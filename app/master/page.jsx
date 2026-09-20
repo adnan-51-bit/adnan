@@ -109,7 +109,7 @@ export default function MasterDashboard(){
 
 function Overview({businesses,tasks,systems}){
   const openTasks=tasks.filter(t=>t.status!=="Erledigt").length;
-  const blocked=systems.filter(s=>s[1]==="🔴").length;
+  const blocked=systems.filter(s=>s.status==="🔴").length;
   return <>
     <div className="pageTitle"><div><span>CONTROL CENTER</span><h2>Was passiert gerade?</h2></div><div className="quick"><a href="/produkt-pipeline">Produkt prüfen</a><a href="/automation">Automation testen</a></div></div>
     <div className="kpis">
@@ -122,7 +122,7 @@ function Overview({businesses,tasks,systems}){
       <Panel title="Betriebsübersicht" action="Betriebe" onClick={()=>{}}>{businesses.map(b=><div className="row" key={b.id}><div><strong>{b.name}</strong><small>{b.type}</small></div><span>{b.health} {b.status}</span></div>)}</Panel>
       <Panel title="Nächste Aufgaben"><>{tasks.filter(t=>t.status!=="Erledigt").slice(0,4).map(t=><div className="taskMini" key={t.id}><span className={t.priority==="Hoch"?"high":""}>{t.priority}</span><div><strong>{t.title}</strong><small>{t.area} · {t.status}</small></div></div>)}</></Panel>
     </div>
-    <Panel title="System-Lage"><div className="systemGrid">{systems.map(([name,status,note])=><div className="system" key={name}><b>{status} {name}</b><small>{note}</small></div>)}</div></Panel>
+    <Panel title="System-Lage"><div className="systemGrid">{systems.map(s=><div className="system" key={s.id}><b>{s.status} {s.name}</b><small>{s.note}</small></div>)}</div></Panel>
   </>
 }
 
