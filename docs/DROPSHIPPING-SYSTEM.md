@@ -3,18 +3,16 @@
 Stand: 2026-09-20
 
 ## Ziel
-
-Mehrere Produkte verkaufen, ohne für den Start selbst große Warenbestände zu halten.
+Mehrere Produkte verkaufen, ohne für den Start große Warenbestände vorzufinanzieren.
 
 ## Zielprozess
+Kunde bestellt -> Zahlung -> Bestellung validieren -> Lieferant auswählen -> Bestellung übermitteln -> Direktversand -> Tracking zurück -> Kunde informieren -> Umsatz, Lieferantenkosten, Versand, Gebühren und Retouren zuordnen.
 
-Kunde bestellt im Shop -> Zahlung -> Bestellung validieren -> passenden Lieferanten auswählen -> Bestellung an Lieferant übermitteln -> Lieferant versendet direkt an Endkunden -> Tracking zurückführen -> Kunde informieren -> Umsatz, Lieferantenkosten, Versand, Gebühren und Retouren der Bestellung zuordnen.
+## Aktuelle Rechercheerkenntnis
+Deutsche Anbieter bestätigen, dass Direktversand/neutraler Versand technisch und operativ angeboten wird. ChiliTec nennt 7,50 € Versandpauschale je Paket innerhalb Deutschlands, 10 € Mindestbestellwert netto und einen aktuellen CSV-Datenexport; Retouren müssen dort grundsätzlich an den Händler gehen. Krempl nennt manuelle oder automatische Bestellübermittlung und Versand im Namen des Händlers. CLP nennt Lagerung, Verpackung und Versand direkt an die Kundschaft im Namen des Händlers. DGH nennt neutralen Versand mit Händler-Absender und die Möglichkeit, ohne eigenen Warenbestand zu verkaufen. Diese Angaben sind Anbieterangaben und müssen vor Vertragsabschluss für konkrete Produkte bestätigt werden.
 
 ## Lieferanten-Gates
-
-Ein Lieferant erhält zunächst 🟡.
-
-Vor 🟢 müssen geprüft werden:
+Ein Lieferant bleibt 🟡, bis geprüft sind:
 - B2B-Vertrag/Anmeldung
 - tatsächlicher Einkaufspreis
 - Versandkosten
@@ -34,7 +32,6 @@ Vor 🟢 müssen geprüft werden:
 - Testbestellung
 
 ## Produkt-Gates
-
 🟢 erst wenn:
 1. Lieferant bestätigt.
 2. Produkt konkret identifiziert.
@@ -47,55 +44,28 @@ Vor 🟢 müssen geprüft werden:
 9. Testbestellung oder belastbarer Lieferantennachweis vorhanden.
 
 ## Mehrere Produkte
-
-Das System ist bewusst multi-product aufgebaut. Produkte können von unterschiedlichen Lieferanten stammen.
-
-Jedes Produkt erhält:
-- product_id
-- supplier_id
-- Kategorie
-- Einkaufspreis
-- Versandkosten
-- Verkaufspreis
-- Gebühren
-- Marketingkosten
-- Retourenreserve
-- Deckungsbeitrag
-- Lieferzeit
-- Bestandssignal
-- Compliance-Status
-- Freigabestatus
+Jedes Produkt erhält product_id, supplier_id, Kategorie, Einkaufspreis, Versandkosten, Verkaufspreis, Gebühren, Marketingkosten, Retourenreserve, Deckungsbeitrag, Lieferzeit, Bestandssignal, Compliance-Status und Freigabestatus.
 
 ## Automatisierung
-
-Phase 1: manuelle/halbautomatische Prüfung.
-
-Phase 2:
-- Produktfeed importieren
-- Preise/Bestand synchronisieren
-- Produkte in Shop übernehmen
-- Bestellungen weiterleiten
-- Tracking zurückschreiben
-
-Phase 3:
-- automatische Margenprüfung
-- automatische Deaktivierung bei fehlendem Bestand
-- Warnung bei Preisänderung
-- Lieferantenvergleich
-- Reporting
+Phase 1: Recherche und halbautomatische Prüfung.
+Phase 2: Produktfeed, Preis-/Bestandssynchronisierung, Shop-Import, Bestellweiterleitung, Tracking-Rückgabe.
+Phase 3: Margenwarnung, automatische Deaktivierung bei fehlendem Bestand, Preiswarnung, Lieferantenvergleich und Reporting.
 
 ## Kostenregel
-
 Keine kostenpflichtige Integration, App, Domain, Werbung oder Bestellung ohne ausdrückliche Freigabe.
 
 ## Aktueller Stand
+Kontrolloberflächen: /lieferanten und /produkt-pipeline. Noch keine produktive Lieferantenanbindung.
 
-Die Kontrolloberfläche liegt unter /lieferanten.
+## Nächster Arbeitsabschnitt
+1. konkrete Produkte gegen direkte Lieferantenangebote matchen
+2. Versand und Mindestbestellwert berechnen
+3. Retouren und Compliance prüfen
+4. Netto-Deckungsbeitrag je Produkt berechnen
+5. nur belastbare Kandidaten für Testfreigabe vorbereiten
 
-Die Lieferantenliste enthält recherchierte Kandidaten, aber noch keine produktive Anbindung. Externe Angaben müssen vor Vertragsabschluss direkt beim jeweiligen Anbieter bestätigt werden.
-
-## Recherchehinweis
-
-Aktuelle Recherche zeigt, dass deutsche/EU-Anbieter Direktversand, neutrale Verpackung und teils CSV/XML/API-Anbindungen anbieten. Beispiele: CLP, T.M. Textil, ChiliTec, Hans Krempl und BigBuy.
-
-Diese Namen sind Recherche-Kandidaten, keine Kaufempfehlungen.
+## Recherchequellen
+ChiliTec: https://www.chilitec.de/versand-und-zahlung/dropshipping/
+Krempl: https://www.krempl.de/dropshipping/
+CLP: https://www.clp.de/haendler
+DGH: https://shop.dgh.de/informationen/dropshipping/
