@@ -36,6 +36,7 @@ export default function MasterDashboard(){
   const [search,setSearch]=useState("");
   const [loading,setLoading]=useState(true);
   const [storage,setStorage]=useState("unbekannt");
+  const [systemFilter,setSystemFilter]=useState("all");
 
   useEffect(()=>{ fetch("/api/master/businesses").then(r=>r.json()).then(data=>{ if(data?.businesses) setBusinesses(data.businesses); if(data?.storage) setStorage(data.storage); }).finally(()=>setLoading(false)); },[]);
 
@@ -79,7 +80,7 @@ export default function MasterDashboard(){
         {tab==="overview" && <Overview businesses={businesses} tasks={tasks} systems={systems}/>}
         {tab==="businesses" && <Businesses businesses={visibleBusinesses} search={search} setSearch={setSearch} editing={editing} setEditing={setEditing} saveBusiness={saveBusiness}/>}
         {tab==="tasks" && <Tasks tasks={tasks} toggleTask={toggleTask}/>}
-        {tab==="systems" && <Systems systems={systems}/>}
+        {tab==="systems" && <Systems systems={systems} filter={systemFilter} setFilter={setSystemFilter}/>}
         {tab==="finance" && <Finance/>}
         {tab==="automation" && <Automation/>}
         {tab==="audit" && <Audit/>}
@@ -123,7 +124,7 @@ function EditBusiness({business,onClose,onSave}){
 
 function Tasks({tasks,toggleTask}){return <><div className="pageTitle"><div><span>WORK QUEUE</span><h2>Aufgaben & Quality Gates</h2></div></div><div className="taskTable">{tasks.map(t=><div className="taskRow" key={t.id}><button onClick={()=>toggleTask(t.id)} className={t.status==="Erledigt"?"check done":"check"}>✓</button><div><strong>{t.title}</strong><small>{t.area}</small></div><span>{t.priority}</span><em>{t.status}</em></div>)}</div></>}
 
-function Systems({systems}){return <><div className="pageTitle"><div><span>INFRASTRUCTURE</span><h2>Systeme & Integrationen</h2></div></div><div className="systemGrid big">{systems.map(([name,status,note])=><article className="system" key={name}><strong>{status} {name}</strong><p>{note}</p><button onClick={()=>alert(name+" ist ein externer Connector. Änderungen werden erst nach sicherer Konfiguration aktiviert.")}>Konfiguration prüfen</button></article>)}</div></>}
+function Systems({systems,filter,setFilter}){const filtered=filter==="all"?systems:systems.filter(s=>s[1]===filter);return <><div className="pageTitle"><div><span>INFRASTRUCTURE</span><h2>Systeme & Integrationen</h2></div><select className="search" value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">Alle Status</option><option value="🟢">🟢 Grün</option><option value="🟡">🟡 Prüfung</option><option value="🔴">🔴 Kritisch</option></select></div><div className="systemGrid big">{filtered.map(([name,status,note])=><article className="system" key={name}><strong>{status} {name}</strong><p>{note}</p><button onClick={()=>alert(name+" ist ein externer Connector. Änderungen werden erst nach sicherer Konfiguration aktiviert.")}>Konfiguration prüfen</button></article>)}</div></>}
 
 function Finance(){return <><div className="pageTitle"><div><span>FINANCE CONTROL</span><h2>Finanzzentrale</h2></div></div><div className="kpis"><Kpi label="Umsatz" value="0 €" note="keine Live-Daten verbunden"/><Kpi label="Kosten" value="0 €" note="keine erfundenen Werte"/><Kpi label="Offene Rechnungen" value="—" note="Connector offen"/><Kpi label="Cashflow" value="—" note="Bank noch nicht verbunden"/></div><Panel title="Finanzregeln"><ul><li>Keine erfundenen Einnahmen oder Kosten.</li><li>Stripe/PayPal erst nach sicherer Integration.</li><li>Bankdaten nur nach expliziter Verbindung.</li><li>Jede reale Zahlung muss nachvollziehbar verbucht werden.</li></ul></Panel></>}
 
