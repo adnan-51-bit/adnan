@@ -154,3 +154,9 @@ Offen:
 ## Nächster STOP-Punkt
 
 Produktentscheidung erst nach dokumentiertem Quality Gate. Bis dahin bleibt der Status 🟡.
+
+
+## Database / Persistence
+- 🟡 Persistence facade implemented; runtime remains memory-only.
+- 🟡 Supabase Free documented as a $0 candidate; no project or paid plan activated.
+- ⚪ Production database requires credentials, schema, smoke test, restart test, and access-control review.
