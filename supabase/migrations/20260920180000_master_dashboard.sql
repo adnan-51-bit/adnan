@@ -33,3 +33,12 @@ revoke all on public.master_audit_log from anon, authenticated;
 grant select, insert, update, delete on public.businesses to service_role;
 grant select, insert, update, delete on public.master_tasks to service_role;
 grant select, insert on public.master_audit_log to service_role;
+
+create table if not exists public.master_systems (id text primary key, name text not null, status text not null, note text not null default '', updated_at timestamptz not null default now());
+create table if not exists public.master_settings (key text primary key, value jsonb not null default '{}'::jsonb, updated_at timestamptz not null default now());
+alter table public.master_systems enable row level security;
+alter table public.master_settings enable row level security;
+revoke all on public.master_systems from anon, authenticated;
+revoke all on public.master_settings from anon, authenticated;
+grant select, insert, update, delete on public.master_systems to service_role;
+grant select, insert, update, delete on public.master_settings to service_role;
