@@ -4,7 +4,7 @@ Stand: 2026-09-20
 
 ## Gesamtstatus
 
-🟡 **MVP-CODE VORHANDEN – NOCH NICHT PRODUKTIV VERIFIZIERT**
+🟡 **MVP SICHTBAR DEPLOYED – PRODUKTIVER GESCHÄFTSBETRIEB NOCH OFFEN**
 
 Die technische Basis für Lead-Verwaltung, E-Commerce-Kalkulation und eine zentrale Übersicht existiert im Repository. Deployment, persistente Datenhaltung und reale Geschäftsprozesse sind noch nicht vollständig verifiziert.
 
@@ -23,7 +23,9 @@ Vorhanden:
 - Kalkulation für Einkauf, Versand, Kanalgebühren und Marketingannahmen
 - Produktrecherche-Dokumentation
 - Lieferantenrecherche Runde 1
-- zentrale Route /zentral
+- sichtbare Master-Zentrale /zentral
+- sichtbare E-Commerce-Zentrale /e-commerce
+- sichtbarer Bereich /kunden-gewinnen
 
 Noch offen:
 - reale Lieferanten vollständig verifizieren
@@ -33,7 +35,9 @@ Noch offen:
 - Shop-Produktseite
 - Bestell-/Zahlungsprozess
 - persistente Datenbank
-- produktives Deployment und Smoke-Test
+- vollständiger Produktions-Smoke-Test
+- Bestell-/Zahlungsprozess
+- persistente Datenhaltung
 
 ## Lead-System
 
