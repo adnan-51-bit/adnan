@@ -6,8 +6,8 @@ const products = [
   {id:"auto-organizer",product:"Kofferraum-Organizer",category:"Auto & Ordnung",supplier:"Laprinta / weitere prüfen",supplierCost:null,shipping:"offen",sale:24.99,drop:"offen",status:"🟡",next:"Direktversand-Partner und Gesamtkosten prüfen"},
   {id:"drawer",product:"Schubladen-Organizer",category:"Haushalt",supplier:"Salzmann / Lieferantenmarkt",supplierCost:1.21,shipping:"offen",sale:18.90,drop:"offen",status:"🟡",next:"Dropshipping-Lieferant mit kleiner MOQ finden"},
   {id:"dog-bottle",product:"Hunde-Reisetrinkflasche",category:"Tierbedarf",supplier:"B2B-Anbieter",supplierCost:null,shipping:"offen",sale:19.90,drop:"offen",status:"🟡",next:"Direktversand + EK verifizieren"},
-  {id:"cable",product:"Kabel-Organizer",category:"Ordnung & Zubehör",supplier:"EU-B2B",supplierCost:null,shipping:"offen",sale:19.90,drop:"offen",status:"🟡",next:"Lieferant mit Direktversand finden"},
-  {id:"textile",product:"Heimtextilien",category:"Wohnen",supplier:"T.M. Textil",supplierCost:null,shipping:"Anbieter prüfen",sale:29.90,drop:"offen",status:"🟡",next:"konkretes Produkt + Marge auswählen"},
+  {id:"cable",product:"Kabel-Organizer 5er",category:"Ordnung & Zubehör",supplier:"ChiliTec · Art. 22713",supplierCost:null,shipping:"7,50 € / Paket DE",sale:19.90,drop:"ja",status:"🟡",next:"Händler-EK nach Login + Retourenprozess prüfen"},
+  {id:"textile",product:"Heimtextilien",category:"Wohnen",supplier:"T.M. Textil · 900+ SKUs",supplierCost:null,shipping:"offen",sale:29.90,drop:"ja",status:"🟡",next:"Händlerkonto + konkretes Produkt + EK prüfen"},
   {id:"garden",product:"Garten-Organizer/Zubehör",category:"Garten",supplier:"EU/DE Dropshipping",supplierCost:null,shipping:"offen",sale:29.90,drop:"offen",status:"⚪",next:"Produktrecherche starten"}
 ];
 
