@@ -160,3 +160,10 @@ Produktentscheidung erst nach dokumentiertem Quality Gate. Bis dahin bleibt der 
 - 🟡 Persistence facade implemented; runtime remains memory-only.
 - 🟡 Supabase Free documented as a $0 candidate; no project or paid plan activated.
 - ⚪ Production database requires credentials, schema, smoke test, restart test, and access-control review.
+
+
+## Master Dashboard
+- 🟢 `/master` central control surface implemented.
+- 🟢 Business edit UI connected to `/api/master/businesses`.
+- 🟡 Supabase migration and server-side adapter prepared; no external database credentials configured.
+- 🔴 Do not mark persistence production-ready until schema deployment and restart smoke test pass.
