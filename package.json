@@ -5,11 +5,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node --test"
   },
   "dependencies": {
     "next": "latest",
     "react": "latest",
     "react-dom": "latest"
-  }
+  },
+  "type": "module"
 }
