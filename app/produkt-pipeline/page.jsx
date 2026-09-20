@@ -3,11 +3,11 @@
 import { useMemo, useState } from "react";
 
 const products = [
-  {id:"auto-organizer",product:"Kofferraum-Organizer",category:"Auto & Ordnung",supplier:"Laprinta / weitere prüfen",supplierCost:12,shipping:"offen",sale:24.99,drop:"nein",status:"🟡",next:"Direktversand-Partner und Gesamtkosten prüfen"},
+  {id:"auto-organizer",product:"Kofferraum-Organizer",category:"Auto & Ordnung",supplier:"Laprinta / weitere prüfen",supplierCost:null,shipping:"offen",sale:24.99,drop:"offen",status:"🟡",next:"Direktversand-Partner und Gesamtkosten prüfen"},
   {id:"drawer",product:"Schubladen-Organizer",category:"Haushalt",supplier:"Salzmann / Lieferantenmarkt",supplierCost:1.21,shipping:"offen",sale:18.90,drop:"offen",status:"🟡",next:"Dropshipping-Lieferant mit kleiner MOQ finden"},
   {id:"dog-bottle",product:"Hunde-Reisetrinkflasche",category:"Tierbedarf",supplier:"B2B-Anbieter",supplierCost:null,shipping:"offen",sale:19.90,drop:"offen",status:"🟡",next:"Direktversand + EK verifizieren"},
   {id:"cable",product:"Kabel-Organizer",category:"Ordnung & Zubehör",supplier:"EU-B2B",supplierCost:null,shipping:"offen",sale:19.90,drop:"offen",status:"🟡",next:"Lieferant mit Direktversand finden"},
-  {id:"textile",product:"Heimtextilien",category:"Wohnen",supplier:"T.M. Textil",supplierCost:null,shipping:"Anbieter prüfen",sale:29.90,drop:"ja",status:"🟡",next:"konkretes Produkt + Marge auswählen"},
+  {id:"textile",product:"Heimtextilien",category:"Wohnen",supplier:"T.M. Textil",supplierCost:null,shipping:"Anbieter prüfen",sale:29.90,drop:"offen",status:"🟡",next:"konkretes Produkt + Marge auswählen"},
   {id:"garden",product:"Garten-Organizer/Zubehör",category:"Garten",supplier:"EU/DE Dropshipping",supplierCost:null,shipping:"offen",sale:29.90,drop:"offen",status:"⚪",next:"Produktrecherche starten"}
 ];
 
@@ -18,7 +18,7 @@ export default function ProduktPipeline(){
  return <main className="shell">
   <header><div className="eyebrow">E-COMMERCE · PRODUCT × SUPPLIER</div><h1>Produkt-Pipeline</h1><p>Mehrere Produkte, mehrere Lieferanten, ein Quality Gate. Noch kein Produkt ist freigegeben.</p></header>
   <nav><a href="/lieferanten">Lieferanten</a><a href="/shop">Kalkulation</a><a href="/zentral">Master-Zentrale</a></nav>
-  <section className="stats"><div><b>{products.length}</b><span>Kandidaten</span></div><div><b>{products.filter(p=>p.drop==="ja").length}</b><span>Direktversand bestätigt</span></div><div><b>0</b><span>Produkte freigegeben</span></div><div><b>0 €</b><span>ausgegeben</span></div></section>
+  <section className="stats"><div><b>{products.length}</b><span>Kandidaten</span></div><div><b>{products.filter(p=>p.drop==="ja").length}</b><span>Produkte mit bestätigtem Direktversand</span></div><div><b>0</b><span>Produkte freigegeben</span></div><div><b>0 €</b><span>ausgegeben</span></div></section>
   <section className="panel">
    <div className="filters"><select value={category} onChange={e=>setCategory(e.target.value)}><option>Alle</option>{[...new Set(products.map(p=>p.category))].map(x=><option key={x}>{x}</option>)}</select><select value={show} onChange={e=>setShow(e.target.value)}><option>Alle</option><option>ja</option><option>nein</option><option>offen</option></select></div>
    <div className="table"><div className="row head"><span>Produkt</span><span>Lieferant</span><span>EK</span><span>Versand</span><span>Verkauf</span><span>Direktversand</span><span>Status</span></div>
