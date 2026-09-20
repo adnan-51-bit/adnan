@@ -19,15 +19,38 @@ Enthalten:
 - Dashboard-Kennzahlen
 - künstliche Testdaten
 
-## Technische Einschränkung
-Die Daten werden aktuell nur im Browser-State gehalten. Beim Neuladen gehen Änderungen verloren. Eine persistente Datenbank ist noch nicht angeschlossen.
+## Phase 2 — E-Commerce-Testsystem
+🟡 IMPLEMENTIERT IM CODE
+
+Enthalten:
+- 20 Produktkandidaten als Testdaten
+- Produkt-/Margentabelle
+- Einkaufskosten
+- Versandkosten
+- Verkaufspreise
+- kanalabhängige Modellgebühren
+- Marketingkosten pro Bestellung
+- Deckungsbeitrag pro Bestellung
+- Filter nach Produktkategorie
+- eigener Shop / eBay / Amazon als Kalkulationskanäle
+- Freigabekriterien und Dokumentation
+
+## Wichtige Einschränkung
+Die E-Commerce-Kalkulation verwendet derzeit Modellannahmen. Sie sind **keine bestätigten Lieferantenpreise**. Vor echtem Verkauf müssen Lieferant, Einkauf, Versand, Lieferzeit, Retouren und Produktkonformität verifiziert werden.
+
+Die Lead-Daten werden aktuell nur im Browser gespeichert. Eine zentrale persistente Datenbank ist noch nicht angeschlossen.
 
 ## Nächster Quality Gate
-Die App muss lokal bzw. über eine Deployment-Umgebung gebaut und getestet werden. Danach folgt die persistente Speicherung.
+1. Shop- und Kalkulationsseiten lokal bzw. über Deployment bauen und testen.
+2. Echte Lieferanten für die besten Produktkandidaten recherchieren.
+3. Reale Kosten in die Kalkulation übernehmen.
+4. Erst danach Produktfreigabe.
+5. Erst danach echte Zahlungs-/Bestellprozesse.
 
 ## Regeln
 - Keine echten Kundendaten in der Demo.
 - Keine Secrets im Repository.
 - Keine kostenpflichtigen Dienste ohne Freigabe.
 - Keine automatisierte Massenwerbung ohne rechtliche Prüfung.
+- Keine Produktfreigabe auf Basis von Fake-/unverifizierten Lieferantendaten.
 - Werknetz24 bleibt getrennt.
