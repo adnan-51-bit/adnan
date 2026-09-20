@@ -21,3 +21,7 @@ A persistent database becomes 🟢 only after:
 6. access control and backup strategy are documented.
 
 Until then: 🟡.
+
+
+## Security
+Current Supabase documentation recommends the newer `sb_secret_...` secret key for server-side code; secret keys must remain server-side and never enter GitHub or browser code. citeturn0search0turn0search1
