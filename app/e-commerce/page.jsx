@@ -29,7 +29,7 @@ export default function Ecommerce() {
     </header>
     <nav>
       <a href="/zentral">← Master-Zentrale</a><a className="active" href="/shop">Kalkulation</a>
-      <a href="/lieferanten">Lieferanten</a><a href="/produkt-pipeline">Produkt-Pipeline</a>
+      <a href="/lieferanten">Lieferanten</a><a href="/produkt-pipeline">Produkt-Pipeline</a><a href="/kunden-gewinnen">Kunden gewinnen</a>
     </nav>
     <section className="banner"><div><span>AKTUELLER STATUS</span><strong>🟡 Aufbau & Validierung</strong><p>Noch kein Produkt ist für den echten Verkauf freigegeben.</p></div><div className="rule">Keine Bestellung · keine Werbung · keine kostenpflichtige Integration ohne Freigabe</div></section>
     <section className="grid">
