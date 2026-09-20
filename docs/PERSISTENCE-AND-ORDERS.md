@@ -31,3 +31,8 @@ Der Stripe-Webhook ist derzeit bewusst vollständig gesperrt. Er verarbeitet kei
 ## Quality Gate
 
 Kein echter Fulfillment-Auftrag darf ausschließlich aufgrund dieses Scaffolds entstehen.
+
+
+## Adapter-Schnittstelle
+
+Der aktuelle Store bleibt absichtlich process-local. Die API ist so klein gehalten, dass später ein persistenter Adapter eingesetzt werden kann, ohne die Order-Logik neu zu bauen: `saveEvent`, `saveOrder`, `getOrder`, `storeStats`.
