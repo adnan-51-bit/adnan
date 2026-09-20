@@ -42,3 +42,8 @@ revoke all on public.master_systems from anon, authenticated;
 revoke all on public.master_settings from anon, authenticated;
 grant select, insert, update, delete on public.master_systems to service_role;
 grant select, insert, update, delete on public.master_settings to service_role;
+
+create table if not exists public.master_tasks_v2 (id bigint generated always as identity primary key, title text not null, area text not null, status text not null default 'Offen', priority text not null default 'Mittel', due_at timestamptz, owner text not null default 'system', created_at timestamptz not null default now(), updated_at timestamptz not null default now());
+alter table public.master_tasks_v2 enable row level security;
+revoke all on public.master_tasks_v2 from anon, authenticated;
+grant select, insert, update, delete on public.master_tasks_v2 to service_role;
