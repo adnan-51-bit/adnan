@@ -1,5 +1,5 @@
-import { listSystems } from "@/lib/master-systems";
-import { runStaticQualityGate } from "@/lib/quality-gate";
+import { listSystems } from "@/lib/master-systems.js";
+import { runStaticQualityGate } from "@/lib/quality-gate.js";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";

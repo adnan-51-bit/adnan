@@ -1,15 +1,26 @@
-# Online-Anfragen-Automation
+# Werknetz24 Master-Zentrale
 
-Neues, von Werknetz24 getrenntes MVP für einen Service, der Online-Anfragen zentral erfasst, strukturiert, priorisiert und nachverfolgt.
+Technische Basis der Master-Zentrale: eine gemeinsame Übersicht/Steuerung für mehrere Geschäftsbereiche
+(Werknetz24, E-Commerce, künftig weitere), mit klar getrennten, unabhängig funktionierenden Bereichen.
+
+Ursprünglich als eng gefasstes MVP für zentrale Online-Anfragen-Erfassung gestartet (Workflow unten) —
+dieser Kern bleibt bestehen und ist Teil des Automation-Bereichs.
 
 ## Status
-- MVP / Validierung
+Siehe `docs/STATUS.md` für den aktuellen, verifizierten Stand (Persistenz, Deployment-Gate, Quality Gate).
+
 - Keine produktive Massenansprache
 - Keine Secrets im Repository
 - Testdaten statt echter Kundendaten
 - Datenschutz und zulässige Werbeansprache vor produktivem Einsatz prüfen
 
-## Workflow
+## Struktur
+- `/master` — vollständiges, API-gestütztes Dashboard (Betriebe, Aufgaben, Systeme, Finanzen, Automation, Audit-Log, Einstellungen)
+- `/zentral` — ältere, statische Vorversion (bleibt erreichbar, von `/master` verlinkt)
+- `/e-commerce`, `/lieferanten`, `/shop`, `/produkt-pipeline` — E-Commerce-Geschäftsbereich
+- `/automation` — Automation Engine
+
+## Ursprünglicher Kern-Workflow (Online-Anfragen)
 Eingang -> Lead -> Klassifizierung -> Priorität -> Benachrichtigung -> Follow-up -> Abschluss -> Reporting
 
 ## Grundregel

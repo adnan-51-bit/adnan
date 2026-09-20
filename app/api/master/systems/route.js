@@ -1,4 +1,4 @@
-import {listSystems,updateSystem} from "@/lib/master-systems";
+import {listSystems,updateSystem} from "@/lib/master-systems.js";
 export const dynamic="force-dynamic";
 
 export async function GET(){

@@ -95,32 +95,28 @@ Registriert:
 
 ## Deployment Gate
 
-🔴 **NOCH NICHT GRÜN**
+🔴 **NOCH NICHT GRÜN** (CI-Fehler jetzt behoben, Vercel-Team-Limit weiterhin offen)
 
-Aktueller nachweisbarer GitHub-Commit-Status für `8318911ea01bccf772d673c7c810958491c21042`:
-- Vercel Status: `failure`
-- Statusziel enthält `upgradeToPro=build-rate-limit`
-- Das ist ein Vercel-Deployment-/Team-Limit-Signal, kein nachgewiesener Next.js-Code-Buildfehler.
-- Es liegt kein sichtbarer GitHub-Actions-Workflow-Run für diesen Commit vor.
-- Der Status wird deshalb nicht als erfolgreicher Deployment-Test gewertet.
+**20.09.2026, Phase 1 (Werknetz24-landing-Sitzung, Technical Lead):** Der Commit-Status `failure` für `8318911` war tatsächlich das Team-Build-Limit — **aber zusätzlich gab es einen echten, reproduzierbaren Code-Fehler**, den die vorherige Sitzung nicht sehen konnte (siehe Korrektur unten). Beide Ursachen wurden getrennt geprüft:
 
-Hinweis: Vercel weist für Hobby-Projekte auf teambezogene Deployment-/Build-Limits hin; die konkrete Ursache und der aktuelle Quota-Zustand dieses Kontos können aus dem verfügbaren GitHub-Connector nicht weiter verifiziert werden.
+1. **Echter Code-Fehler (jetzt behoben):** `lib/master-finance.js`, `lib/master-store.js`, `lib/master-tasks.js`, `lib/persistence.js` importierten relative Module ohne `.js`-Dateiendung (`from "./audit"` statt `from "./audit.js"`) — bricht unter Node.js' nativer ESM-Auflösung (`node --test`), auch wenn Next.js' Bundler es toleriert. Zusätzlich fehlte eine `jsconfig.json` für den `@/`-Pfad-Alias, der in 4 weiteren Dateien verwendet wird (`app/api/health/route.js`, `app/api/master/quality-gate/route.js`, `app/api/master/systems/route.js`, `lib/master-systems.js`) — ohne diese Datei ist NICHT VERIFIZIERT, ob `npm run build` vorher überhaupt durchgelaufen wäre. Beides behoben: fehlende Endungen ergänzt, `jsconfig.json` mit `"@/*":["./*"]` ergänzt. **Verifiziert:** `npm test` = 12/12 grün (vorher 8/9), `npm run build` erfolgreich (Next.js 16.3.3, Turbopack, alle 22 Routen generiert).
+2. **Vercel-Team-Build-Limit:** weiterhin ungeklärt, betrifft auch das Schwester-Repository `werknetz24-landing` (dort hängt Commit `5523d29` ohne jeden Build-Trigger). Nur Adnan kann das im Vercel-Billing-Dashboard prüfen — er hat bereits signalisiert, notfalls ein Upgrade zu machen.
 
-Produktionsfreigabe erfordert:
-1. GitHub CI erfolgreich
-2. Vercel Deployment erfolgreich
+**Korrektur zur vorherigen Behauptung "kein sichtbarer GitHub-Actions-Workflow-Run":** Das war unzutreffend — unter github.com/adnan-51-bit/adnan/actions sind alle 104 Workflow-Runs einsehbar. Der neueste (Commit `8099964`, Run `#104`) war tatsächlich **rot** (exit code 1, exakt wegen Fund 1 oben) — nicht wegen fehlender Sichtbarkeit, sondern weil `tests/finance.test.js` echt fehlschlug.
+
+Produktionsfreigabe erfordert weiterhin:
+1. GitHub CI erfolgreich (🟢 jetzt erreicht, s. o. — muss nach diesem Fix erneut am echten CI-Lauf bestätigt werden)
+2. Vercel Deployment erfolgreich (🔴 weiterhin blockiert durch Team-Limit)
 3. /master lädt
 4. /api/master/systems antwortet
 5. keine Secrets im Client-Bundle
 6. Produktions- und Fehlerpfade getestet
 
-Aktuell ist über die verfügbare GitHub-Schnittstelle kein Workflow-Run für die neuesten Commits sichtbar. Deshalb wird kein grüner CI-/Deployment-Status behauptet.
-
 ## Verifikation
 
-- 🟢 Quality-Gate-Unit-Tests wurden lokal gegen die betroffenen reinen JavaScript-Module ausgeführt.
-- 🟡 Vollständiger npm install / npm test / npm run build-Lauf auf dem Repository konnte in der aktuellen Ausführungsumgebung nicht durchgeführt werden, weil der Zugriff auf GitHub aus der Shell nicht aufgelöst werden konnte.
-- 🟡 Vercel-Live-Status bleibt separat zu verifizieren.
+- 🟢 `npm install` + `npm test` + `npm run build` wurden 20.09.2026 tatsächlich vollständig lokal ausgeführt (nicht nur einzelne Module) — 12/12 Tests grün, Build erfolgreich.
+- 🟡 Vercel-Live-Status bleibt separat zu verifizieren (Team-Limit, s. o.).
+- ⚪ **Neuer Fund, nicht Teil dieses Fixes:** `/api/master/businesses`, `/api/master/tasks`, `/api/master/finance`, `/api/master/systems` haben **keine erkennbare Authentifizierung** — jeder mit der URL kann per PATCH/POST Betriebsdaten, Aufgaben, Finanzbuchungen und Systemstatus ändern. Aktuelles Risiko durch fehlende Persistenz (In-Memory-Fallback, Daten gehen bei jedem Neustart verloren) praktisch begrenzt, wird aber zu einem echten Sicherheitsproblem, sobald Supabase produktiv konfiguriert ist. **Empfehlung (Entscheidung liegt bei Adnan/ChatGPT als Product Lead):** gleiches Bearer-Secret-Muster wie im Schwester-Repository `werknetz24-landing` (`ADMIN_SECRET`, zeitkonstant geprüft) — günstig, bewährt, schnell umsetzbar. Nicht in dieser Phase umgesetzt, da außerhalb des ursprünglich beauftragten Fix-Umfangs.
 
 ## Regeln
 
