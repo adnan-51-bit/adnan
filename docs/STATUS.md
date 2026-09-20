@@ -40,6 +40,21 @@ Noch offen:
 - persistente Datenhaltung
 
 
+## Order Service & Persistence Scaffold
+
+🟡 CODE EXISTS
+
+Vorhanden:
+- Order-Service API
+- Event-/Order-Speicherung als austauschbare Store-Schicht
+- Idempotency-Schicht
+- Stripe-Webhook bewusst gesperrt, bis sichere Signaturprüfung implementiert ist
+
+Offen:
+- persistente Datenbank
+- transaktionale Verarbeitung
+- Queue/Background Processing
+
 ## Webhook Integration
 
 🟡 CODE EXISTS
