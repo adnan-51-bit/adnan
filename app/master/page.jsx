@@ -35,8 +35,9 @@ export default function MasterDashboard(){
   const [notice,setNotice]=useState("");
   const [search,setSearch]=useState("");
   const [loading,setLoading]=useState(true);
+  const [storage,setStorage]=useState("unbekannt");
 
-  useEffect(()=>{ fetch("/api/master/businesses").then(r=>r.json()).then(data=>{ if(data?.businesses) setBusinesses(data.businesses); }).finally(()=>setLoading(false)); },[]);
+  useEffect(()=>{ fetch("/api/master/businesses").then(r=>r.json()).then(data=>{ if(data?.businesses) setBusinesses(data.businesses); if(data?.storage) setStorage(data.storage); }).finally(()=>setLoading(false)); },[]);
 
   const visibleBusinesses=useMemo(()=>businesses.filter(b=>
     !search || (b.name+" "+b.type+" "+b.status).toLowerCase().includes(search.toLowerCase())
@@ -50,7 +51,7 @@ export default function MasterDashboard(){
       const data=await response.json();
       if(!response.ok || !data?.business) throw new Error(data?.error || "Speichern fehlgeschlagen");
       setBusinesses(prev=>prev.map(b=>b.id===updated.id?data.business:b));
-      setNotice(data.storage==="supabase" ? "Gespeichert." : "Änderung gespeichert; aktuell nur im Fallback-Speicher.");
+      setNotice(data.storage==="supabase" ? "Gespeichert in der Datenbank." : "Gespeichert im Fallback-Speicher. Für dauerhafte Speicherung fehlt noch die externe Datenbank-Konfiguration.");
     }catch(error){ setNotice("Speichern fehlgeschlagen: "+error.message); }
   }
 
@@ -62,7 +63,7 @@ export default function MasterDashboard(){
   return <main className="app">
     <header className="topbar">
       <div><span className="eyebrow">WERKNETZ24 · MASTER-ZENTRALE</span><h1>Master Dashboard</h1><p>Alle Betriebe, Systeme, Aufgaben, Finanzen und Automationen an einem Ort.</p></div>
-      <div className="topActions"><span className="live"><i/>Systemübersicht</span><a href="/zentral">Alte Zentrale</a></div>
+      <div className="topActions"><span className="live"><i/>Systemübersicht · {storage}</span><a href="/zentral">Alte Zentrale</a></div>
     </header>
 
     <div className="layout">
