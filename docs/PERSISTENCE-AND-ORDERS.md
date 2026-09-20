@@ -15,7 +15,7 @@ Stand: 2026-09-20
 
 Der aktuelle Store ist nur Prozess-Speicher. Ein Neustart löscht ihn. Das ist **nicht produktionsbereit**.
 
-Der Stripe-Webhook prüft aktuell nur das Vorhandensein der Signatur und darf deshalb keine echte Zahlung als bestätigt behandeln. Für Produktion muss die offizielle Stripe-Signaturprüfung verwendet werden.
+Der Stripe-Webhook ist derzeit bewusst vollständig gesperrt. Er verarbeitet keine Zahlungsereignisse. Für Produktion muss die offizielle Stripe-Signaturprüfung mit der offiziellen Stripe-Bibliothek und persistenter Speicherung implementiert werden.
 
 ## Produktionsschritt
 
