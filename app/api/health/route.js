@@ -1,11 +1,34 @@
-import { NextResponse } from "next/server";
+import { listSystems } from "@/lib/master-systems";
+import { runStaticQualityGate } from "@/lib/quality-gate";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET() {
-  return NextResponse.json({
-    ok: true,
-    service: "master-zentrale",
-    environment: process.env.NODE_ENV || "unknown",
-    timestamp: new Date().toISOString(),
-    checks: { application: "ok", persistence: "not_configured", payments: "not_connected", suppliers: "not_connected", notifications: "not_connected" }
-  });
+  try {
+    const { storage, systems } = await listSystems();
+    const gate = runStaticQualityGate({ storage, systems });
+    return Response.json({
+      ok: true,
+      service: "master-zentrale",
+      environment: process.env.NODE_ENV || "unknown",
+      timestamp: new Date().toISOString(),
+      checks: {
+        application: "ok",
+        persistence: storage,
+        payments: systems.find(s => s.id === "stripe")?.status || "unknown",
+        suppliers: systems.find(s => s.id === "shopify")?.status || "unknown",
+        notifications: systems.find(s => s.id === "email")?.status || "unknown",
+        quality_gate: gate.productionReady ? "ready" : "blocked"
+      }
+    });
+  } catch (error) {
+    return Response.json({
+      ok: false,
+      service: "master-zentrale",
+      environment: process.env.NODE_ENV || "unknown",
+      timestamp: new Date().toISOString(),
+      error: error?.message || "Health check failed"
+    }, { status: 503 });
+  }
 }
