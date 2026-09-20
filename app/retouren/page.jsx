@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { adminFetch } from "../../lib/admin-fetch.js";
 
 const STATUS_LABEL = { angefragt: "Angefragt", genehmigt: "Genehmigt", abgelehnt: "Abgelehnt", erhalten: "Erhalten", erstattet: "Erstattet" };
 
@@ -17,7 +18,7 @@ export default function RetourenPage() {
   useEffect(() => { reload(); }, []);
 
   async function setStatus(id, status) {
-    const res = await fetch("/api/orders?type=returns", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
+    const res = await adminFetch("/api/orders?type=returns", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
     const data = await res.json();
     if (!res.ok) { setNotice("Fehler: " + data.error); return; }
     setNotice(`Retoure ${id} → ${STATUS_LABEL[data.return.status]}`);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { adminFetch } from "../../lib/admin-fetch.js";
 
 const STATUS_LABEL = { recherchiert: "🟡 Recherchiert", geprueft: "🟡 Geprüft", verifiziert: "🟢 Verifiziert", abgelehnt: "🔴 Abgelehnt" };
 
@@ -22,7 +23,7 @@ export default function LieferantenZentrale() {
   const visible = useMemo(() => filter === "alle" ? suppliers : suppliers.filter(s => s.region === filter), [filter, suppliers]);
 
   async function setStatus(id, status) {
-    const res = await fetch("/api/orders?type=suppliers", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
+    const res = await adminFetch("/api/orders?type=suppliers", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
     const data = await res.json();
     if (!res.ok) { setNotice("Fehler: " + data.error); return; }
     setNotice(`Status von „${data.supplier.name}“ auf „${STATUS_LABEL[data.supplier.status]}“ gesetzt.`);
@@ -30,7 +31,7 @@ export default function LieferantenZentrale() {
   }
 
   async function createSupplier(form) {
-    const res = await fetch("/api/orders?type=suppliers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    const res = await adminFetch("/api/orders?type=suppliers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
     const data = await res.json();
     if (!res.ok) { setNotice("Fehler: " + data.error); return; }
     setCreating(false);

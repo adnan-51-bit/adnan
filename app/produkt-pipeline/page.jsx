@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { adminFetch } from "../../lib/admin-fetch.js";
 
 const PIPELINE_LABELS = {
   IDEA: "Idee", RESEARCH: "Recherche", SUPPLIER_CHECK: "Lieferant prüfen", PRODUCT_CHECK: "Produkt prüfen",
@@ -37,7 +38,7 @@ export default function ProduktPipeline() {
   const supplierName = id => suppliers.find(s => s.id === id)?.name || "—";
 
   async function advance(id) {
-    const res = await fetch("/api/orders?type=products", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "advance", id }) });
+    const res = await adminFetch("/api/orders?type=products", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "advance", id }) });
     const data = await res.json();
     if (!res.ok) { setNotice("Fehler: " + data.error); return; }
     setNotice(`„${data.product.name}“ ist jetzt bei „${PIPELINE_LABELS[data.product.pipeline_status]}“.`);
@@ -45,7 +46,7 @@ export default function ProduktPipeline() {
   }
 
   async function createProduct(form) {
-    const res = await fetch("/api/orders?type=products", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    const res = await adminFetch("/api/orders?type=products", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
     const data = await res.json();
     if (!res.ok) { setNotice("Fehler: " + data.error); return; }
     setCreating(false);

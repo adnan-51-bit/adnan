@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Anfragen-Zentrale",
-  description: "MVP für Online-Anfragen-Automation"
+  title: "Werknetz24 Master-Zentrale",
+  description: "Übersicht und Steuerung für Werknetz24, E-Commerce und weitere Geschäftsbereiche"
 };
 
 export default function RootLayout({ children }) {

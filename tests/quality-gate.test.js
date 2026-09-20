@@ -23,3 +23,14 @@ test("quality gate keeps secret values out of output", () => {
   assert.equal(JSON.stringify(gate).includes("do-not-expose"), false);
   assert.equal(gate.checks.find(c => c.id === "secret-exposure")?.status, "pass");
 });
+
+test("quality gate fails admin-auth when MASTER_API_SECRET is not set (Phase 4 finding)", () => {
+  const gate = runStaticQualityGate({ storage: "supabase", systems, env: {} });
+  assert.equal(gate.checks.find(c => c.id === "admin-auth")?.status, "fail");
+  assert.equal(gate.productionReady, false);
+});
+
+test("quality gate passes admin-auth once MASTER_API_SECRET is set", () => {
+  const gate = runStaticQualityGate({ storage: "supabase", systems, env: { MASTER_API_SECRET: "set" } });
+  assert.equal(gate.checks.find(c => c.id === "admin-auth")?.status, "pass");
+});

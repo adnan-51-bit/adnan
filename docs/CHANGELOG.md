@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-20 (Phase 4)
+### Phase 4 — Quality Gate (Technical Lead, werknetz24-landing-Sitzung)
+- Vollständiger Bericht: `docs/QUALITY-GATE-PHASE-4.md` (Sicherheit, Datenschutz, Recht, E-Commerce, Technik).
+- **Sicherheitslücke behoben:** alle 6 mutierenden API-Endpunkte waren unauthentifiziert. Neues `lib/auth.js` (`MASTER_API_SECRET`, zeitkonstant, fail-closed) auf `/api/master/businesses`, `/api/master/tasks`, `/api/master/finance`, `/api/master/systems`, `/api/master/audit`, `/api/orders` angewendet.
+- Neuer Client-Helfer `lib/admin-fetch.js` (Bearer-Token aus `localStorage`, fragt bei Bedarf nach) — alle betroffenen Seiten (`/master`, `/produkt-pipeline`, `/lieferanten`, `/kunden`, `/bestellungen`, `/retouren`) umgestellt.
+- `lib/quality-gate.js`: neuer `admin-auth`-Check.
+- `app/layout.jsx`: veraltete Metadata ("Anfragen-Zentrale") korrigiert.
+- **Kritischer, unbehobener Fund:** Impressum/Datenschutzerklärung/AGB/Widerrufsbelehrung fehlen vollständig — 🔴 BLOCKER für jeden echten/öffentlichen Verkauf. Keine Texte erfunden.
+- 8 neue Tests, Gesamtsuite 47/47 grün, `npm run build` erfolgreich (weiterhin 12 API-Funktionen).
+- Nicht deployed.
+
 ## 2026-09-20 (Phase 3)
 ### Phase 3 — E-Commerce fertigstellen (Technical Lead, werknetz24-landing-Sitzung)
 - Neue echte Datenschicht `lib/ecommerce-store.js` (Supabase-oder-Speicher-Muster wie `lib/master-store.js`): Produkte (11-stufige Pipeline), Lieferanten, Kunden, Bestellungen, Retouren.

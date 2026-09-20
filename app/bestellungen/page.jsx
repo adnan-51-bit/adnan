@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { adminFetch } from "../../lib/admin-fetch.js";
 
 const STATUS_LABEL = {
   payment_pending: "Zahlung offen", paid: "Bezahlt", validated: "Geprüft", supplier_pending: "Lieferant offen",
@@ -31,7 +32,7 @@ export default function BestellungenPage() {
   // (nicht diese Seite) entscheidet anhand echter Produkt-/Lieferantendaten, ob der Schritt
   // tatsaechlich ausgefuehrt wird oder die Bestellung stattdessen "blocked" wird.
   async function fireEvent(order, type) {
-    const res = await fetch("/api/orders?type=orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: order.id, type }) });
+    const res = await adminFetch("/api/orders?type=orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: order.id, type }) });
     const data = await res.json();
     if (!res.ok) { setNotice("Fehler: " + data.error); return; }
     if (data.order.status === "blocked") {

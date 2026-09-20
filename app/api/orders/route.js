@@ -9,6 +9,7 @@ import {
   listReturns, createReturn, updateReturn,
   storageMode,
 } from "../../../lib/ecommerce-store.js";
+import { checkAdminSecret } from "../../../lib/auth.js";
 
 // Phase 3 (20.09.2026): dieser einzelne Route-Datei bedient jetzt den gesamten E-Commerce-
 // Datenbereich (Produkte, Lieferanten, Kunden, Bestellungen, Retouren) ueber ?type= - genau wie
@@ -37,6 +38,8 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const authError = checkAdminSecret(request);
+  if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
   const url = new URL(request.url);
   const type = url.searchParams.get("type") || "orders";
 
@@ -87,6 +90,8 @@ export async function POST(request) {
 }
 
 export async function PATCH(request) {
+  const authError = checkAdminSecret(request);
+  if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
   const url = new URL(request.url);
   const type = url.searchParams.get("type");
 

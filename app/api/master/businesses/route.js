@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { listBusinesses, updateBusiness, storageMode } from "../../../../lib/master-store";
+import { checkAdminSecret } from "../../../../lib/auth.js";
 
 export const runtime = "nodejs";
 
@@ -12,6 +13,8 @@ export async function GET(){
 }
 
 export async function PATCH(request){
+  const authError = checkAdminSecret(request);
+  if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
   try{
     const body=await request.json();
     if(!body?.id) return NextResponse.json({ok:false,error:"id is required"},{status:400});

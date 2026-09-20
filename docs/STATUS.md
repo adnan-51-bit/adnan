@@ -25,6 +25,19 @@ Vorhanden:
 - Systemstatus-Registry
 - Quality-Gate unter /api/master/quality-gate
 
+## Quality Gate (Phase 4, 20.09.2026)
+
+**Vollständiger Bericht:** `docs/QUALITY-GATE-PHASE-4.md`.
+
+🔴 **BLOCKER gefunden und teilweise behoben:**
+- **Behoben:** Alle 6 mutierenden API-Endpunkte (`/api/master/*`, `/api/orders`) hatten keine Authentifizierung — neues `lib/auth.js` (`MASTER_API_SECRET`, zeitkonstanter Vergleich, fail-closed) jetzt auf allen angewendet, inkl. Frontend-Anpassung (`lib/admin-fetch.js`) und neuem `admin-auth`-Check im Quality Gate selbst.
+- **Weiterhin offen, nicht behebbar ohne echte rechtliche Prüfung:** Impressum, Datenschutzerklärung, AGB und Widerrufsbelehrung fehlen komplett — vor jedem öffentlichen/echten Verkauf zwingend nötig. Keine dieser Texte wurde erfunden.
+- **Weiterhin offen (unverändert seit Phase 1):** Vercel-Team-Build-Limit.
+
+**Datenschutz/Tracking:** 🟢 nichts Kritisches — keine unnötigen personenbezogenen Daten, kein Tracking-Code vorhanden, alle externen Dienste dokumentiert.
+
+**Tests:** 47/47 grün (8 neu), `npm run build` erfolgreich, weiterhin 12 API-Funktionen. Nicht deployed.
+
 ## E-Commerce (Phase 3, 20.09.2026)
 
 🟡 **ECHTE DATENSCHICHT UND WORKFLOWS IMPLEMENTIERT — NOCH KEIN PRODUKT VERÖFFENTLICHT**

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { adminFetch } from "../../lib/admin-fetch.js";
 
 export default function KundenPage() {
   const [customers, setCustomers] = useState([]);
@@ -16,7 +17,7 @@ export default function KundenPage() {
   useEffect(() => { reload(); }, []);
 
   async function createCustomer(form) {
-    const res = await fetch("/api/orders?type=customers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    const res = await adminFetch("/api/orders?type=customers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
     const data = await res.json();
     if (!res.ok) { setNotice("Fehler: " + data.error); return; }
     setCreating(false);

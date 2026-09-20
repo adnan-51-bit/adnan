@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { adminFetch } from "../../lib/admin-fetch.js";
 
 const initialBusinesses = [
   { id:"werknetz24", name:"Werknetz24", type:"Bestehender Betrieb", status:"EXTERNAL", health:"🟡", revenue:"—", link:"https://werknetz24.de/admin-zentrale", modules:["Lisa / Telefon","Kunden","Leads","Aufträge","Rechnungen","Finanzen","Integrationen"] },
@@ -57,7 +58,7 @@ export default function MasterDashboard(){
     setBusinesses(prev=>prev.map(b=>b.id===updated.id?updated:b));
     setEditing(null);
     try{
-      const response=await fetch("/api/master/businesses",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(updated)});
+      const response=await adminFetch("/api/master/businesses",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(updated)});
       const data=await response.json();
       if(!response.ok || !data?.business) throw new Error(data?.error || "Speichern fehlgeschlagen");
       setBusinesses(prev=>prev.map(b=>b.id===updated.id?data.business:b));
@@ -66,14 +67,14 @@ export default function MasterDashboard(){
   }
 
   async function saveTask(updated){
-    try{const response=await fetch("/api/master/tasks",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(updated)});const data=await response.json();if(!response.ok||!data?.task)throw new Error(data?.error||"Speichern fehlgeschlagen");setTasks(prev=>prev.map(t=>String(t.id)===String(updated.id)?data.task:t));setNotice(data.storage==="supabase"?"Aufgabe dauerhaft gespeichert.":"Aufgabe gespeichert; dauerhafte DB fehlt noch.");}catch(error){setNotice("Aufgabe konnte nicht gespeichert werden: "+error.message);}
+    try{const response=await adminFetch("/api/master/tasks",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(updated)});const data=await response.json();if(!response.ok||!data?.task)throw new Error(data?.error||"Speichern fehlgeschlagen");setTasks(prev=>prev.map(t=>String(t.id)===String(updated.id)?data.task:t));setNotice(data.storage==="supabase"?"Aufgabe dauerhaft gespeichert.":"Aufgabe gespeichert; dauerhafte DB fehlt noch.");}catch(error){setNotice("Aufgabe konnte nicht gespeichert werden: "+error.message);}
   }
   async function saveSystem(updated){
-    try{const response=await fetch("/api/master/systems",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(updated)});const data=await response.json();if(!response.ok||!data?.system)throw new Error(data?.error||"Speichern fehlgeschlagen");setSystems(prev=>prev.map(s=>s.id===updated.id?data.system:s));setSystemEditing(null);setNotice(data.storage==="supabase"?"Systemstatus dauerhaft gespeichert.":"Systemstatus im Fallback-Speicher gespeichert.");}catch(error){setNotice("Systemstatus konnte nicht gespeichert werden: "+error.message);}
+    try{const response=await adminFetch("/api/master/systems",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(updated)});const data=await response.json();if(!response.ok||!data?.system)throw new Error(data?.error||"Speichern fehlgeschlagen");setSystems(prev=>prev.map(s=>s.id===updated.id?data.system:s));setSystemEditing(null);setNotice(data.storage==="supabase"?"Systemstatus dauerhaft gespeichert.":"Systemstatus im Fallback-Speicher gespeichert.");}catch(error){setNotice("Systemstatus konnte nicht gespeichert werden: "+error.message);}
   }
 
   async function createTask(form){
-    try{const response=await fetch("/api/master/tasks",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)});const data=await response.json();if(!response.ok||!data?.task)throw new Error(data?.error||"Anlegen fehlgeschlagen");setTasks(prev=>[data.task,...prev]);setNotice("Neue Aufgabe angelegt.");}catch(error){setNotice("Aufgabe konnte nicht angelegt werden: "+error.message);}
+    try{const response=await adminFetch("/api/master/tasks",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)});const data=await response.json();if(!response.ok||!data?.task)throw new Error(data?.error||"Anlegen fehlgeschlagen");setTasks(prev=>[data.task,...prev]);setNotice("Neue Aufgabe angelegt.");}catch(error){setNotice("Aufgabe konnte nicht angelegt werden: "+error.message);}
   }
 
   return <main className="app">
@@ -96,7 +97,7 @@ export default function MasterDashboard(){
         {tab==="businesses" && <Businesses businesses={visibleBusinesses} search={search} setSearch={setSearch} editing={editing} setEditing={setEditing} saveBusiness={saveBusiness}/>}
         {tab==="tasks" && <Tasks tasks={tasks} loading={tasksLoading} onSave={saveTask} onCreate={createTask}/>}
         {tab==="systems" && <Systems systems={systems} loading={systemsLoading} filter={systemFilter} setFilter={setSystemFilter} editing={systemEditing} setEditing={setSystemEditing} onSave={saveSystem}/>}
-        {tab==="finance" && <Finance entries={finance} loading={financeLoading} onCreate={async form=>{const r=await fetch("/api/master/finance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)});const d=await r.json();if(!r.ok||!d?.entry)throw new Error(d?.error||"Speichern fehlgeschlagen");setFinance(prev=>[d.entry,...prev]);setNotice("Finanzbuchung gespeichert.");}}/>}
+        {tab==="finance" && <Finance entries={finance} loading={financeLoading} onCreate={async form=>{const r=await adminFetch("/api/master/finance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)});const d=await r.json();if(!r.ok||!d?.entry)throw new Error(d?.error||"Speichern fehlgeschlagen");setFinance(prev=>[d.entry,...prev]);setNotice("Finanzbuchung gespeichert.");}}/>}
         {tab==="automation" && <Automation/>}
         {tab==="audit" && <Audit/>}
         {tab==="settings" && <Settings/>}
