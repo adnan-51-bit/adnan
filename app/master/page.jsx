@@ -1,0 +1,127 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
+const initialBusinesses = [
+  { id:"werknetz24", name:"Werknetz24", type:"Bestehender Betrieb", status:"EXTERNAL", health:"🟡", revenue:"—", link:"https://werknetz24.de/admin-zentrale", modules:["Lisa / Telefon","Kunden","Leads","Aufträge","Rechnungen","Finanzen","Integrationen"] },
+  { id:"ecommerce", name:"E-Commerce", type:"Geschäftsbereich", status:"CODE EXISTS", health:"🟡", revenue:"0 €", link:"/e-commerce", modules:["Produkte","Lieferanten","Bestellungen","Shop","Marketing","Retouren","Finanzen"] },
+  { id:"future", name:"Weiterer Betrieb", type:"Vorbereitet", status:"OPEN", health:"⚪", revenue:"—", link:"#", modules:["Kunden","Aufgaben","Finanzen","Reports"] }
+];
+
+const initialTasks = [
+  {id:1, title:"Persistenz fertigstellen", area:"System", status:"In Arbeit", priority:"Hoch"},
+  {id:2, title:"Stripe sicher anbinden", area:"Zahlungen", status:"Blockiert", priority:"Hoch"},
+  {id:3, title:"Lieferanten-Connector vorbereiten", area:"E-Commerce", status:"Offen", priority:"Mittel"},
+  {id:4, title:"Master-Zentrale Quality Gate", area:"Master", status:"In Arbeit", priority:"Hoch"}
+];
+
+const systems = [
+  ["GitHub","🟢","Code & Dokumentation"],
+  ["Vercel","🟢","Deployment"],
+  ["Famulor","🟢","Werknetz24 Telefon"],
+  ["Easybell","🟡","Telefonie / Weiterleitung"],
+  ["Stripe","🔴","Produktiv noch gesperrt"],
+  ["Shopify","🟡","Webhook-Schicht vorhanden"],
+  ["Datenbank","🟡","Adapter vorhanden, noch nicht persistent"],
+  ["E-Mail","🟡","Connector offen"],
+  ["Slack","🟡","Connector offen"]
+];
+
+export default function MasterDashboard(){
+  const [tab,setTab]=useState("overview");
+  const [businesses,setBusinesses]=useState(initialBusinesses);
+  const [tasks,setTasks]=useState(initialTasks);
+  const [editing,setEditing]=useState(null);
+  const [notice,setNotice]=useState("");
+  const [search,setSearch]=useState("");
+
+  const visibleBusinesses=useMemo(()=>businesses.filter(b=>
+    !search || (b.name+" "+b.type+" "+b.status).toLowerCase().includes(search.toLowerCase())
+  ),[businesses,search]);
+
+  function saveBusiness(updated){
+    setBusinesses(prev=>prev.map(b=>b.id===updated.id?updated:b));
+    setEditing(null); setNotice("Änderung übernommen. Persistente Speicherung folgt mit der Datenbank.");
+  }
+
+  function toggleTask(id){
+    setTasks(prev=>prev.map(t=>t.id===id?{...t,status:t.status==="Erledigt"?"Offen":"Erledigt"}:t));
+    setNotice("Aufgabenstatus geändert.");
+  }
+
+  return <main className="app">
+    <header className="topbar">
+      <div><span className="eyebrow">WERKNETZ24 · MASTER-ZENTRALE</span><h1>Master Dashboard</h1><p>Alle Betriebe, Systeme, Aufgaben, Finanzen und Automationen an einem Ort.</p></div>
+      <div className="topActions"><span className="live"><i/>Systemübersicht</span><a href="/zentral">Alte Zentrale</a></div>
+    </header>
+
+    <div className="layout">
+      <aside className="sidebar">
+        {[
+          ["overview","◈","Übersicht"],["businesses","▣","Betriebe"],["tasks","✓","Aufgaben"],["systems","◉","Systeme"],["finance","€","Finanzen"],["automation","↻","Automationen"],["settings","⚙","Einstellungen"]
+        ].map(([id,icon,label])=><button key={id} className={tab===id?"selected":""} onClick={()=>setTab(id)}><b>{icon}</b>{label}</button>)}
+        <div className="sideBottom"><a href="/e-commerce">E-Commerce</a><a href="/produkt-pipeline">Produkt-Pipeline</a><a href="/lieferanten">Lieferanten</a><a href="/automation">Automation Engine</a><a href="https://werknetz24.de/admin-zentrale">Werknetz24 Admin</a></div>
+      </aside>
+
+      <section className="content">
+        {notice && <div className="notice">{notice}<button onClick={()=>setNotice("")}>×</button></div>}
+        {tab==="overview" && <Overview businesses={businesses} tasks={tasks} systems={systems}/>}
+        {tab==="businesses" && <Businesses businesses={visibleBusinesses} search={search} setSearch={setSearch} editing={editing} setEditing={setEditing} saveBusiness={saveBusiness}/>}
+        {tab==="tasks" && <Tasks tasks={tasks} toggleTask={toggleTask}/>}
+        {tab==="systems" && <Systems systems={systems}/>}
+        {tab==="finance" && <Finance/>}
+        {tab==="automation" && <Automation/>}
+        {tab==="settings" && <Settings/>}
+      </section>
+    </div>
+    <footer>Master-Zentrale · Änderungen sind aktuell Sitzungsänderungen. Keine externe Zahlung, Bestellung oder Vertragsänderung wird durch dieses Dashboard ausgelöst.</footer>
+    <style jsx>{styles}</style>
+  </main>
+}
+
+function Overview({businesses,tasks,systems}){
+  const openTasks=tasks.filter(t=>t.status!=="Erledigt").length;
+  const blocked=systems.filter(s=>s[1]==="🔴").length;
+  return <>
+    <div className="pageTitle"><div><span>CONTROL CENTER</span><h2>Was passiert gerade?</h2></div><div className="quick"><a href="/produkt-pipeline">Produkt prüfen</a><a href="/automation">Automation testen</a></div></div>
+    <div className="kpis">
+      <Kpi label="Betriebe" value={businesses.length} note="zentral verwaltet"/>
+      <Kpi label="Offene Aufgaben" value={openTasks} note="Priorisierung aktiv"/>
+      <Kpi label="Systeme kritisch" value={blocked} note="müssen vor Live-Betrieb geprüft werden"/>
+      <Kpi label="Umsatz" value="0 €" note="keine erfundenen Umsätze"/>
+    </div>
+    <div className="columns">
+      <Panel title="Betriebsübersicht" action="Betriebe" onClick={()=>{}}>{businesses.map(b=><div className="row" key={b.id}><div><strong>{b.name}</strong><small>{b.type}</small></div><span>{b.health} {b.status}</span></div>)}</Panel>
+      <Panel title="Nächste Aufgaben"><>{tasks.filter(t=>t.status!=="Erledigt").slice(0,4).map(t=><div className="taskMini" key={t.id}><span className={t.priority==="Hoch"?"high":""}>{t.priority}</span><div><strong>{t.title}</strong><small>{t.area} · {t.status}</small></div></div>)}</></Panel>
+    </div>
+    <Panel title="System-Lage"><div className="systemGrid">{systems.map(([name,status,note])=><div className="system" key={name}><b>{status} {name}</b><small>{note}</small></div>)}</div></Panel>
+  </>
+}
+
+function Businesses({businesses,search,setSearch,editing,setEditing,saveBusiness}){
+  return <><div className="pageTitle"><div><span>BUSINESS MANAGEMENT</span><h2>Betriebe verwalten</h2></div><input className="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Suchen…"/></div>
+  <div className="businessGrid">{businesses.map(b=><article className="businessCard" key={b.id}><div className="cardHead"><div><span>{b.type}</span><h3>{b.name}</h3></div><em>{b.status}</em></div><p>{b.health} Systemstatus · Umsatz: {b.revenue}</p><div className="chips">{b.modules.map(m=><i key={m}>{m}</i>)}</div><div className="cardActions">{b.link!="#"&&<a href={b.link}>Öffnen →</a>}<button onClick={()=>setEditing(b)}>Bearbeiten</button></div></article>)}</div>
+  {editing&&<EditBusiness business={editing} onClose={()=>setEditing(null)} onSave={saveBusiness}/>}</>
+}
+
+function EditBusiness({business,onClose,onSave}){
+ const [form,setForm]=useState(business);
+ return <div className="modalBack"><div className="modal"><div className="modalHead"><h3>Betrieb bearbeiten</h3><button onClick={onClose}>×</button></div><label>Name<input value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></label><label>Typ<input value={form.type} onChange={e=>setForm({...form,type:e.target.value})}/></label><label>Status<select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option>OPEN</option><option>CODE EXISTS</option><option>EXTERNAL</option><option>BLOCKED</option></select></label><label>Notiz / Umsatzanzeige<input value={form.revenue} onChange={e=>setForm({...form,revenue:e.target.value})}/></label><div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" onClick={()=>onSave(form)}>Speichern</button></div></div></div>
+}
+
+function Tasks({tasks,toggleTask}){return <><div className="pageTitle"><div><span>WORK QUEUE</span><h2>Aufgaben & Quality Gates</h2></div></div><div className="taskTable">{tasks.map(t=><div className="taskRow" key={t.id}><button onClick={()=>toggleTask(t.id)} className={t.status==="Erledigt"?"check done":"check"}>✓</button><div><strong>{t.title}</strong><small>{t.area}</small></div><span>{t.priority}</span><em>{t.status}</em></div>)}</div></>}
+
+function Systems({systems}){return <><div className="pageTitle"><div><span>INFRASTRUCTURE</span><h2>Systeme & Integrationen</h2></div></div><div className="systemGrid big">{systems.map(([name,status,note])=><article className="system" key={name}><strong>{status} {name}</strong><p>{note}</p><button onClick={()=>alert(name+" ist ein externer Connector. Änderungen werden erst nach sicherer Konfiguration aktiviert.")}>Konfiguration prüfen</button></article>)}</div></>}
+
+function Finance(){return <><div className="pageTitle"><div><span>FINANCE CONTROL</span><h2>Finanzzentrale</h2></div></div><div className="kpis"><Kpi label="Umsatz" value="0 €" note="keine Live-Daten verbunden"/><Kpi label="Kosten" value="0 €" note="keine erfundenen Werte"/><Kpi label="Offene Rechnungen" value="—" note="Connector offen"/><Kpi label="Cashflow" value="—" note="Bank noch nicht verbunden"/></div><Panel title="Finanzregeln"><ul><li>Keine erfundenen Einnahmen oder Kosten.</li><li>Stripe/PayPal erst nach sicherer Integration.</li><li>Bankdaten nur nach expliziter Verbindung.</li><li>Jede reale Zahlung muss nachvollziehbar verbucht werden.</li></ul></Panel></>}
+
+function Automation(){return <><div className="pageTitle"><div><span>AUTOMATION CONTROL</span><h2>Automationen</h2></div><a className="primaryLink" href="/automation">Engine öffnen →</a></div><div className="automationGrid">{["Bestellung → Lieferant → Tracking","Produktprüfung → Quality Gate","Kundengewinnung → Conversion","Finanzen → Deckungsbeitrag","Fehler → Task → Stop"].map((x,i)=><article key={x}><span>0{i+1}</span><h3>{x}</h3><p>{i===4?"Fehler müssen automatisch sichtbar werden; keine stille Weiterverarbeitung.":"Workflow vorbereitet; externe Ausführung bleibt bis zum Connector-Gate deaktiviert."}</p></article>)}</div></>}
+
+function Settings(){return <><div className="pageTitle"><div><span>MASTER SETTINGS</span><h2>Steuerung</h2></div></div><Panel title="Grundregeln"><div className="rules"><b>🔒 Keine Secrets im GitHub-Repository</b><b>💶 Keine Kosten ohne Freigabe</b><b>🧪 Keine echten Bestellungen ohne Test/Quality Gate</b><b>📚 Dokumentation bleibt Teil des Systems</b><b>🛑 Kritische Fehler stoppen automatische Folgeprozesse</b></div></Panel><Panel title="Datenhaltung"><p>Der aktuelle Master läuft ohne persistente Produktionsdatenbank. Der Datenbank-Adapter ist vorbereitet; eine echte Datenbank wird erst nach Konfiguration und Smoke-Test als produktiv markiert.</p><a href="/start">Start- und Produktionscheck öffnen →</a></Panel></>}
+
+function Kpi({label,value,note}){return <div className="kpi"><span>{label}</span><strong>{value}</strong><small>{note}</small></div>}
+function Panel({title,children}){return <section className="panel"><div className="panelTitle"><h3>{title}</h3></div>{children}</section>}
+
+const styles=`
+*{box-sizing:border-box}.app{min-height:100vh;background:#f5f7fa;color:#101828;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.topbar{background:#101828;color:#fff;padding:28px max(22px,calc((100vw - 1400px)/2));display:flex;justify-content:space-between;gap:30px}.eyebrow{font-size:10px;font-weight:800;letter-spacing:.14em;color:#98a2b3}.topbar h1{font-size:34px;letter-spacing:-.035em;margin:7px 0}.topbar p{margin:0;color:#c0c5d0}.topActions{display:flex;gap:8px;align-items:flex-start}.topActions a,.live{padding:9px 11px;border:1px solid #344054;border-radius:8px;color:#fff;text-decoration:none;font-size:12px}.live{background:#1d2939}.live i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#12b76a;margin-right:6px}.layout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1400px;margin:auto}.sidebar{background:#fff;border-right:1px solid #e4e7ec;min-height:calc(100vh - 116px);padding:18px 12px}.sidebar button,.sideBottom a{width:100%;display:flex;gap:10px;align-items:center;border:0;background:transparent;text-align:left;padding:11px 12px;border-radius:8px;color:#475467;text-decoration:none;font:inherit;cursor:pointer}.sidebar button:hover,.sidebar .selected{background:#f2f4f7;color:#101828}.sidebar button b{width:20px}.sideBottom{border-top:1px solid #eaecf0;margin-top:18px;padding-top:14px}.sideBottom a{font-size:12px}.content{padding:28px;min-width:0}.pageTitle{display:flex;justify-content:space-between;align-items:end;gap:15px;margin-bottom:18px}.pageTitle>div>span{font-size:10px;font-weight:800;letter-spacing:.13em;color:#667085}.pageTitle h2{margin:5px 0 0;font-size:28px;letter-spacing:-.03em}.quick{display:flex;gap:8px}.quick a,.primaryLink{padding:9px 11px;background:#101828;color:#fff;border-radius:8px;text-decoration:none;font-size:12px}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.kpi{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:17px}.kpi span,.kpi small{display:block;color:#667085;font-size:12px}.kpi strong{display:block;font-size:30px;letter-spacing:-.03em;margin:8px 0 3px}.columns{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.panel{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:19px;margin-top:14px}.panelTitle{display:flex;justify-content:space-between;margin-bottom:13px}.panel h3{margin:0;font-size:16px}.row,.taskMini,.taskRow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #eaecf0}.row:last-child,.taskMini:last-child{border-bottom:0}.row>div,.taskMini>div,.taskRow>div{flex:1}.row strong,.taskMini strong,.taskRow strong{display:block}.row small,.taskMini small,.taskRow small{display:block;color:#667085;font-size:12px;margin-top:3px}.row>span{font-size:11px;color:#667085}.taskMini>span{font-size:10px;border-radius:999px;background:#f2f4f7;padding:5px 7px}.taskMini .high{background:#fef3f2;color:#b42318}.systemGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.system{border:1px solid #eaecf0;border-radius:10px;padding:13px}.system small,.system p{display:block;color:#667085;font-size:12px;margin:5px 0 0;line-height:1.4}.system button{margin-top:9px;border:1px solid #d0d5dd;background:#fff;border-radius:7px;padding:7px 9px;cursor:pointer}.businessGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}.businessCard{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:18px}.cardHead{display:flex;justify-content:space-between;gap:10px}.cardHead span{font-size:10px;color:#667085}.cardHead h3{margin:5px 0;font-size:20px}.cardHead em{font-size:10px;font-style:normal;background:#f2f4f7;padding:6px 8px;border-radius:999px;height:max-content}.businessCard p{color:#667085;font-size:13px}.chips{display:flex;gap:5px;flex-wrap:wrap}.chips i{font-style:normal;font-size:10px;border:1px solid #eaecf0;padding:5px 7px;border-radius:6px}.cardActions{display:flex;gap:8px;margin-top:16px}.cardActions a,.cardActions button{border:1px solid #d0d5dd;background:#fff;color:#344054;border-radius:7px;padding:8px 10px;text-decoration:none;font:inherit;font-size:12px;cursor:pointer}.cardActions a{background:#101828;color:#fff}.search{border:1px solid #d0d5dd;border-radius:8px;padding:9px 11px;width:190px}.taskTable{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:0 18px}.taskRow>span,.taskRow>em{font-size:11px;font-style:normal;padding:6px 8px;background:#f2f4f7;border-radius:999px}.check{width:27px;height:27px;border-radius:7px;border:1px solid #d0d5dd;background:#fff;cursor:pointer}.check.done{background:#12b76a;color:#fff;border-color:#12b76a}.big{margin-top:0}.big .system{min-height:125px}.automationGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}.automationGrid article{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:18px}.automationGrid span{font-size:10px;color:#667085}.automationGrid h3{margin:8px 0}.automationGrid p{color:#667085;font-size:13px;line-height:1.5}.rules{display:grid;gap:11px}.rules b{padding:12px;background:#f9fafb;border:1px solid #eaecf0;border-radius:8px}.notice{background:#ecfdf3;border:1px solid #abefc6;color:#067647;padding:10px 12px;border-radius:8px;margin-bottom:14px;font-size:12px;display:flex;justify-content:space-between}.notice button{border:0;background:transparent;cursor:pointer}.modalBack{position:fixed;inset:0;background:rgba(16,24,40,.45);display:grid;place-items:center;padding:20px;z-index:20}.modal{background:#fff;border-radius:13px;width:min(460px,100%);padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.2)}.modalHead{display:flex;justify-content:space-between}.modalHead h3{margin:0 0 15px}.modalHead button{border:0;background:transparent;font-size:22px;cursor:pointer}.modal label{display:block;font-size:12px;font-weight:700;margin-top:12px}.modal input,.modal select{display:block;width:100%;margin-top:5px;padding:10px;border:1px solid #d0d5dd;border-radius:7px}.modalActions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.modalActions button{padding:9px 12px;border:1px solid #d0d5dd;background:#fff;border-radius:7px;cursor:pointer}.modalActions .primary{background:#101828;color:#fff}.primaryLink{display:inline-block}footer{max-width:1400px;margin:auto;padding:18px 28px 30px;color:#667085;font-size:11px}@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar{min-height:auto;border-right:0;border-bottom:1px solid #e4e7ec;display:flex;overflow:auto}.sidebar button{min-width:max-content}.sideBottom{display:none}.kpis,.systemGrid{grid-template-columns:1fr 1fr}.columns,.businessGrid,.automationGrid{grid-template-columns:1fr}}@media(max-width:600px){.topbar{display:block}.topActions{margin-top:15px}.content{padding:18px}.kpis,.systemGrid{grid-template-columns:1fr}.pageTitle{display:block}.quick{margin-top:12px}.search{width:100%;margin-top:12px}}
+`;
