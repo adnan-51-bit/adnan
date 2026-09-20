@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { providerStatus } from "../../../lib/providers";
+import { providerCapabilities, providerStatus } from "../../../lib/providers";
 
 export async function GET() {
   return NextResponse.json({
     ok: true,
+    capabilities: providerCapabilities,
     providers: providerStatus(),
-    note: "Configuration is intentionally false until real credentials and external account checks are completed."
+    note: "Credentials alone do not make a provider production-ready; each connector requires its own verification and end-to-end test."
   });
 }
