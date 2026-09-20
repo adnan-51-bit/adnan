@@ -2,27 +2,32 @@
 
 Stand: 2026-09-20
 
-## Entscheidung
-Neues Projekt getrennt von Werknetz24: automatisierter Service für Online-Anfragen.
+## Phase 1 — Lead-Verwaltung
+🟡 IMPLEMENTIERT IM CODE
 
-## MVP
-- Lead-Dashboard
-- Statusworkflow
-- Priorität
+Enthalten:
+- Lead-Liste
+- neue Anfrage anlegen
+- Anfrage öffnen und bearbeiten
+- Status ändern
+- Priorität ändern
+- Kategorie
 - Quelle
-- Zusammenfassung
-- Follow-up
-- Kennzahlen
+- Follow-up-Datum
+- Notizen
+- Status- und Prioritätsfilter
+- Dashboard-Kennzahlen
+- künstliche Testdaten
 
-## Offen
-- Produktname
-- Zielbranche
-- Eingangskanäle
-- Datenbank
-- Benachrichtigungen
-- Datenschutz/AVV
-- zulässige Kundengewinnung
-- Preis nach Marktvalidierung
+## Technische Einschränkung
+Die Daten werden aktuell nur im Browser-State gehalten. Beim Neuladen gehen Änderungen verloren. Eine persistente Datenbank ist noch nicht angeschlossen.
 
-## Quality Gate
-🟡 GELB: Technischer MVP darf vorbereitet werden. Produktiv erst nach Tests, Datenschutzprüfung und Pilotkunde.
+## Nächster Quality Gate
+Die App muss lokal bzw. über eine Deployment-Umgebung gebaut und getestet werden. Danach folgt die persistente Speicherung.
+
+## Regeln
+- Keine echten Kundendaten in der Demo.
+- Keine Secrets im Repository.
+- Keine kostenpflichtigen Dienste ohne Freigabe.
+- Keine automatisierte Massenwerbung ohne rechtliche Prüfung.
+- Werknetz24 bleibt getrennt.
