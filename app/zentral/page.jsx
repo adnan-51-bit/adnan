@@ -21,7 +21,7 @@ const businesses = [
     color: "green",
     description: "Produkte, Lieferanten, Kalkulation, Shop und Gewinnkontrolle.",
     modules: ["Produkte", "Lieferanten", "Recherche", "Bestellungen", "Shop", "Marketing", "Retouren", "Finanzen"],
-    link: "/shop"
+    link: "/e-commerce"
   },
   {
     id: "future",
@@ -68,7 +68,7 @@ export default function MasterZentrale() {
           ["dashboard","Übersicht"],["businesses","Betriebe"],["tools","Tools"],["plan","Arbeitsplan"]
         ].map(([id,label]) => <button key={id} className={tab===id ? "active":""} onClick={()=>setTab(id)}>{label}</button>)}
         <a href="/">Anfragen</a>
-        <a href="/shop">E-Commerce</a>
+        <a href="/e-commerce">E-Commerce</a>
         <a href="https://werknetz24.de/admin-zentrale">Werknetz24</a>
       </nav>
 
