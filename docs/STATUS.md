@@ -167,3 +167,6 @@ Produktentscheidung erst nach dokumentiertem Quality Gate. Bis dahin bleibt der 
 - 🟢 Business edit UI connected to `/api/master/businesses`.
 - 🟡 Supabase migration and server-side adapter prepared; no external database credentials configured.
 - 🔴 Do not mark persistence production-ready until schema deployment and restart smoke test pass.
+
+- 🟢 Master audit-log service and protected database schema prepared.
+- 🟡 Audit persistence remains memory fallback until Supabase credentials are configured.
