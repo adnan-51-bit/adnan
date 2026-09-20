@@ -39,6 +39,23 @@ Noch offen:
 - Bestell-/Zahlungsprozess
 - persistente Datenhaltung
 
+
+## Webhook Integration
+
+🟡 CODE EXISTS
+
+Vorhanden:
+- Shopify-Webhookschnittstelle
+- HMAC-Signaturprüfung
+- Duplicate-Schutz auf Webhook-ID
+- Provider-Capability-Modell
+
+Offen:
+- persistenter Idempotency Store
+- echte Shopify-Konfiguration
+- Payment-Webhooks
+- produktive Order-/Supplier-Verarbeitung
+
 ## Automation Engine
 
 🟡 CODE EXISTS
