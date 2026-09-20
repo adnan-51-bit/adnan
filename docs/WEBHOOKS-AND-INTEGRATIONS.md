@@ -34,3 +34,8 @@ Shopify dokumentiert HTTPS-POST-Webhooks, eindeutige Webhook-IDs und Wiederholun
 ## Kostenregel
 
 Keine kostenpflichtige Integration wird aktiviert, solange sie nicht ausdrücklich freigegeben wurde.
+
+
+## Provider Readiness
+
+Provider status now distinguishes **configured** from **productionReady**. An environment variable or credential is not treated as proof that the integration works. Production readiness requires connector-specific verification and an end-to-end test.
