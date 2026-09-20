@@ -1,0 +1,23 @@
+# Database Plan
+
+## Decision
+
+The application gets a provider-independent persistence facade. The current runtime remains process-memory-only until a database is explicitly configured.
+
+## Candidate
+
+Supabase Free is currently a viable $0 development option: it includes a Postgres database with a 500 MB database quota and two active free projects. Free projects can pause after inactivity. citeturn0search0turn0search1
+
+No Supabase project is created or activated by this code change. No paid plan is approved.
+
+## Production gate
+
+A persistent database becomes 🟢 only after:
+1. project/account exists;
+2. credentials are stored as deployment secrets;
+3. schema/migrations are applied;
+4. read/write smoke test succeeds;
+5. restart test confirms data survives;
+6. access control and backup strategy are documented.
+
+Until then: 🟡.
