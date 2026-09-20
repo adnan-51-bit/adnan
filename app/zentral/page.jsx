@@ -88,7 +88,7 @@ export default function MasterZentrale() {
       {tab === "tools" && <Tools />}
       {tab === "plan" && <Plan />}
       
-      <footer>
+      <style jsx>{styles}</style>\n      <footer>
         <b>Wichtig:</b> Diese Zentrale zeigt nur Daten, die tatsächlich vorhanden oder technisch angebunden sind. EXTERNAL/OPEN bedeutet ausdrücklich: noch nicht verbunden bzw. noch nicht umgesetzt.
       </footer>
     </main>
