@@ -7,6 +7,9 @@ Ursprünglich als eng gefasstes MVP für zentrale Online-Anfragen-Erfassung gest
 dieser Kern bleibt bestehen und ist Teil des Automation-Bereichs.
 
 ## Status
+
+**Live (technisch, seit 21.09.2026):** `https://adnan-sandy.vercel.app` — Schreibzugriffe bleiben ohne konfiguriertes `MASTER_API_SECRET` gesperrt, echter Geschäftsbetrieb (Verkauf/Zahlungen) ist weiterhin gesperrt (fehlende Rechtstexte, s. `docs/QUALITY-GATE-PHASE-4.md`).
+
 Siehe `docs/STATUS.md` für den aktuellen, verifizierten Stand (Persistenz, Deployment-Gate, Quality Gate).
 
 - Keine produktive Massenansprache
@@ -17,7 +20,8 @@ Siehe `docs/STATUS.md` für den aktuellen, verifizierten Stand (Persistenz, Depl
 ## Struktur
 - `/master` — vollständiges, API-gestütztes Dashboard (Betriebe, Aufgaben, Systeme, Finanzen, Automation, Audit-Log, Einstellungen)
 - `/zentral` — ältere, statische Vorversion (bleibt erreichbar, von `/master` verlinkt)
-- `/e-commerce`, `/lieferanten`, `/shop`, `/produkt-pipeline` — E-Commerce-Geschäftsbereich
+- `/e-commerce`, `/lieferanten`, `/produkt-pipeline`, `/kunden`, `/bestellungen`, `/retouren` — E-Commerce-Geschäftsbereich
+- `/shop` — Margenkalkulation (Testdaten, kein echter Shop)
 - `/automation` — Automation Engine
 
 ## Ursprünglicher Kern-Workflow (Online-Anfragen)

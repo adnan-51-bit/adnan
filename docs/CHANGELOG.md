@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-09-21 (Phase 5)
+### Phase 5 — Finaler Go-Live (Technical Lead, werknetz24-landing-Sitzung)
+- Pre-Deploy-Checkliste durchlaufen: working tree sauber, `npm test` 47/47 grün, `npm run build` erfolgreich (12 API-Funktionen), Quality-Gate-Output live geprüft (`node` REPL, ehrlich `productionReady:false` wegen fehlendem Secret/Supabase/Stripe — korrekt).
+- Lokaler Produktions-Smoke-Test (`npm start`): alle Seiten und API-Routen real per `curl` geprüft, inkl. bestätigt, dass Schreibversuche ohne Secret 503 liefern.
+- **Deployment war bereits erfolgreich** — das Vercel-Team-Build-Limit aus Phase 1 hat sich aufgelöst; GitHub-Deployments-Verlauf zeigt die letzten 4 Commits (f1740d6/bc4762e/6395ca1/c1afab7) alle als "Deployed (completed)".
+- **Live-Verifikation gegen `https://adnan-sandy.vercel.app`:** `/master`, `/e-commerce`, `/zentral`, `/produkt-pipeline`, `/lieferanten`, `/kunden`, `/bestellungen`, `/retouren`, `/shop`, `/automation` alle 200 mit echtem Inhalt; `/api/health` ehrlich; `/api/master/quality-gate` korrekt 503; unbekannte Route 404; keine Konsolenfehler.
+- **Sicherheitsfix live bestätigt:** echter PATCH-Versuch gegen `/api/master/businesses` ohne Secret liefert live 503 — der Phase-4-Schreibschutz ist tatsächlich aktiv in Produktion.
+- `docs/STATUS.md`, `docs/DEPLOYMENT-GATE.md`, `README.md` aktualisiert.
+- Keine Codeänderungen in dieser Phase nötig — alle vorherigen Fixes haben gehalten.
+
 ## 2026-09-20 (Phase 4)
 ### Phase 4 — Quality Gate (Technical Lead, werknetz24-landing-Sitzung)
 - Vollständiger Bericht: `docs/QUALITY-GATE-PHASE-4.md` (Sicherheit, Datenschutz, Recht, E-Commerce, Technik).

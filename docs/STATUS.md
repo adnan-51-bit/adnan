@@ -1,12 +1,14 @@
 # Projektstatus – Master-Zentrale
 
-Stand: 2026-09-20
+Stand: 2026-09-21 (Phase 5, Finaler Go-Live)
 
 ## Gesamtstatus
 
-🟡 **TECHNISCHE BASIS WEIT FORTGESCHRITTEN – PRODUKTIVER GESCHÄFTSBETRIEB NOCH GESPERRT**
+🟡 **TECHNISCH LIVE UND VERIFIZIERT — ECHTER GESCHÄFTSBETRIEB WEITERHIN GESPERRT**
 
-Die Master-Zentrale, API-Schichten, Automation-Logik, Finanz-Validierung, System-Registry und Quality-Gate sind im Repository vorhanden. Produktionsfreigabe bleibt gesperrt, solange Persistenz, Deployment und externe Integrationen nicht nachweisbar verifiziert sind.
+Die Master-Zentrale ist seit Phase 5 (21.09.2026) tatsächlich live und live geprüft unter `https://adnan-sandy.vercel.app` (nicht nur behauptet — Deployment-Status, Seiteninhalt, API-Antworten und der Phase-4-Sicherheitsfix wurden alle direkt gegen die Live-URL verifiziert). Das zuvor dokumentierte Vercel-Team-Build-Limit hat sich aufgelöst.
+
+Produktiver **echter Geschäftsbetrieb** (Verkauf, Zahlungen) bleibt weiterhin gesperrt: Persistenz läuft im Fallback-Speicher (kein Supabase konfiguriert), Schreibzugriffe sind ohne gesetztes `MASTER_API_SECRET` gesperrt, und die rechtlichen Pflichttexte (Impressum/Datenschutz/AGB/Widerruf) fehlen komplett (🔴 BLOCKER, s. `docs/QUALITY-GATE-PHASE-4.md`).
 
 ## Master-Zentrale
 
@@ -135,7 +137,9 @@ Registriert:
 
 ## Deployment Gate
 
-🔴 **NOCH NICHT GRÜN** (CI-Fehler jetzt behoben, Vercel-Team-Limit weiterhin offen)
+🟢 **DEPLOYMENT ERFOLGREICH UND LIVE VERIFIZIERT (21.09.2026, Phase 5)** — vollständiger Bericht: `docs/DEPLOYMENT-GATE.md`. Live-URL: `https://adnan-sandy.vercel.app`. Das unten beschriebene Team-Build-Limit hat sich zwischenzeitlich aufgelöst (GitHub-Deployments-Verlauf zeigt die letzten 4 Commits alle als "Deployed (completed)"). Rest dieses Abschnitts bleibt als historischer Verlauf erhalten.
+
+<details><summary>Ursprünglicher Befund (20.09.2026, inzwischen gelöst)</summary>
 
 **20.09.2026, Phase 1 (Werknetz24-landing-Sitzung, Technical Lead):** Der Commit-Status `failure` für `8318911` war tatsächlich das Team-Build-Limit — **aber zusätzlich gab es einen echten, reproduzierbaren Code-Fehler**, den die vorherige Sitzung nicht sehen konnte (siehe Korrektur unten). Beide Ursachen wurden getrennt geprüft:
 
@@ -152,11 +156,13 @@ Produktionsfreigabe erfordert weiterhin:
 5. keine Secrets im Client-Bundle
 6. Produktions- und Fehlerpfade getestet
 
+</details>
+
 ## Verifikation
 
-- 🟢 `npm install` + `npm test` + `npm run build` wurden 20.09.2026 tatsächlich vollständig lokal ausgeführt (nicht nur einzelne Module) — 12/12 Tests grün, Build erfolgreich.
-- 🟡 Vercel-Live-Status bleibt separat zu verifizieren (Team-Limit, s. o.).
-- ⚪ **Neuer Fund, nicht Teil dieses Fixes:** `/api/master/businesses`, `/api/master/tasks`, `/api/master/finance`, `/api/master/systems` haben **keine erkennbare Authentifizierung** — jeder mit der URL kann per PATCH/POST Betriebsdaten, Aufgaben, Finanzbuchungen und Systemstatus ändern. Aktuelles Risiko durch fehlende Persistenz (In-Memory-Fallback, Daten gehen bei jedem Neustart verloren) praktisch begrenzt, wird aber zu einem echten Sicherheitsproblem, sobald Supabase produktiv konfiguriert ist. **Empfehlung (Entscheidung liegt bei Adnan/ChatGPT als Product Lead):** gleiches Bearer-Secret-Muster wie im Schwester-Repository `werknetz24-landing` (`ADMIN_SECRET`, zeitkonstant geprüft) — günstig, bewährt, schnell umsetzbar. Nicht in dieser Phase umgesetzt, da außerhalb des ursprünglich beauftragten Fix-Umfangs.
+- 🟢 `npm install` + `npm test` + `npm run build` **erneut am 21.09.2026 (Phase 5) durchgeführt** — 47/47 Tests grün, Build erfolgreich, weiterhin 12 API-Funktionen.
+- 🟢 **Vercel-Live-Status verifiziert** (nicht mehr offen): `https://adnan-sandy.vercel.app/master` und `/e-commerce` echt aufgerufen, korrekter Inhalt, keine Konsolenfehler. `/api/health` antwortet ehrlich. Unbekannte Route liefert `404`.
+- 🟢 **Auth-Fund aus Phase 1 in Phase 4 behoben und in Phase 5 live bestätigt:** ein echter PATCH-Versuch gegen `/api/master/businesses` ohne Secret liefert live `503` — der Schreibschutz ist tatsächlich aktiv in Produktion, nicht nur lokal getestet.
 
 ## Regeln
 
@@ -171,4 +177,4 @@ Produktionsfreigabe erfordert weiterhin:
 
 ## Nächster STOP-Punkt
 
-**Vercel-Rate-Limit/Deployment-Gate klären → CI/Build → Vercel → API-Smoke-Test → Neustarttest → erst dann Produktionsfreigabe.**
+**Deployment-Gate erreicht und bestätigt (Phase 5, 21.09.2026).** Vor echtem Geschäftsbetrieb weiterhin nötig: Umgebungsvariablen setzen (`MASTER_API_SECRET`, `WERKNETZ24_STATUS_SECRET`, `SUPABASE_*` — Adnans Vercel-Zugang), und vor allem: **rechtliche Pflichttexte (Impressum/Datenschutz/AGB/Widerruf) erstellen** — 🔴 BLOCKER, s. `docs/QUALITY-GATE-PHASE-4.md`.
