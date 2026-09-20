@@ -69,7 +69,7 @@ export default function MasterDashboard(){
     <div className="layout">
       <aside className="sidebar">
         {[
-          ["overview","◈","Übersicht"],["businesses","▣","Betriebe"],["tasks","✓","Aufgaben"],["systems","◉","Systeme"],["finance","€","Finanzen"],["automation","↻","Automationen"],["settings","⚙","Einstellungen"]
+          ["overview","◈","Übersicht"],["businesses","▣","Betriebe"],["tasks","✓","Aufgaben"],["systems","◉","Systeme"],["finance","€","Finanzen"],["automation","↻","Automationen"],["audit","▤","Audit-Log"],["settings","⚙","Einstellungen"]
         ].map(([id,icon,label])=><button key={id} className={tab===id?"selected":""} onClick={()=>setTab(id)}><b>{icon}</b>{label}</button>)}
         <div className="sideBottom"><a href="/e-commerce">E-Commerce</a><a href="/produkt-pipeline">Produkt-Pipeline</a><a href="/lieferanten">Lieferanten</a><a href="/automation">Automation Engine</a><a href="https://werknetz24.de/admin-zentrale">Werknetz24 Admin</a></div>
       </aside>
@@ -82,6 +82,7 @@ export default function MasterDashboard(){
         {tab==="systems" && <Systems systems={systems}/>}
         {tab==="finance" && <Finance/>}
         {tab==="automation" && <Automation/>}
+        {tab==="audit" && <Audit/>}
         {tab==="settings" && <Settings/>}
       </section>
     </div>
@@ -129,6 +130,12 @@ function Finance(){return <><div className="pageTitle"><div><span>FINANCE CONTRO
 function Automation(){return <><div className="pageTitle"><div><span>AUTOMATION CONTROL</span><h2>Automationen</h2></div><a className="primaryLink" href="/automation">Engine öffnen →</a></div><div className="automationGrid">{["Bestellung → Lieferant → Tracking","Produktprüfung → Quality Gate","Kundengewinnung → Conversion","Finanzen → Deckungsbeitrag","Fehler → Task → Stop"].map((x,i)=><article key={x}><span>0{i+1}</span><h3>{x}</h3><p>{i===4?"Fehler müssen automatisch sichtbar werden; keine stille Weiterverarbeitung.":"Workflow vorbereitet; externe Ausführung bleibt bis zum Connector-Gate deaktiviert."}</p></article>)}</div></>}
 
 function Settings(){return <><div className="pageTitle"><div><span>MASTER SETTINGS</span><h2>Steuerung</h2></div></div><Panel title="Grundregeln"><div className="rules"><b>🔒 Keine Secrets im GitHub-Repository</b><b>💶 Keine Kosten ohne Freigabe</b><b>🧪 Keine echten Bestellungen ohne Test/Quality Gate</b><b>📚 Dokumentation bleibt Teil des Systems</b><b>🛑 Kritische Fehler stoppen automatische Folgeprozesse</b></div></Panel><Panel title="Datenhaltung"><p>Der aktuelle Master läuft ohne persistente Produktionsdatenbank. Der Datenbank-Adapter ist vorbereitet; eine echte Datenbank wird erst nach Konfiguration und Smoke-Test als produktiv markiert.</p><a href="/start">Start- und Produktionscheck öffnen →</a></Panel></>}
+
+function Audit(){
+  const [entries,setEntries]=useState([]); const [loading,setLoading]=useState(true);
+  useEffect(()=>{fetch("/api/master/audit").then(r=>r.json()).then(d=>setEntries(d.entries||[])).finally(()=>setLoading(false))},[]);
+  return <><div className="pageTitle"><div><span>SECURITY & TRACEABILITY</span><h2>Audit-Log</h2></div></div><Panel title="Letzte Änderungen">{loading?<p>Daten werden geladen…</p>:entries.length===0?<p>Noch keine protokollierten Änderungen.</p>:entries.map((e,i)=><div className="taskMini" key={e.id||i}><span>{e.action}</span><div><strong>{e.entity_type} {e.entity_id||""}</strong><small>{e.actor} · {e.created_at}</small></div></div>)}</Panel></>
+}
 
 function Kpi({label,value,note}){return <div className="kpi"><span>{label}</span><strong>{value}</strong><small>{note}</small></div>}
 function Panel({title,children}){return <section className="panel"><div className="panelTitle"><h3>{title}</h3></div>{children}</section>}
