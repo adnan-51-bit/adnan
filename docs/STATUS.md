@@ -44,6 +44,7 @@ Der Quality-Gate-Endpoint liefert HTTP 503, solange die Produktionsbedingungen n
 🟡 **ADAPTER VORBEREITET**
 
 - Supabase-Adapter und Migrationen vorhanden.
+- Authorization-Header im Business-Persistence-Adapter auf den tatsächlich geprüften `SUPABASE_SECRET_KEY` vereinheitlicht (Commit 8318911ea01bccf772d673c7c810958491c21042).
 - Ohne SUPABASE_URL und SUPABASE_SECRET_KEY läuft der Fallback-Speicher.
 - Fallback-Daten sind nicht als dauerhafte Produktionsdaten zu betrachten.
 - Produktionsfreigabe erst nach Schema-Deployment, Read/Write-Smoke-Test, Neustarttest und Rechteprüfung.
@@ -96,6 +97,15 @@ Registriert:
 
 🔴 **NOCH NICHT GRÜN**
 
+Aktueller nachweisbarer GitHub-Commit-Status für `8318911ea01bccf772d673c7c810958491c21042`:
+- Vercel Status: `failure`
+- Statusziel enthält `upgradeToPro=build-rate-limit`
+- Das ist ein Vercel-Deployment-/Team-Limit-Signal, kein nachgewiesener Next.js-Code-Buildfehler.
+- Es liegt kein sichtbarer GitHub-Actions-Workflow-Run für diesen Commit vor.
+- Der Status wird deshalb nicht als erfolgreicher Deployment-Test gewertet.
+
+Hinweis: Vercel weist für Hobby-Projekte auf teambezogene Deployment-/Build-Limits hin; die konkrete Ursache und der aktuelle Quota-Zustand dieses Kontos können aus dem verfügbaren GitHub-Connector nicht weiter verifiziert werden.
+
 Produktionsfreigabe erfordert:
 1. GitHub CI erfolgreich
 2. Vercel Deployment erfolgreich
@@ -125,4 +135,4 @@ Aktuell ist über die verfügbare GitHub-Schnittstelle kein Workflow-Run für di
 
 ## Nächster STOP-Punkt
 
-**Persistenz → CI/Build → Vercel → API-Smoke-Test → Neustarttest → erst dann Produktionsfreigabe.**
+**Vercel-Rate-Limit/Deployment-Gate klären → CI/Build → Vercel → API-Smoke-Test → Neustarttest → erst dann Produktionsfreigabe.**
