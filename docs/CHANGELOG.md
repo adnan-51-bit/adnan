@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-09-20 (Phase 2)
+### Phase 2 — Werknetz24 mit Master-Zentrale verbinden (Technical Lead, werknetz24-landing-Sitzung)
+- Read-only Connector `lib/werknetz24-connector.js` zum bestehenden Werknetz24-System gebaut, ohne neue API-Route (Vercel-Hobby-Limit bereits erreicht).
+- `lib/master-store.js` `listBusinesses()` reichert den `werknetz24`-Eintrag jetzt mit `liveStatus` an.
+- `app/master/page.jsx`: neue `LiveStatus`-Komponente zeigt den echten Status auf der Betriebe-Karte — ehrlich `🔵 EXTERNAL` solange nicht konfiguriert.
+- Eigenes, engeres Secret (`WERKNETZ24_STATUS_SECRET`) statt des Werknetz24-`ADMIN_SECRET` — Begründung in `docs/WEBHOOKS-AND-INTEGRATIONS.md`.
+- Gegenstelle in `werknetz24-landing`: neuer `?type=master-zentrale-status`-Endpunkt (`api/customers.js`), liefert nur Aggregate, nie Kundendaten.
+- Getestet: `tests/werknetz24-connector.test.js` (5 Tests, alle grün) — inkl. dass ohne Secret nie ein Fetch versucht wird.
+- Nicht deployed. Vercel-Team-Build-Limit besteht unverändert fort.
+
 ## 2026-09-20 (spätere Änderung)
 ### Phase 1 — Grundlage und Bestand reparieren (Technical Lead, werknetz24-landing-Sitzung)
 - Fehlende `.js`-Dateiendungen bei relativen Imports behoben (`lib/master-finance.js`, `lib/master-store.js`, `lib/master-tasks.js`, `lib/persistence.js`) — brach unter `node --test`.

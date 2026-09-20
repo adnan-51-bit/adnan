@@ -39,3 +39,14 @@ Keine kostenpflichtige Integration wird aktiviert, solange sie nicht ausdrückli
 ## Provider Readiness
 
 Provider status now distinguishes **configured** from **productionReady**. An environment variable or credential is not treated as proof that the integration works. Production readiness requires connector-specific verification and an end-to-end test.
+
+## Werknetz24-Connector (Phase 2, 20.09.2026)
+
+Read-only Verbindung zum separaten, bereits produktiven System `adnan-51-bit/werknetz24-landing`.
+
+- Modul: `lib/werknetz24-connector.js`, aufgerufen aus `lib/master-store.js` (`listBusinesses()`), **keine neue API-Route** — dieses Repo hat mit 12 Routen bereits das Vercel-Hobby-Limit erreicht (s. `docs/PROJECT-AUDIT.md` im Schwester-Repo).
+- Gegenstelle: `GET https://werknetz24.de/api/customers?type=master-zentrale-status` — liefert ausschließlich aggregierte Kennzahlen (Systemstatus-Zähler, Anzahl offener Incidents/Aufgaben, Summe offener Rechnungen/Ausgaben in Cent). **Niemals** Kundendaten, Rechnungspositionen oder Rohdaten.
+- Eigenes, engeres Secret: `WERKNETZ24_STATUS_SECRET` (hier) ↔ `MASTER_ZENTRALE_SECRET` (dort) — bewusst **nicht** das Werknetz24-`ADMIN_SECRET`. Grund: dieses System hatte im Bestandsaudit selbst keine eigene Authentifizierung auf seinen Schreibendpunkten; eine Kompromittierung hier darf nicht automatisch vollen Admin-Zugriff auf Werknetz24 erlauben.
+- 🔵 **EXTERNAL — aktuell nicht konfiguriert.** `WERKNETZ24_STATUS_SECRET` ist in keiner Umgebung gesetzt. `listBusinesses()` liefert deshalb ehrlich `liveStatus: { configured: false, reason: "WERKNETZ24_STATUS_SECRET nicht gesetzt" }` für den Werknetz24-Eintrag — keine erfundenen Werte, keine vorgetäuschte Verbindung.
+- Um zu aktivieren: in beiden Vercel-Projekten denselben zufälligen Secret-Wert setzen (`WERKNETZ24_STATUS_SECRET` hier, `MASTER_ZENTRALE_SECRET` in `werknetz24-landing`) und neu deployen. Adnan/Vercel-Zugang nötig — hier nicht selbst gesetzt.
+- Getestet (`tests/werknetz24-connector.test.js`): fehlendes Secret liefert ehrlich `configured:false` ohne jeden Fetch-Versuch; korrekter Bearer-Header bei Erfolg; Server-Fehler (401/503) werden als `ok:false` mit echter Fehlermeldung durchgereicht statt eines stillen Fallbacks; Netzwerkfehler/Timeout werden abgefangen und ehrlich gemeldet, nicht als Erfolg maskiert.

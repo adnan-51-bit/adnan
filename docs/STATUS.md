@@ -13,7 +13,7 @@ Die Master-Zentrale, API-Schichten, Automation-Logik, Finanz-Validierung, System
 🟢 **UI/API-BASIS IMPLEMENTIERT**
 
 Vorhanden:
-- /master zentrale Übersicht
+- /master zentrale Übersicht (Standard-Einstiegspunkt seit Phase 1, `/` leitet direkt hierher weiter)
 - Betriebe
 - Aufgaben
 - Systeme/Integrationen
@@ -24,6 +24,14 @@ Vorhanden:
 - serverseitige API-Schichten
 - Systemstatus-Registry
 - Quality-Gate unter /api/master/quality-gate
+
+## Werknetz24-Anbindung (Phase 2, 20.09.2026)
+
+🔵 **EXTERNAL — Integrationsschicht vorbereitet, noch nicht aktiv.**
+
+Read-only Connector (`lib/werknetz24-connector.js`) an das bestehende, produktive `werknetz24-landing`-Repository gebaut. Liefert bei Aufruf von `listBusinesses()` den echten, live abgefragten Werknetz24-Status (Systemstatus, offene Incidents/Aufgaben, offene Rechnungen/Ausgaben-Summen) im `werknetz24`-Eintrag als `liveStatus`. **Aktuell nicht konfiguriert** — `WERKNETZ24_STATUS_SECRET` ist in keiner Umgebung gesetzt, `liveStatus.configured` ist deshalb ehrlich `false`. Details, inkl. warum bewusst ein eigenes Secret statt des Werknetz24-`ADMIN_SECRET` verwendet wird: `docs/WEBHOOKS-AND-INTEGRATIONS.md`.
+
+Keine neue API-Route nötig (Repo hat mit 12 Routen bereits das Vercel-Hobby-Limit erreicht).
 
 ## Quality Gate
 
