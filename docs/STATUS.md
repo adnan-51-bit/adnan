@@ -170,3 +170,5 @@ Produktentscheidung erst nach dokumentiertem Quality Gate. Bis dahin bleibt der 
 
 - 🟢 Master audit-log service and protected database schema prepared.
 - 🟡 Audit persistence remains memory fallback until Supabase credentials are configured.
+
+- 🟢 Master system view now supports status filtering.
