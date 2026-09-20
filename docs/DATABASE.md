@@ -25,3 +25,7 @@ Until then: 🟡.
 
 ## Security
 Current Supabase documentation recommends the newer `sb_secret_...` secret key for server-side code; secret keys must remain server-side and never enter GitHub or browser code. citeturn0search0turn0search1
+
+
+## Master Tables
+The schema now includes `master_systems` and `master_settings` in addition to businesses, tasks, and audit log. Public roles receive no access; server-side service access is required.
