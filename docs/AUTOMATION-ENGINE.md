@@ -42,3 +42,8 @@ Diese Anschlüsse benötigen echte Konten, Zugangsdaten und teilweise Vertrags-/
 
 ## Sicherheitsregel
 Kein Endpoint darf nur aufgrund eines UI-Klicks echte Bestellungen auslösen. Ein späterer produktiver Connector muss zusätzlich Authentifizierung, Idempotenz, Audit-Log und Fehler-/Retry-Strategie besitzen.
+
+
+## Webhook Layer
+
+The repository now includes a secure Shopify webhook boundary with HMAC verification and duplicate-delivery protection. It accepts no webhook when the required secret is missing and does not create supplier orders. Persistent storage and real provider credentials remain required for production.
