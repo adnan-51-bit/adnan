@@ -68,7 +68,7 @@ export default function MasterZentrale() {
           ["dashboard","Übersicht"],["businesses","Betriebe"],["tools","Tools"],["plan","Arbeitsplan"]
         ].map(([id,label]) => <button key={id} className={tab===id ? "active":""} onClick={()=>setTab(id)}>{label}</button>)}
         <a href="/">Anfragen</a>
-        <a href="/e-commerce">E-Commerce</a><a href="/kunden-gewinnen">Kunden gewinnen</a><a href="/start">Start</a>
+        <a href="/e-commerce">E-Commerce</a><a href="/kunden-gewinnen">Kunden gewinnen</a><a href="/start">Start</a><a href="/automation">Automationen</a>
         <a href="https://werknetz24.de/admin-zentrale">Werknetz24</a>
       </nav>
 
