@@ -39,7 +39,7 @@ Noch offen:
 - Bestell-/Zahlungsprozess
 - persistente Datenhaltung
 
-## Lead-System
+## Automation Engine\n\n🟡 CODE EXISTS\n\nVorhanden:\n- Event- und Order-State-Modell\n- sichere Zustandsübergänge\n- Quality-Gate vor automatischem Fulfillment\n- Health- und Automation-API als Dry-Run/Scaffold\n\nOffen:\n- persistente Datenbank\n- echte Zahlungs-/Shop-Webhooks\n- Lieferanten-Connectoren\n- produktive Benachrichtigungen\n\n## Lead-System
 
 🟡 CODE EXISTS
 
