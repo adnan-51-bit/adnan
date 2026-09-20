@@ -1,56 +1,104 @@
-# Projektstatus
+# Projektstatus – Master-Zentrale
 
 Stand: 2026-09-20
 
-## Phase 1 — Lead-Verwaltung
-🟡 IMPLEMENTIERT IM CODE
+## Gesamtstatus
 
-Enthalten:
+🟡 **MVP-CODE VORHANDEN – NOCH NICHT PRODUKTIV VERIFIZIERT**
+
+Die technische Basis für Lead-Verwaltung, E-Commerce-Kalkulation und eine zentrale Übersicht existiert im Repository. Deployment, persistente Datenhaltung und reale Geschäftsprozesse sind noch nicht vollständig verifiziert.
+
+## Geschäftsbereiche
+
+### Werknetz24
+🔵 EXTERNAL / SEPARAT
+
+Die bestehende Werknetz24-Administration bleibt technisch getrennt. Die Master-Zentrale enthält nur die übergeordnete Übersicht bzw. Verweise.
+
+### E-Commerce
+🟡 CODE EXISTS
+
+Vorhanden:
+- Produktkandidaten-Testsystem
+- Kalkulation für Einkauf, Versand, Kanalgebühren und Marketingannahmen
+- Produktrecherche-Dokumentation
+- Lieferantenrecherche Runde 1
+- zentrale Route /zentral
+
+Noch offen:
+- reale Lieferanten vollständig verifizieren
+- vollständige Stückkosten
+- Produktkonformität/GPSR-Dokumentation
+- Produktfreigabe
+- Shop-Produktseite
+- Bestell-/Zahlungsprozess
+- persistente Datenbank
+- produktives Deployment und Smoke-Test
+
+## Lead-System
+
+🟡 CODE EXISTS
+
+Vorhanden:
 - Lead-Liste
-- neue Anfrage anlegen
-- Anfrage öffnen und bearbeiten
-- Status ändern
-- Priorität ändern
+- neue Anfrage
+- Bearbeitung
+- Status
+- Priorität
 - Kategorie
 - Quelle
-- Follow-up-Datum
+- Follow-up
 - Notizen
-- Status- und Prioritätsfilter
 - Dashboard-Kennzahlen
-- künstliche Testdaten
+- Testdaten
 
-## Phase 2 — E-Commerce-Testsystem
-🟡 IMPLEMENTIERT IM CODE
+Offen:
+- persistente zentrale Datenbank
+- echte Eingangsquellen
+- Automatisierung
+- produktive Benachrichtigungen
 
-Enthalten:
-- 20 Produktkandidaten als Testdaten
-- Produkt-/Margentabelle
-- Einkaufskosten
-- Versandkosten
-- Verkaufspreise
-- kanalabhängige Modellgebühren
-- Marketingkosten pro Bestellung
-- Deckungsbeitrag pro Bestellung
-- Filter nach Produktkategorie
-- eigener Shop / eBay / Amazon als Kalkulationskanäle
-- Freigabekriterien und Dokumentation
+## Master-Zentrale
 
-## Wichtige Einschränkung
-Die E-Commerce-Kalkulation verwendet derzeit Modellannahmen. Sie sind **keine bestätigten Lieferantenpreise**. Vor echtem Verkauf müssen Lieferant, Einkauf, Versand, Lieferzeit, Retouren und Produktkonformität verifiziert werden.
+🟡 CODE EXISTS
 
-Die Lead-Daten werden aktuell nur im Browser gespeichert. Eine zentrale persistente Datenbank ist noch nicht angeschlossen.
+Vorhanden:
+- Geschäftsbereich-Auswahl
+- Statusübersicht
+- Tool-Landschaft
+- Arbeitsablauf
+- Roadmap
+- Verweise auf Werknetz24 und E-Commerce
 
-## Nächster Quality Gate
-1. Shop- und Kalkulationsseiten lokal bzw. über Deployment bauen und testen.
-2. Echte Lieferanten für die besten Produktkandidaten recherchieren.
-3. Reale Kosten in die Kalkulation übernehmen.
-4. Erst danach Produktfreigabe.
-5. Erst danach echte Zahlungs-/Bestellprozesse.
+Offen:
+- echte zentrale Datenquelle
+- Authentifizierung/Rechte
+- persistente Aufgaben
+- Integrationsstatus aus echten APIs
+- produktives Deployment
+
+## Aktueller Quality Gate
+
+1. Kofferraum-Organizer weiter verifizieren.
+2. Schubladen-Organizer parallel auf vollständige Kosten prüfen.
+3. Erst nach vollständiger Kostenrechnung Produktentscheidung.
+4. Danach erst Domain/Marke.
+5. Danach Shop-Aufbau.
+6. Danach Zahlungs-/Bestellprozess.
+7. Danach produktives Deployment und Smoke-Test.
+8. Danach kontrollierte Kundengewinnung.
 
 ## Regeln
-- Keine echten Kundendaten in der Demo.
+
+- Keine Bestellung ohne Freigabe.
+- Keine Domain ohne Produktfreigabe.
+- Keine Werbung ohne Freigabe und rechtliche Prüfung.
+- Keine kostenpflichtigen Dienste ohne ausdrückliche Freigabe.
 - Keine Secrets im Repository.
-- Keine kostenpflichtigen Dienste ohne Freigabe.
-- Keine automatisierte Massenwerbung ohne rechtliche Prüfung.
-- Keine Produktfreigabe auf Basis von Fake-/unverifizierten Lieferantendaten.
-- Werknetz24 bleibt getrennt.
+- Keine echten Kundendaten in Testsystemen.
+- Keine Produktfreigabe auf Basis unverifizierter Preise.
+- Keine produktive Massenansprache ohne rechtliche Prüfung.
+
+## Nächster STOP-Punkt
+
+Produktentscheidung erst nach dokumentiertem Quality Gate. Bis dahin bleibt der Status 🟡.
