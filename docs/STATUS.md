@@ -39,7 +39,23 @@ Noch offen:
 - Bestell-/Zahlungsprozess
 - persistente Datenhaltung
 
-## Automation Engine\n\n🟡 CODE EXISTS\n\nVorhanden:\n- Event- und Order-State-Modell\n- sichere Zustandsübergänge\n- Quality-Gate vor automatischem Fulfillment\n- Health- und Automation-API als Dry-Run/Scaffold\n\nOffen:\n- persistente Datenbank\n- echte Zahlungs-/Shop-Webhooks\n- Lieferanten-Connectoren\n- produktive Benachrichtigungen\n\n## Lead-System
+## Automation Engine
+
+🟡 CODE EXISTS
+
+Vorhanden:
+- Event- und Order-State-Modell
+- sichere Zustandsübergänge
+- Quality-Gate vor automatischem Fulfillment
+- Health- und Automation-API als Dry-Run/Scaffold
+
+Offen:
+- persistente Datenbank
+- echte Zahlungs-/Shop-Webhooks
+- Lieferanten-Connectoren
+- produktive Benachrichtigungen
+
+## Lead-System
 
 🟡 CODE EXISTS
 
