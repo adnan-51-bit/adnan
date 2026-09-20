@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const initialBusinesses = [
   { id:"werknetz24", name:"Werknetz24", type:"Bestehender Betrieb", status:"EXTERNAL", health:"🟡", revenue:"—", link:"https://werknetz24.de/admin-zentrale", modules:["Lisa / Telefon","Kunden","Leads","Aufträge","Rechnungen","Finanzen","Integrationen"] },
@@ -34,14 +34,24 @@ export default function MasterDashboard(){
   const [editing,setEditing]=useState(null);
   const [notice,setNotice]=useState("");
   const [search,setSearch]=useState("");
+  const [loading,setLoading]=useState(true);
+
+  useEffect(()=>{ fetch("/api/master/businesses").then(r=>r.json()).then(data=>{ if(data?.businesses) setBusinesses(data.businesses); }).finally(()=>setLoading(false)); },[]);
 
   const visibleBusinesses=useMemo(()=>businesses.filter(b=>
     !search || (b.name+" "+b.type+" "+b.status).toLowerCase().includes(search.toLowerCase())
   ),[businesses,search]);
 
-  function saveBusiness(updated){
+  async function saveBusiness(updated){
     setBusinesses(prev=>prev.map(b=>b.id===updated.id?updated:b));
-    setEditing(null); setNotice("Änderung übernommen. Persistente Speicherung folgt mit der Datenbank.");
+    setEditing(null);
+    try{
+      const response=await fetch("/api/master/businesses",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(updated)});
+      const data=await response.json();
+      if(!response.ok || !data?.business) throw new Error(data?.error || "Speichern fehlgeschlagen");
+      setBusinesses(prev=>prev.map(b=>b.id===updated.id?data.business:b));
+      setNotice(data.storage==="supabase" ? "Gespeichert." : "Änderung gespeichert; aktuell nur im Fallback-Speicher.");
+    }catch(error){ setNotice("Speichern fehlgeschlagen: "+error.message); }
   }
 
   function toggleTask(id){
@@ -63,7 +73,7 @@ export default function MasterDashboard(){
         <div className="sideBottom"><a href="/e-commerce">E-Commerce</a><a href="/produkt-pipeline">Produkt-Pipeline</a><a href="/lieferanten">Lieferanten</a><a href="/automation">Automation Engine</a><a href="https://werknetz24.de/admin-zentrale">Werknetz24 Admin</a></div>
       </aside>
 
-      <section className="content">
+      <section className="content">{loading && <div className="notice">Master-Daten werden geladen…</div>}
         {notice && <div className="notice">{notice}<button onClick={()=>setNotice("")}>×</button></div>}
         {tab==="overview" && <Overview businesses={businesses} tasks={tasks} systems={systems}/>}
         {tab==="businesses" && <Businesses businesses={visibleBusinesses} search={search} setSearch={setSearch} editing={editing} setEditing={setEditing} saveBusiness={saveBusiness}/>}
