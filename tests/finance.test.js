@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { financeTotals } from "../lib/master-finance.js";
+import { createFinance, financeTotals } from "../lib/master-finance.js";
 
 test("finance totals calculate income, expense and net", () => {
   const totals=financeTotals([
@@ -15,4 +15,18 @@ test("finance totals calculate income, expense and net", () => {
 test("finance totals ignore cancelled entries", () => {
   const totals=financeTotals([{kind:"income",amount:999,status:"cancelled"}]);
   assert.deepEqual(totals,{income:0,expense:0,net:0});
+});
+
+test("finance creation rejects invalid status", async () => {
+  await assert.rejects(
+    () => createFinance({kind:"expense",amount:10,category:"test",status:"invalid"}),
+    /invalid finance status/
+  );
+});
+
+test("finance creation rejects negative amounts", async () => {
+  await assert.rejects(
+    () => createFinance({kind:"expense",amount:-1,category:"test"}),
+    /kind, amount and category are required/
+  );
 });
