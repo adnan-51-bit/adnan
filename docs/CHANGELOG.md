@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-09-20 (Phase 3)
+### Phase 3 — E-Commerce fertigstellen (Technical Lead, werknetz24-landing-Sitzung)
+- Neue echte Datenschicht `lib/ecommerce-store.js` (Supabase-oder-Speicher-Muster wie `lib/master-store.js`): Produkte (11-stufige Pipeline), Lieferanten, Kunden, Bestellungen, Retouren.
+- Geseedete Lieferanten/Produkte sind die bereits vorher in `app/lieferanten`/`app/produkt-pipeline` hartcodierte, echte Recherche — nicht neu erfunden, nur in die Datenschicht überführt.
+- Kunden/Bestellungen/Retouren starten bewusst leer — keine Fake-Daten.
+- **Sicherheitskorrektur:** `app/api/orders/route.js` übernahm Sicherheitsflags (`paymentConfirmed`/`productApproved`/...) vorher direkt aus dem Request-Body. Neue Funktion `deriveOrderGateInputs()` leitet sie jetzt ausschließlich aus echten, gespeicherten Daten ab.
+- `app/api/orders/route.js` zum konsolidierten E-Commerce-Endpunkt erweitert (`?type=`) — keine 13. Route (Vercel-Hobby-Limit).
+- Neue Seiten `/kunden`, `/bestellungen`, `/retouren`; `/produkt-pipeline`, `/lieferanten`, `/e-commerce` jetzt live-daten-getrieben statt hartcodiert (inkl. Korrektur der vorher fest einprogrammierten Zahlen "20 Kandidaten"/"6 geprüft").
+- `/shop` (Margenkalkulation, klar als Testdaten gekennzeichnet) bewusst unverändert.
+- 18 neue Tests (`tests/ecommerce-store.test.js`), Gesamtsuite 38/38 grün, `npm run build` erfolgreich (25 Routen, weiterhin 12 API-Funktionen).
+- Nicht deployed.
+
 ## 2026-09-20 (Phase 2)
 ### Phase 2 — Werknetz24 mit Master-Zentrale verbinden (Technical Lead, werknetz24-landing-Sitzung)
 - Read-only Connector `lib/werknetz24-connector.js` zum bestehenden Werknetz24-System gebaut, ohne neue API-Route (Vercel-Hobby-Limit bereits erreicht).

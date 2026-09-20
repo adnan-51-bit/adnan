@@ -65,3 +65,11 @@ Ein Produkt wird erst 🟢 freigegeben, wenn:
 ## Keine Fake-Zahlen
 
 Alle Modellannahmen müssen als TEST/ANNAHME gekennzeichnet bleiben, bis sie mit einem realen Lieferanten oder einer offiziellen Gebührenquelle verifiziert wurden.
+
+## Nachtrag 20.09.2026 (Phase 3): echte Datenschicht statt hartcodierter Werte
+
+`app/shop/page.jsx` bleibt unverändert die hier beschriebene Modellrechnung (20 Testkandidaten, klar als "🟡 TESTDATEN" gekennzeichnet — bewusst nicht angefasst, dient weiterhin der reinen Margenkalkulation).
+
+**Neu, real und persistent** (`lib/ecommerce-store.js`, s. `docs/STATUS.md` Abschnitt "E-Commerce (Phase 3)"): Produkte durchlaufen jetzt eine echte, technisch erzwungene 11-Stufen-Pipeline statt nur eine Statusspalte in einer JSX-Tabelle zu sein. Lieferanten haben einen echten, veränderbaren Status (recherchiert/geprüft/verifiziert/abgelehnt). Kunden/Bestellungen/Retouren sind neue, echte (leer startende) Datenbereiche unter `/kunden`, `/bestellungen`, `/retouren`.
+
+Die Automatisierungslogik (`lib/automation.js`) selbst wurde nicht verändert — sie war bereits korrekt geschrieben (nimmt Sicherheitsflags als Parameter entgegen, statt sie selbst zu erfinden). Der Fehler lag im Aufrufer (`app/api/orders/route.js`), der diese Flags vorher direkt und ungeprüft aus dem Request weiterreichte. Das ist jetzt behoben (`deriveOrderGateInputs()`).

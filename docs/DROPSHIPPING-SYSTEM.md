@@ -55,7 +55,9 @@ Phase 3: Margenwarnung, automatische Deaktivierung bei fehlendem Bestand, Preisw
 Keine kostenpflichtige Integration, App, Domain, Werbung oder Bestellung ohne ausdrückliche Freigabe.
 
 ## Aktueller Stand
-Kontrolloberflächen: /lieferanten und /produkt-pipeline. Noch keine produktive Lieferantenanbindung.
+Kontrolloberflächen: /lieferanten und /produkt-pipeline, jetzt beide gegen eine echte Datenschicht (`lib/ecommerce-store.js`, Phase 3, 20.09.2026) statt hartcodierter Arrays. Noch keine produktive Lieferantenanbindung (API/CSV/XML aus Abschnitt "Automatisierung" unten bleibt Phase 2/3 dieses Dokuments, nicht verwechseln mit den Repository-Phasen 1-4 in `docs/STATUS.md`).
+
+**Neu:** Die "Produkt-Gates" oben (1-9) sind jetzt als echte, technisch erzwungene Pipeline-Stufen abgebildet (`PRODUCT_PIPELINE_STATES` in `lib/ecommerce-store.js`: IDEA → RESEARCH → SUPPLIER_CHECK → PRODUCT_CHECK → LEGAL_CHECK → MARGIN_CHECK → IMAGE_CHECK → COPY_CHECK → QUALITY_GATE → READY → PUBLISHED). Eine Bestellung kann nur automatisch weiterlaufen, wenn das bestellte Produkt tatsächlich `PUBLISHED` UND sein Lieferant tatsächlich `verifiziert` ist — beides wird bei jeder Bestellung frisch aus der Datenschicht gelesen, nie vom Aufrufer behauptet.
 
 ## Nächster Arbeitsabschnitt
 1. konkrete Produkte gegen direkte Lieferantenangebote matchen

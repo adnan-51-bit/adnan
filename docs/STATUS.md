@@ -25,6 +25,25 @@ Vorhanden:
 - Systemstatus-Registry
 - Quality-Gate unter /api/master/quality-gate
 
+## E-Commerce (Phase 3, 20.09.2026)
+
+🟡 **ECHTE DATENSCHICHT UND WORKFLOWS IMPLEMENTIERT — NOCH KEIN PRODUKT VERÖFFENTLICHT**
+
+Neu: `lib/ecommerce-store.js` — echte Persistenz (Supabase, wenn konfiguriert, sonst Prozess-Speicher, gleiches Muster wie `lib/master-store.js`) für:
+- **Produkte** (`/produkt-pipeline`): 11-stufige Pipeline (IDEA → RESEARCH → SUPPLIER_CHECK → PRODUCT_CHECK → LEGAL_CHECK → MARGIN_CHECK → IMAGE_CHECK → COPY_CHECK → QUALITY_GATE → READY → PUBLISHED). Kein Schritt kann übersprungen werden — technisch erzwungen (`advanceProductPipeline` erlaubt nur genau einen Schritt).
+- **Lieferanten** (`/lieferanten`): Status recherchiert → geprüft → verifiziert → abgelehnt.
+- **Kunden** (`/kunden`, neu), **Bestellungen** (`/bestellungen`, neu), **Retouren** (`/retouren`, neu) — alle bewusst **leer gestartet**, keine Fake-Daten.
+
+**Geseedete Daten sind keine Erfindung:** Die 6 Lieferanten (CLP, T.M. Textil, ChiliTec, Hans Krempl, Dropply, BigBuy) und 6 Produktkandidaten stammen aus der bereits vorher in `app/lieferanten` und `app/produkt-pipeline` hartcodierten, echten Recherche (mit Quellen-URLs) — jetzt in die echte Datenschicht überführt statt im Frontend fest verdrahtet. `app/e-commerce/page.jsx` zeigte vorher fest einprogrammierte Zahlen ("20 Kandidaten", "6 geprüft") — jetzt echte, live aus der Datenschicht berechnete Werte.
+
+**Sicherheitskorrektur (wichtigster Fund dieser Phase):** `POST /api/orders` übernahm vor dieser Phase `paymentConfirmed`/`productApproved`/`supplierVerified`/`marginApproved` direkt und ungeprüft aus dem Request-Body — jeder Aufrufer hätte behaupten können, ein Produkt sei freigegeben. Neue Funktion `deriveOrderGateInputs()` leitet diese drei Flags jetzt ausschließlich aus dem tatsächlichen, gespeicherten Pipeline-/Lieferantenstatus ab. Eine Bestellung wird nur automatisch weiterverarbeitet, wenn zum Zeitpunkt der Prüfung wirklich ein `PUBLISHED`-Produkt mit `verifiziert`-Lieferant und positiver Marge vorliegt — sonst `blocked`, mit den echten Blockierungsgründen.
+
+**Keine neue API-Route:** `app/api/orders/route.js` wurde zum konsolidierten E-Commerce-Endpunkt (`?type=products|suppliers|customers|orders|returns`) erweitert statt eine 13. Route anzulegen.
+
+**Bewusst nicht umgesetzt:** echte Stripe-/PayPal-/Shopify-Zahlungsabwicklung (bleibt `/api/payments/stripe` 503, `/api/webhooks/shopify` ohne Persistenz — beide bereits vor Phase 3 bewusst so gebaut, unverändert), echter Checkout im Shop (`/shop` bleibt die bereits vorher als Testsystem gekennzeichnete Kalkulations-Seite).
+
+**Tests:** 18 neue Tests (`tests/ecommerce-store.test.js`), davon 7 gezielt für `deriveOrderGateInputs` (jede der drei Sicherheitsbedingungen einzeln geprüft). Gesamtsuite 38/38 grün, `npm run build` erfolgreich (25 Routen, weiterhin genau 12 API-Funktionen).
+
 ## Werknetz24-Anbindung (Phase 2, 20.09.2026)
 
 🔵 **EXTERNAL — Integrationsschicht vorbereitet, noch nicht aktiv.**
