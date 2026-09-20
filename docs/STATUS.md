@@ -4,178 +4,125 @@ Stand: 2026-09-20
 
 ## Gesamtstatus
 
-🟡 **MVP SICHTBAR DEPLOYED – PRODUKTIVER GESCHÄFTSBETRIEB NOCH OFFEN**
+🟡 **TECHNISCHE BASIS WEIT FORTGESCHRITTEN – PRODUKTIVER GESCHÄFTSBETRIEB NOCH GESPERRT**
 
-Die technische Basis für Lead-Verwaltung, E-Commerce-Kalkulation und eine zentrale Übersicht existiert im Repository. Deployment, persistente Datenhaltung und reale Geschäftsprozesse sind noch nicht vollständig verifiziert.
+Die Master-Zentrale, API-Schichten, Automation-Logik, Finanz-Validierung, System-Registry und Quality-Gate sind im Repository vorhanden. Produktionsfreigabe bleibt gesperrt, solange Persistenz, Deployment und externe Integrationen nicht nachweisbar verifiziert sind.
 
-## Geschäftsbereiche
+## Master-Zentrale
 
-### Werknetz24
-🔵 EXTERNAL / SEPARAT
-
-Die bestehende Werknetz24-Administration bleibt technisch getrennt. Die Master-Zentrale enthält nur die übergeordnete Übersicht bzw. Verweise.
-
-### E-Commerce
-🟡 CODE EXISTS
+🟢 **UI/API-BASIS IMPLEMENTIERT**
 
 Vorhanden:
-- Produktkandidaten-Testsystem
-- Kalkulation für Einkauf, Versand, Kanalgebühren und Marketingannahmen
-- Produktrecherche-Dokumentation
-- Lieferantenrecherche Runde 1
-- sichtbare Master-Zentrale /zentral
-- sichtbare E-Commerce-Zentrale /e-commerce
-- sichtbarer Bereich /kunden-gewinnen
+- /master zentrale Übersicht
+- Betriebe
+- Aufgaben
+- Systeme/Integrationen
+- Finanzen
+- Automationen
+- Audit-Log
+- Einstellungen
+- serverseitige API-Schichten
+- Systemstatus-Registry
+- Quality-Gate unter /api/master/quality-gate
 
-Noch offen:
-- reale Lieferanten vollständig verifizieren
-- vollständige Stückkosten
-- Produktkonformität/GPSR-Dokumentation
-- Produktfreigabe
-- Shop-Produktseite
-- Bestell-/Zahlungsprozess
-- persistente Datenbank
-- vollständiger Produktions-Smoke-Test
-- Bestell-/Zahlungsprozess
-- persistente Datenhaltung
+## Quality Gate
 
+🟡 **AKTIV – PRODUKTION NOCH NICHT FREIGEGEBEN**
 
-## Order Service & Persistence Scaffold
+Geprüft werden:
+- Automation-Modul geladen
+- Automation stoppt ohne bestätigte Zahlung
+- vollständige System-Registry
+- Persistenzmodus
+- keine Ausgabe von Secret-Werten
+- Payment-Gate bleibt bis zur sicheren Integration gesperrt
 
-🟡 CODE EXISTS
+Der Quality-Gate-Endpoint liefert HTTP 503, solange die Produktionsbedingungen nicht erfüllt sind. Das ist beabsichtigt.
 
-Vorhanden:
-- Order-Service API
-- Event-/Order-Speicherung als austauschbare Store-Schicht
-- Idempotency-Schicht
-- Stripe-Webhook bewusst gesperrt, bis sichere Signaturprüfung implementiert ist
+## Persistence / Datenbank
 
-Offen:
-- persistente Datenbank
-- transaktionale Verarbeitung
-- Queue/Background Processing
+🟡 **ADAPTER VORBEREITET**
 
-## Webhook Integration
-
-🟡 CODE EXISTS
-
-Vorhanden:
-- Shopify-Webhookschnittstelle
-- HMAC-Signaturprüfung
-- Duplicate-Schutz auf Webhook-ID
-- Provider-Capability-Modell
-
-Offen:
-- persistenter Idempotency Store
-- echte Shopify-Konfiguration
-- Payment-Webhooks
-- produktive Order-/Supplier-Verarbeitung
+- Supabase-Adapter und Migrationen vorhanden.
+- Ohne SUPABASE_URL und SUPABASE_SECRET_KEY läuft der Fallback-Speicher.
+- Fallback-Daten sind nicht als dauerhafte Produktionsdaten zu betrachten.
+- Produktionsfreigabe erst nach Schema-Deployment, Read/Write-Smoke-Test, Neustarttest und Rechteprüfung.
 
 ## Automation Engine
 
-🟡 CODE EXISTS
+🟢 **LOGIK UND REGRESSIONSTESTS VORHANDEN**
 
-Vorhanden:
-- Event- und Order-State-Modell
+- Event-/Order-State-Modell
 - sichere Zustandsübergänge
 - Quality-Gate vor automatischem Fulfillment
-- Health- und Automation-API als Dry-Run/Scaffold
+- Regressionstests für ungültige Events, State-Transitions und Blocker
 
 Offen:
-- persistente Datenbank
+- persistente Speicherung
 - echte Zahlungs-/Shop-Webhooks
 - Lieferanten-Connectoren
 - produktive Benachrichtigungen
 
-## Lead-System
+## Finanzen
 
-🟡 CODE EXISTS
+🟢 **VALIDIERUNG VORHANDEN / PRODUKTIVE ZAHLUNGEN GESPERRT**
 
-Vorhanden:
-- Lead-Liste
-- neue Anfrage
-- Bearbeitung
-- Status
-- Priorität
-- Kategorie
-- Quelle
-- Follow-up
-- Notizen
-- Dashboard-Kennzahlen
-- Testdaten
+- Einnahmen/Kosten-Ledger
+- Statusvalidierung
+- negative Beträge werden abgelehnt
+- stornierte Einträge werden aus Summen ausgeschlossen
+- keine erfundenen Umsätze
+- Stripe bleibt bis zur sicheren Payment-Integration gesperrt
 
-Offen:
-- persistente zentrale Datenbank
-- echte Eingangsquellen
-- Automatisierung
-- produktive Benachrichtigungen
+## Systeme & Integrationen
 
-## Master-Zentrale
+🟢 **REGISTRY VORHANDEN**
 
-🟡 CODE EXISTS
+Registriert:
+- GitHub
+- Vercel
+- Supabase
+- Famulor
+- Easybell
+- Stripe
+- PayPal
+- Shopify
+- E-Mail
+- Slack
 
-Vorhanden:
-- Geschäftsbereich-Auswahl
-- Statusübersicht
-- Tool-Landschaft
-- Arbeitsablauf
-- Roadmap
-- Verweise auf Werknetz24 und E-Commerce
+🟡 Externe Live-Verbindungen sind nicht automatisch durch die Registry bestätigt.
 
-Offen:
-- echte zentrale Datenquelle
-- Authentifizierung/Rechte
-- persistente Aufgaben
-- Integrationsstatus aus echten APIs
-- produktives Deployment
+## Deployment Gate
 
-## Aktueller Quality Gate
+🔴 **NOCH NICHT GRÜN**
 
-1. Kofferraum-Organizer weiter verifizieren.
-2. Schubladen-Organizer parallel auf vollständige Kosten prüfen.
-3. Erst nach vollständiger Kostenrechnung Produktentscheidung.
-4. Danach erst Domain/Marke.
-5. Danach Shop-Aufbau.
-6. Danach Zahlungs-/Bestellprozess.
-7. Danach produktives Deployment und Smoke-Test.
-8. Danach kontrollierte Kundengewinnung.
+Produktionsfreigabe erfordert:
+1. GitHub CI erfolgreich
+2. Vercel Deployment erfolgreich
+3. /master lädt
+4. /api/master/systems antwortet
+5. keine Secrets im Client-Bundle
+6. Produktions- und Fehlerpfade getestet
+
+Aktuell ist über die verfügbare GitHub-Schnittstelle kein Workflow-Run für die neuesten Commits sichtbar. Deshalb wird kein grüner CI-/Deployment-Status behauptet.
+
+## Verifikation
+
+- 🟢 Quality-Gate-Unit-Tests wurden lokal gegen die betroffenen reinen JavaScript-Module ausgeführt.
+- 🟡 Vollständiger npm install / npm test / npm run build-Lauf auf dem Repository konnte in der aktuellen Ausführungsumgebung nicht durchgeführt werden, weil der Zugriff auf GitHub aus der Shell nicht aufgelöst werden konnte.
+- 🟡 Vercel-Live-Status bleibt separat zu verifizieren.
 
 ## Regeln
 
 - Keine Bestellung ohne Freigabe.
-- Keine Domain ohne Produktfreigabe.
-- Keine Werbung ohne Freigabe und rechtliche Prüfung.
 - Keine kostenpflichtigen Dienste ohne ausdrückliche Freigabe.
 - Keine Secrets im Repository.
 - Keine echten Kundendaten in Testsystemen.
-- Keine Produktfreigabe auf Basis unverifizierter Preise.
-- Keine produktive Massenansprache ohne rechtliche Prüfung.
+- Keine erfundenen Finanzzahlen.
+- Keine produktive Zahlung ohne Payment-Gate.
+- Kritische Fehler stoppen Folgeprozesse.
+- Produktionsstatus wird nur nach nachweisbarer Prüfung auf 🟢 gesetzt.
 
 ## Nächster STOP-Punkt
 
-Produktentscheidung erst nach dokumentiertem Quality Gate. Bis dahin bleibt der Status 🟡.
-
-
-## Database / Persistence
-- 🟡 Persistence facade implemented; runtime remains memory-only.
-- 🟡 Supabase Free documented as a $0 candidate; no project or paid plan activated.
-- ⚪ Production database requires credentials, schema, smoke test, restart test, and access-control review.
-
-
-## Master Dashboard
-- 🟢 `/master` central control surface implemented.
-- 🟢 Business edit UI connected to `/api/master/businesses`.
-- 🟡 Supabase migration and server-side adapter prepared; no external database credentials configured.
-- 🔴 Do not mark persistence production-ready until schema deployment and restart smoke test pass.
-
-- 🟢 Master audit-log service and protected database schema prepared.
-- 🟡 Audit persistence remains memory fallback until Supabase credentials are configured.
-
-- 🟢 Master system view now supports status filtering.
-
-
-## Systeme & Integrationen – 2026-09-20
-- 🟢 Systemregister/API implementiert: GitHub, Vercel, Supabase, Famulor, Easybell, Stripe, PayPal, Shopify, E-Mail, Slack.
-- 🟢 Statusänderungen werden über die Master-API und Audit-Log vorbereitet.
-- 🟡 Live-Connector-Prüfungen sind bewusst noch nicht behauptet; externe Zugangsdaten/Aktionen fehlen oder sind gesperrt.
-- 🔴 Aktueller Vercel-Commitstatus meldet einen Deployment-Fehler. Ursache konnte über die verfügbare GitHub-Statusschnittstelle nicht ausgelesen werden und wird separat verfolgt.
+**Persistenz → CI/Build → Vercel → API-Smoke-Test → Neustarttest → erst dann Produktionsfreigabe.**
