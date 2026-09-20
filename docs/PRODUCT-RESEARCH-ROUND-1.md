@@ -4,73 +4,73 @@ Stand: 2026-09-20
 
 ## Ergebnis
 
-Noch keine Kaufentscheidung.
+Noch keine Kaufentscheidung und keine Bestellung.
 
 ### Kandidat A — Kofferraum-Organizer
 
-**Konkrete B2B-Funde:**
-- StockEtik: faltbarer Organizer 60 × 31 × 36 cm; Staffelpreise ab 18 Stück, z. B. 13,20 € netto bei 18 Stück bis 11,44 € netto bei 240 Stück. Die Seite meldet aktuell allerdings widersprüchlich Bestand/ausverkauft; daher vor Bestellung verifizieren. citeturn0search0
-- Werbeartikel-Großhandel: faltbarer Kofferraum-Organizer 600D, 3 Fächer, 6,71 € netto Einzelpreis laut Seite; Herkunft China; MOQ 1. citeturn0search2
-- Werbeartikel-Großhandel: weiteres Modell 600D, 8,76 € netto Einzelpreis laut Seite; MOQ 1. citeturn0search3
-- Accordion-Modell: 9,80 € netto Einzelpreis; MOQ 1; Herkunft China. citeturn0search8
-- Aktuelles Endkundenbeispiel: monzana Kofferraumtasche 28,85 € bei Kaufland. Das ist nur ein Marktpreis, kein garantierter erzielbarer Verkaufspreis. 
+**Aktuell verifizierte Recherchepunkte:**
+
+- StockEtik: faltbarer Organizer 60 × 31 × 36 cm aus 600D Polyester. Staffelpreise laut aktueller Produktseite: 13,20 € netto ab 18 Stück bis 11,44 € netto bei 240 Stück. Die Seite enthält zugleich einen Bestands-/Ausverkauft-Widerspruch; deshalb nicht als sicher verfügbar behandeln. Muster wird mit 27,62 € netto angegeben. citeturn0search1
+- Werbeartikel-Großhandel: Accordion Kofferraum Organizer, 60 × 31 × 36 cm, 600D Polyester, 9,80 € netto bei 1 Stück; MOQ 1. Mengenpreise steigen auf der Seite bei größeren Mengen nicht auf ein Niveau, das für unser kleines Startbudget bereits attraktiv genug wäre. Herkunft China. citeturn0search6
+- Alibaba: ein 600D-Oxford-Modell wird mit 2,35 € bei 100–299 Stück, 1,96 € bei 300–499 und 1,57 € ab 500 Stück angezeigt; MOQ 300 laut Produktdaten, Versand und Liefertermin sind separat zu verhandeln. Für einen Start mit kleinem Budget ist die MOQ ein wesentlicher Nachteil. citeturn0search4
+- Ein weiteres Alibaba-Modell liegt bei 2,61–17,40 € mit MOQ 2.000 Stück; damit aktuell für unseren Start nicht geeignet. citeturn0search2
+- Ein aktuelles Endkundenbeispiel auf OTTO liegt bei 17,99 € für einen 600D-Rücksitzorganizer; ein anderes bei 24,99 €. Das zeigt eine Preisspanne, ist aber kein Nachweis für unseren erzielbaren Verkaufspreis. citeturn0search11turn0search13
+- Ein aktueller Preisvergleich zeigt für einen 600D-Kofferraum-Organizer Angebote ab 40,99 €. Solche Marktplatzpreise sind stark produkt-/anbieterabhängig und dürfen nicht als Zielpreis übernommen werden. citeturn0search0
+- Ein B2B-Angebot bei Laprinta nennt einen Kofferraum-Organizer für 5,46 € netto als Muster/Einzelpreis, MOQ 1 und Lagerbestand; Druck ist optional und verursacht zusätzliche Kosten. Versand und genaue Konditionen müssen vor Bestellung geprüft werden. citeturn0search12
 
 **Bewertung:** 🟡 WEITER PRÜFEN
-Grund: Es existieren konkrete B2B-Preise und mehrere Bezugsquellen. Vor Freigabe müssen Versand, tatsächliche Verfügbarkeit, Produktdaten, Retouren, Verpackung, Gebühren und realistisch erzielbarer Verkaufspreis geprüft werden.
+
+**Warum noch keine Freigabe:** Wir haben mehrere konkrete Bezugsquellen, aber noch keine belastbare Gesamtkostenrechnung inklusive Versand, Verpackung, Zahlungs-/Marktplatzgebühren, Retourenreserve und realistischem Werbekosten-Szenario. Zusätzlich muss geklärt werden, ob die konkrete Variante rechtlich/produktseitig für den Verkauf in Deutschland geeignet ist.
 
 ### Kandidat B — Schubladen-Organizer
 
-- Faire/JOCCA: Schubladen-Organizer, EKP/Preisangabe auf Seite 3,38 €, Mindestbestellwert 299 €. Die Großhandelspreise müssen vor Bestellung freigeschaltet/verifiziert werden. citeturn0search4
-- Salzmann Restwaren: 8er-Set Waben-Organizer ab 1,21 €, 3.627 Sets verfügbar laut Seite; B2B-only. Produkt wurde laut Anbieter vor dem 13.12.2024 in Verkehr gebracht. citeturn0search5
-- Aktuelles Endkundenbeispiel: Schubladen-Organizer-Set ca. 16–20 € je nach Anbieter. 
+- Faire/JOCCA: Preisangabe sichtbar, aber der echte Großhandelspreis muss vor Bestellung verifiziert werden.
+- Salzmann Restwaren: günstiges 8er-Set laut Anbieter; Restwarenmodell und Verfügbarkeit müssen vor Bestellung verifiziert werden.
+- Merkandi: weitere B2B-Angebote vorhanden; Lieferbedingungen und Produktunterlagen müssen vor einer Freigabe geprüft werden.
 
 **Bewertung:** 🟡 WEITER PRÜFEN
-Grund: Potenziell niedriger Einkauf, aber Restposten-/B2B-Modell und Produkt-/Lieferfähigkeit müssen geprüft werden.
 
 ### Kandidat C — Hunde-Reisetrinkflasche
 
-- Faire listet zahlreiche B2B-Angebote und Marken. citeturn1search1
-- Springland 12er-Pack: auf der Seite ist eine EKP-/UVP-Angabe von 21,58 € sichtbar, aber der eigentliche Großhandelspreis muss freigeschaltet werden. Daher nicht als Einkaufspreis verwenden. citeturn1search2
-- B&W Doggyroller: UVP 15,90 €, Großhandelspreis muss freigeschaltet werden; Mindestbestellwert 100 €. citeturn1search3
-- United Pets: UVP 16,50 €, Großhandelspreis muss freigeschaltet werden; Mindestbestellwert 100 €. citeturn1search11
+- Mehrere B2B-Angebote sind sichtbar.
+- Bei mehreren Angeboten ist der eigentliche Einkaufspreis erst nach Freischaltung sichtbar.
 
 **Bewertung:** 🟡 WEITER PRÜFEN
-Grund: Nachfrage-/Produktinteresse sichtbar, aber für die Wirtschaftlichkeitsrechnung fehlt derzeit ein verifizierter Einkaufspreis.
 
 ### Kandidat D — Kabel-Organizer
 
-- Faire/Loika: Großhandel Kabel-Organizer; Mindestbestellwert 100 €, Großhandelspreis muss freigeschaltet werden; Herstellung Spanien. citeturn0search6
-- Faire/shh manufaktur: Leder-Kabelorganizer; Mindestbestellwert 130 €, Großhandelspreis muss freigeschaltet werden; Herstellung Deutschland. citeturn0search10
-- TK Gruppe: Tech Organizer laut Seite 10,06 €; Verfügbarkeit wird vor Bestellung geprüft. citeturn0search11
-- RPET Organizer Temor: 2,52 € netto laut Seite, Herkunft China. citeturn0search9
+- Mehrere B2B-Angebote mit sehr unterschiedlichen Materialien und Mindestmengen.
+- Einkaufspreise und Differenzierung müssen je konkretem Modell geprüft werden.
 
 **Bewertung:** 🟡 WEITER PRÜFEN
-Grund: sehr unterschiedliche Produkte; einfache Organizer können preislich interessant sein, aber Differenzierung und Verkaufspreis sind noch offen.
 
-## Vorläufige Priorität für die nächste Prüfung
+## Vorläufige Arbeitsreihenfolge
 
-1. Kofferraum-Organizer — konkrete B2B-Preise bereits sichtbar
-2. Schubladen-Organizer — sehr niedrige B2B-Preise möglich
-3. Hunde-Reisetrinkflasche — interessante Kategorie, Einkaufspreis noch nicht offen
-4. Kabel-Organizer — viele Varianten, Differenzierung schwieriger
+Diese Reihenfolge ist **keine Aussage über erwarteten Markterfolg**. Sie beschreibt nur die Effizienz der nächsten Prüfung:
 
-Diese Reihenfolge ist **keine Aussage über erwarteten Markterfolg**. Sie beschreibt nur, welche Kandidaten wir als Nächstes am effizientesten auf vollständige Kosten und Beschaffbarkeit prüfen können.
+1. Kofferraum-Organizer
+2. Schubladen-Organizer
+3. Hunde-Reisetrinkflasche
+4. Kabel-Organizer
 
 ## Nächster Quality Gate
 
-Für die Top-2 Kandidaten werden jetzt recherchiert:
-- konkrete Lieferquelle
+Für die Top-Kandidaten werden vor jeder Kaufentscheidung geprüft:
+
+- konkrete Lieferquelle und Lieferland
 - verifizierbarer Einkaufspreis
 - Versand nach Deutschland
 - Lieferzeit
 - Mindestmenge
 - Muster-/Einzelbestellung
-- Retouren
+- Retourenbedingungen
 - Produktkonformität / GPSR-relevante Informationen
-- Verpackung
+- Hersteller-/Importeurinformationen
+- Verpackung und Kennzeichnung
 - realistischer Verkaufspreis
 - Zahlungs-/Marktplatzgebühren
 - Werbekosten-Szenario
 - Deckungsbeitrag
+- Kapitalbedarf und maximales Verlustrisiko
 
-**Noch keine Bestellung. Noch keine Domain. Noch keine Werbung.**
+**Keine Bestellung. Keine Domain. Keine Werbung. Keine kostenpflichtige API ohne ausdrückliche Freigabe.**
