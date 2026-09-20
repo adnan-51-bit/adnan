@@ -172,3 +172,10 @@ Produktentscheidung erst nach dokumentiertem Quality Gate. Bis dahin bleibt der 
 - 🟡 Audit persistence remains memory fallback until Supabase credentials are configured.
 
 - 🟢 Master system view now supports status filtering.
+
+
+## Systeme & Integrationen – 2026-09-20
+- 🟢 Systemregister/API implementiert: GitHub, Vercel, Supabase, Famulor, Easybell, Stripe, PayPal, Shopify, E-Mail, Slack.
+- 🟢 Statusänderungen werden über die Master-API und Audit-Log vorbereitet.
+- 🟡 Live-Connector-Prüfungen sind bewusst noch nicht behauptet; externe Zugangsdaten/Aktionen fehlen oder sind gesperrt.
+- 🔴 Aktueller Vercel-Commitstatus meldet einen Deployment-Fehler. Ursache konnte über die verfügbare GitHub-Statusschnittstelle nicht ausgelesen werden und wird separat verfolgt.
