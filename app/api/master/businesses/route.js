@@ -4,9 +4,16 @@ import { checkAdminSecret } from "../../../../lib/auth.js";
 
 export const runtime = "nodejs";
 
-export async function GET(){
+export async function GET(request){
   try{
-    return NextResponse.json({ok:true,storage:storageMode(),businesses:await listBusinesses()});
+    const id = new URL(request.url).searchParams.get("id");
+    const businesses = await listBusinesses();
+    if (id) {
+      const business = businesses.find(b => b.id === id);
+      if (!business) return NextResponse.json({ok:false,error:"Business nicht gefunden"},{status:404});
+      return NextResponse.json({ok:true,storage:storageMode(),business});
+    }
+    return NextResponse.json({ok:true,storage:storageMode(),businesses});
   }catch(error){
     return NextResponse.json({ok:false,error:error.message},{status:500});
   }

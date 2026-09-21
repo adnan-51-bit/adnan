@@ -12,6 +12,14 @@ Die Master-Zentrale ist seit Phase 5 (21.09.2026) tatsächlich live und live gep
 
 Produktiver **echter Geschäftsbetrieb** (Verkauf, Zahlungen) bleibt weiterhin gesperrt: Persistenz läuft weiterhin im Fallback-Speicher (kein Supabase-Konto vorhanden, auf Adnans ausdrücklichen Wunsch nicht selbst angelegt), und die rechtlichen Pflichttexte (Impressum/Datenschutz/AGB/Widerruf) fehlen komplett (🔴 BLOCKER, s. `docs/QUALITY-GATE-PHASE-4.md`).
 
+## Multi-Business-Struktur — Phase 1 (21.09.2026)
+
+🟢 **UMGESETZT, GETESTET, NICHT DEPLOYED.**
+
+Formale `business_id`-Trennung eingeführt: `lib/master-store.js` (`BUSINESS_IDS`, `isKnownBusinessId`, `getBusiness`), `lib/master-tasks.js` und `lib/master-finance.js` validieren/filtern jetzt nach `business_id` (`GET /api/master/tasks?business_id=`, `GET /api/master/finance?business_id=`, `GET /api/master/businesses?id=`). `lib/ecommerce-store.js` stempelt `business_id: "ecommerce"` auf jeden Datensatz. Keine neue API-Route-Datei — weiterhin genau 12 Vercel-Funktionen. Volle Details: `docs/MULTI-BUSINESS-ARCHITECTURE.md`.
+
+**Getestet:** 8 neue Tests (`tests/multi-business-separation.test.js`) beweisen u. a. strukturell, dass `ecommerce-store.js` den Werknetz24-Connector nie importiert, und dass `listTasks`/`listFinance` mit `business_id`-Filter keine Vermischung zulassen. Gesamtsuite 55/55 grün, `npm run build` erfolgreich (weiterhin 12 API-Funktionen, 25 Routen). **Nicht deployed** (laut Auftrag).
+
 ## Master-Zentrale
 
 🟢 **UI/API-BASIS IMPLEMENTIERT**
