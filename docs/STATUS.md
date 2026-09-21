@@ -8,7 +8,9 @@ Stand: 2026-09-21 (Phase 5, Finaler Go-Live)
 
 Die Master-Zentrale ist seit Phase 5 (21.09.2026) tatsächlich live und live geprüft unter `https://adnan-sandy.vercel.app` (nicht nur behauptet — Deployment-Status, Seiteninhalt, API-Antworten und der Phase-4-Sicherheitsfix wurden alle direkt gegen die Live-URL verifiziert). Das zuvor dokumentierte Vercel-Team-Build-Limit hat sich aufgelöst.
 
-Produktiver **echter Geschäftsbetrieb** (Verkauf, Zahlungen) bleibt weiterhin gesperrt: Persistenz läuft im Fallback-Speicher (kein Supabase konfiguriert), Schreibzugriffe sind ohne gesetztes `MASTER_API_SECRET` gesperrt, und die rechtlichen Pflichttexte (Impressum/Datenschutz/AGB/Widerruf) fehlen komplett (🔴 BLOCKER, s. `docs/QUALITY-GATE-PHASE-4.md`).
+**Update 21.09.2026 (Folgearbeit "alles live machen"):** `MASTER_API_SECRET` und `WERKNETZ24_STATUS_SECRET` wurden in der Vercel-Produktionsumgebung gesetzt und beide Projekte redeployed. Live verifiziert: Schreibschutz (`PATCH /api/master/businesses` ohne Token → `401`, mit korrektem Token → `200`) und die Werknetz24-Verbindung (`liveStatus.configured:true, ok:true` mit echten Daten, sichtbar im `/master`-Betriebe-Tab als grüne "Werknetz24 live"-Box). Damit sind Punkt 2 und 3 aus Abschnitt "Werknetz24-Anbindung" unten sowie der Schreibschutz aus Phase 4 jetzt 🟢 statt 🔵/🟡. Ein erster Setzversuch der Secrets hatte trotz Anzeige "Added" keinen Wert gespeichert (Vercel zeigt bei Secret-Typ-Variablen nie den Wert an, sodass das leer geblieben war) — behoben durch `Rotate` mit erneuter Werteingabe statt erneutem `Add`.
+
+Produktiver **echter Geschäftsbetrieb** (Verkauf, Zahlungen) bleibt weiterhin gesperrt: Persistenz läuft weiterhin im Fallback-Speicher (kein Supabase-Konto vorhanden, auf Adnans ausdrücklichen Wunsch nicht selbst angelegt), und die rechtlichen Pflichttexte (Impressum/Datenschutz/AGB/Widerruf) fehlen komplett (🔴 BLOCKER, s. `docs/QUALITY-GATE-PHASE-4.md`).
 
 ## Master-Zentrale
 
@@ -32,7 +34,7 @@ Vorhanden:
 **Vollständiger Bericht:** `docs/QUALITY-GATE-PHASE-4.md`.
 
 🔴 **BLOCKER gefunden und teilweise behoben:**
-- **Behoben:** Alle 6 mutierenden API-Endpunkte (`/api/master/*`, `/api/orders`) hatten keine Authentifizierung — neues `lib/auth.js` (`MASTER_API_SECRET`, zeitkonstanter Vergleich, fail-closed) jetzt auf allen angewendet, inkl. Frontend-Anpassung (`lib/admin-fetch.js`) und neuem `admin-auth`-Check im Quality Gate selbst.
+- **Behoben, seit 21.09.2026 auch live aktiv:** Alle 6 mutierenden API-Endpunkte (`/api/master/*`, `/api/orders`) hatten keine Authentifizierung — neues `lib/auth.js` (`MASTER_API_SECRET`, zeitkonstanter Vergleich, fail-closed) jetzt auf allen angewendet, inkl. Frontend-Anpassung (`lib/admin-fetch.js`) und neuem `admin-auth`-Check im Quality Gate selbst. `MASTER_API_SECRET` ist jetzt gesetzt und live bestätigt (401 ohne Token, 200 mit korrektem Token).
 - **Weiterhin offen, nicht behebbar ohne echte rechtliche Prüfung:** Impressum, Datenschutzerklärung, AGB und Widerrufsbelehrung fehlen komplett — vor jedem öffentlichen/echten Verkauf zwingend nötig. Keine dieser Texte wurde erfunden.
 - **Weiterhin offen (unverändert seit Phase 1):** Vercel-Team-Build-Limit.
 
@@ -59,11 +61,11 @@ Neu: `lib/ecommerce-store.js` — echte Persistenz (Supabase, wenn konfiguriert,
 
 **Tests:** 18 neue Tests (`tests/ecommerce-store.test.js`), davon 7 gezielt für `deriveOrderGateInputs` (jede der drei Sicherheitsbedingungen einzeln geprüft). Gesamtsuite 38/38 grün, `npm run build` erfolgreich (25 Routen, weiterhin genau 12 API-Funktionen).
 
-## Werknetz24-Anbindung (Phase 2, 20.09.2026)
+## Werknetz24-Anbindung (Phase 2, 20.09.2026; live aktiviert 21.09.2026)
 
-🔵 **EXTERNAL — Integrationsschicht vorbereitet, noch nicht aktiv.**
+🟢 **LIVE — Verbindung aktiv, echte Daten fließen.**
 
-Read-only Connector (`lib/werknetz24-connector.js`) an das bestehende, produktive `werknetz24-landing`-Repository gebaut. Liefert bei Aufruf von `listBusinesses()` den echten, live abgefragten Werknetz24-Status (Systemstatus, offene Incidents/Aufgaben, offene Rechnungen/Ausgaben-Summen) im `werknetz24`-Eintrag als `liveStatus`. **Aktuell nicht konfiguriert** — `WERKNETZ24_STATUS_SECRET` ist in keiner Umgebung gesetzt, `liveStatus.configured` ist deshalb ehrlich `false`. Details, inkl. warum bewusst ein eigenes Secret statt des Werknetz24-`ADMIN_SECRET` verwendet wird: `docs/WEBHOOKS-AND-INTEGRATIONS.md`.
+Read-only Connector (`lib/werknetz24-connector.js`) an das bestehende, produktive `werknetz24-landing`-Repository gebaut. Liefert bei Aufruf von `listBusinesses()` den echten, live abgefragten Werknetz24-Status (Systemstatus, offene Incidents/Aufgaben, offene Rechnungen/Ausgaben-Summen) im `werknetz24`-Eintrag als `liveStatus`. `WERKNETZ24_STATUS_SECRET` ist seit 21.09.2026 in Production gesetzt; `liveStatus.configured` und `liveStatus.ok` sind live bestätigt `true`, mit echten, aktuell abgefragten Zahlen (bestätigt sowohl über `GET /api/master/businesses` als auch visuell im `/master`-Betriebe-Tab). Details, inkl. warum bewusst ein eigenes Secret statt des Werknetz24-`ADMIN_SECRET` verwendet wird: `docs/WEBHOOKS-AND-INTEGRATIONS.md`.
 
 Keine neue API-Route nötig (Repo hat mit 12 Routen bereits das Vercel-Hobby-Limit erreicht).
 
@@ -177,4 +179,4 @@ Produktionsfreigabe erfordert weiterhin:
 
 ## Nächster STOP-Punkt
 
-**Deployment-Gate erreicht und bestätigt (Phase 5, 21.09.2026).** Vor echtem Geschäftsbetrieb weiterhin nötig: Umgebungsvariablen setzen (`MASTER_API_SECRET`, `WERKNETZ24_STATUS_SECRET`, `SUPABASE_*` — Adnans Vercel-Zugang), und vor allem: **rechtliche Pflichttexte (Impressum/Datenschutz/AGB/Widerruf) erstellen** — 🔴 BLOCKER, s. `docs/QUALITY-GATE-PHASE-4.md`.
+**Deployment-Gate erreicht und bestätigt (Phase 5, 21.09.2026); `MASTER_API_SECRET` und `WERKNETZ24_STATUS_SECRET` seit 21.09.2026 gesetzt und live verifiziert.** Vor echtem Geschäftsbetrieb weiterhin nötig: `SUPABASE_*` (nur mit echtem Supabase-Konto — Adnan hat noch keins, bewusst nicht selbst angelegt, bleibt Fallback-Speicher), und vor allem: **rechtliche Pflichttexte (Impressum/Datenschutz/AGB/Widerruf) erstellen** — 🔴 BLOCKER, s. `docs/QUALITY-GATE-PHASE-4.md`.
