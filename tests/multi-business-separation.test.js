@@ -36,7 +36,12 @@ test("listBusinesses exposes exactly the known businesses, each with its own das
 
   const werknetz24 = businesses.find(b => b.id === "werknetz24");
   const ecommerce = businesses.find(b => b.id === "ecommerce");
-  assert.ok(werknetz24.link.startsWith("https://werknetz24.de"), "Werknetz24 muss auf sein eigenes, externes Dashboard verlinken");
+  // Seit 22.09.2026 (Adnans Wunsch "eigene Seite pro Betrieb, nichts vermischen") verlinkt auch
+  // Werknetz24 auf eine eigene, dedizierte Seite in diesem Repo (/werknetz24, zeigt nur
+  // Werknetz24-Live-Status + Kalender über die sichere Bruecke) statt direkt auf die externe
+  // werknetz24.de/admin-zentrale - von dort aus gibt es einen klaren Link zur vollständigen
+  // externen Verwaltung.
+  assert.equal(werknetz24.link, "/werknetz24", "Werknetz24 muss auf seine eigene, dedizierte Seite verlinken");
   assert.equal(ecommerce.link, "/e-commerce", "E-Commerce muss auf sein eigenes internes Dashboard verlinken");
   assert.notEqual(werknetz24.link, ecommerce.link, "Beide Betriebe müssen zu unterschiedlichen Dashboards führen");
 });

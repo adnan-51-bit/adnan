@@ -86,7 +86,9 @@ test("Werknetz24 and E-Commerce dashboard links never diverge between the server
   const clientLinks = extractLinks(pageSource);
 
   assert.deepEqual(serverLinks, clientLinks, "Server-Registry (lib/master-store.js) und Client-Fallback (app/master/page.jsx) dürfen bei den Betriebs-Links nicht auseinanderlaufen");
-  assert.ok(serverLinks.werknetz24.startsWith("https://werknetz24.de"));
+  // Seit 22.09.2026: eigene, dedizierte Seite in diesem Repo statt direktem externem Link (s.
+  // multi-business-separation.test.js für die volle Begründung).
+  assert.equal(serverLinks.werknetz24, "/werknetz24");
   assert.equal(serverLinks.ecommerce, "/e-commerce");
 });
 
