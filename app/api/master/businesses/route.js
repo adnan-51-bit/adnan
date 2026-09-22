@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { listBusinesses, updateBusiness, storageMode } from "../../../../lib/master-store";
 import { checkAdminSecret } from "../../../../lib/auth.js";
-import { fetchWerknetz24Kalender, createWerknetz24KalenderTermin } from "../../../../lib/werknetz24-connector.js";
+import { fetchWerknetz24Kalender, createWerknetz24KalenderTermin, fetchWerknetz24Aufgaben, fetchWerknetz24Rechnungen } from "../../../../lib/werknetz24-connector.js";
 
 export const runtime = "nodejs";
 
@@ -15,6 +15,14 @@ export async function GET(request){
     if (params.get("werknetz24Kalender")) {
       const kalender = await fetchWerknetz24Kalender();
       return NextResponse.json({ ok: true, kalender });
+    }
+    if (params.get("werknetz24Aufgaben")) {
+      const aufgaben = await fetchWerknetz24Aufgaben();
+      return NextResponse.json({ ok: true, aufgaben });
+    }
+    if (params.get("werknetz24Rechnungen")) {
+      const rechnungen = await fetchWerknetz24Rechnungen();
+      return NextResponse.json({ ok: true, rechnungen });
     }
     const id = params.get("id");
     const businesses = await listBusinesses();

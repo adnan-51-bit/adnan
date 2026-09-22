@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fetchWerknetz24Status, werknetz24ConnectorConfigured, fetchWerknetz24Kalender, createWerknetz24KalenderTermin, werknetz24WriteConfigured } from "../lib/werknetz24-connector.js";
+import { fetchWerknetz24Status, werknetz24ConnectorConfigured, fetchWerknetz24Kalender, createWerknetz24KalenderTermin, werknetz24WriteConfigured, fetchWerknetz24Aufgaben, fetchWerknetz24Rechnungen } from "../lib/werknetz24-connector.js";
 
 test("werknetz24ConnectorConfigured is false without WERKNETZ24_STATUS_SECRET", () => {
   delete process.env.WERKNETZ24_STATUS_SECRET;
@@ -120,4 +120,42 @@ test("createWerknetz24KalenderTermin reports a server-side rejection (e.g. valid
   assert.equal(result.ok, false);
   assert.match(result.error, /summary/);
   delete process.env.WERKNETZ24_WRITE_SECRET;
+});
+
+// ─── Aufgaben + Rechnungen (22.09.2026) ───
+
+test("fetchWerknetz24Aufgaben returns configured:false honestly when secret is missing, never fakes tasks", async () => {
+  delete process.env.WERKNETZ24_STATUS_SECRET;
+  const result = await fetchWerknetz24Aufgaben(async () => { throw new Error("must not fetch when not configured"); });
+  assert.equal(result.configured, false);
+  assert.equal(result.aufgaben, undefined);
+});
+
+test("fetchWerknetz24Aufgaben returns the real tasks on success", async () => {
+  process.env.WERKNETZ24_STATUS_SECRET = "read-secret";
+  const fakeFetch = async () => ({ ok: true, status: 200, json: async () => ({ ok: true, aufgaben: [{ id: "w1", text: "Rechnung pruefen", erledigt: false }] }) });
+  const result = await fetchWerknetz24Aufgaben(fakeFetch);
+  assert.equal(result.ok, true);
+  assert.equal(result.aufgaben.length, 1);
+  assert.equal(result.aufgaben[0].text, "Rechnung pruefen");
+  delete process.env.WERKNETZ24_STATUS_SECRET;
+});
+
+test("fetchWerknetz24Rechnungen returns configured:false honestly when secret is missing, never fakes invoices", async () => {
+  delete process.env.WERKNETZ24_STATUS_SECRET;
+  const result = await fetchWerknetz24Rechnungen(async () => { throw new Error("must not fetch when not configured"); });
+  assert.equal(result.configured, false);
+  assert.equal(result.rechnungen, undefined);
+});
+
+test("fetchWerknetz24Rechnungen returns the real invoices on success, reports errors honestly on failure", async () => {
+  process.env.WERKNETZ24_STATUS_SECRET = "read-secret";
+  const ok = await fetchWerknetz24Rechnungen(async () => ({ ok: true, status: 200, json: async () => ({ ok: true, rechnungen: [{ rechnungsnummer: "RE-1", betrag_cent: 5000, status: "offen" }] }) }));
+  assert.equal(ok.ok, true);
+  assert.equal(ok.rechnungen[0].rechnungsnummer, "RE-1");
+
+  const failed = await fetchWerknetz24Rechnungen(async () => ({ ok: false, status: 503, json: async () => ({ ok: false, error: "nicht konfiguriert" }) }));
+  assert.equal(failed.ok, false);
+  assert.match(failed.error, /nicht konfiguriert/);
+  delete process.env.WERKNETZ24_STATUS_SECRET;
 });
