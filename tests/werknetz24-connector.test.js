@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fetchWerknetz24Status, werknetz24ConnectorConfigured, fetchWerknetz24Kalender, createWerknetz24KalenderTermin, werknetz24WriteConfigured, fetchWerknetz24Aufgaben, fetchWerknetz24Rechnungen } from "../lib/werknetz24-connector.js";
+import { fetchWerknetz24Status, werknetz24ConnectorConfigured, fetchWerknetz24Kalender, createWerknetz24KalenderTermin, werknetz24WriteConfigured, fetchWerknetz24Aufgaben, fetchWerknetz24Rechnungen, fetchWerknetz24Incidents } from "../lib/werknetz24-connector.js";
 
 test("werknetz24ConnectorConfigured is false without WERKNETZ24_STATUS_SECRET", () => {
   delete process.env.WERKNETZ24_STATUS_SECRET;
@@ -157,5 +157,23 @@ test("fetchWerknetz24Rechnungen returns the real invoices on success, reports er
   const failed = await fetchWerknetz24Rechnungen(async () => ({ ok: false, status: 503, json: async () => ({ ok: false, error: "nicht konfiguriert" }) }));
   assert.equal(failed.ok, false);
   assert.match(failed.error, /nicht konfiguriert/);
+  delete process.env.WERKNETZ24_STATUS_SECRET;
+});
+
+// ─── Incidents (22.09.2026) ───
+
+test("fetchWerknetz24Incidents returns configured:false honestly when secret is missing, never fakes incidents", async () => {
+  delete process.env.WERKNETZ24_STATUS_SECRET;
+  const result = await fetchWerknetz24Incidents(async () => { throw new Error("must not fetch when not configured"); });
+  assert.equal(result.configured, false);
+  assert.equal(result.incidents, undefined);
+});
+
+test("fetchWerknetz24Incidents returns the real, minimal incident list on success", async () => {
+  process.env.WERKNETZ24_STATUS_SECRET = "read-secret";
+  const fakeFetch = async () => ({ ok: true, status: 200, json: async () => ({ ok: true, incidents: [{ system: "email-berichte", prioritaet: "Kritisch", erste_erkennung: "2026-09-22T10:00:00.000Z" }] }) });
+  const result = await fetchWerknetz24Incidents(fakeFetch);
+  assert.equal(result.ok, true);
+  assert.equal(result.incidents[0].system, "email-berichte");
   delete process.env.WERKNETZ24_STATUS_SECRET;
 });

@@ -69,6 +69,10 @@ export default function Werknetz24Page() {
 
 function Overview({ business }) {
   const status = business?.liveStatus;
+  const [incidents, setIncidents] = useState(null);
+  useEffect(() => {
+    fetch("/api/master/businesses?werknetz24Incidents=1").then(r => r.json()).then(d => setIncidents(d.incidents)).catch(() => {});
+  }, []);
   return <>
     <div className="pageTitle"><div><span>STATUS</span><h2>Werknetz24 auf einen Blick</h2></div></div>
     {!status ? <Panel title="Live-Status"><p>Lädt…</p></Panel>
@@ -80,6 +84,7 @@ function Overview({ business }) {
           <Kpi label="Offene Aufgaben" value={status.data.aufgaben.offen} note="in Werknetz24" />
           <Kpi label="Offene Rechnungen" value={status.data.finanzen.offeneRechnungenAnzahl} note={new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format((status.data.finanzen.offeneRechnungenSummeCent || 0) / 100)} />
         </div>}
+    {incidents?.ok && incidents.incidents.length > 0 && <Panel title="Was ist rot? (Systemwächter-Incidents)">{incidents.incidents.map((i, idx) => <div className="taskMini" key={idx}><div><strong>{i.system || "unbekanntes System"}</strong><small>{i.erste_erkennung ? new Date(i.erste_erkennung).toLocaleString("de-DE") : "—"}</small></div><span>{i.prioritaet || "—"}</span></div>)}</Panel>}
     <Panel title="Module"><div className="chips">{(business?.modules || []).map(m => <i key={m}>{m}</i>)}</div></Panel>
   </>;
 }
