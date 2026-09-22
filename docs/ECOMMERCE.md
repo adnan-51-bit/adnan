@@ -66,6 +66,13 @@ Ein Produkt wird erst 🟢 freigegeben, wenn:
 
 Alle Modellannahmen müssen als TEST/ANNAHME gekennzeichnet bleiben, bis sie mit einem realen Lieferanten oder einer offiziellen Gebührenquelle verifiziert wurden.
 
+## Nachtrag 21.09.2026 (Phase 2 Multi-Business-Struktur): eigenständiges Dashboard
+
+`app/e-commerce/page.jsx` ist jetzt das vollständige E-Commerce-Dashboard (Übersicht, Produkte,
+Produkt-Pipeline, Lieferanten, Bestellungen, Kunden, Zahlungen, Retouren, Finanzen, Automationen,
+Systeme, Quality Gate, Einstellungen) — nicht mehr nur eine Übersichtsseite mit Links zu
+Einzelseiten. Details: `docs/MULTI-BUSINESS-ARCHITECTURE.md`.
+
 ## Nachtrag 20.09.2026 (Phase 3): echte Datenschicht statt hartcodierter Werte
 
 `app/shop/page.jsx` bleibt unverändert die hier beschriebene Modellrechnung (20 Testkandidaten, klar als "🟡 TESTDATEN" gekennzeichnet — bewusst nicht angefasst, dient weiterhin der reinen Margenkalkulation).

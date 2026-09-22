@@ -88,7 +88,7 @@ export default function MasterDashboard(){
         {[
           ["overview","◈","Übersicht"],["businesses","▣","Betriebe"],["tasks","✓","Aufgaben"],["systems","◉","Systeme"],["finance","€","Finanzen"],["automation","↻","Automationen"],["audit","▤","Audit-Log"],["settings","⚙","Einstellungen"]
         ].map(([id,icon,label])=><button key={id} className={tab===id?"selected":""} onClick={()=>setTab(id)}><b>{icon}</b>{label}</button>)}
-        <div className="sideBottom"><a href="/e-commerce">E-Commerce</a><a href="/produkt-pipeline">Produkt-Pipeline</a><a href="/lieferanten">Lieferanten</a><a href="/automation">Automation Engine</a><a href="https://werknetz24.de/admin-zentrale">Werknetz24 Admin</a></div>
+        <div className="sideBottom"><a href="/e-commerce">E-Commerce Dashboard</a><a href="/e-commerce?tab=pipeline">↳ Produkt-Pipeline</a><a href="/e-commerce?tab=lieferanten">↳ Lieferanten</a><a href="/e-commerce?tab=automation">↳ Automationen</a><a href="https://werknetz24.de/admin-zentrale">Werknetz24 Admin ↗</a></div>
       </aside>
 
       <section className="content">{loading && <div className="notice">Master-Daten werden geladen…</div>}

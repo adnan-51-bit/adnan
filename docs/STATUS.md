@@ -18,6 +18,16 @@ Produktiver **echter Geschäftsbetrieb** (Verkauf, Zahlungen) bleibt weiterhin g
 
 Formale `business_id`-Trennung eingeführt: `lib/master-store.js` (`BUSINESS_IDS`, `isKnownBusinessId`, `getBusiness`), `lib/master-tasks.js` und `lib/master-finance.js` validieren/filtern jetzt nach `business_id` (`GET /api/master/tasks?business_id=`, `GET /api/master/finance?business_id=`, `GET /api/master/businesses?id=`). `lib/ecommerce-store.js` stempelt `business_id: "ecommerce"` auf jeden Datensatz. Keine neue API-Route-Datei — weiterhin genau 12 Vercel-Funktionen. Volle Details: `docs/MULTI-BUSINESS-ARCHITECTURE.md`.
 
+## Multi-Business-Struktur — Phase 2: E-Commerce-Dashboard (21.09.2026)
+
+🟢 **UMGESETZT, GETESTET, LOKAL LIVE GEPRÜFT, NICHT DEPLOYED.**
+
+`app/e-commerce/page.jsx` ist jetzt das vollständige, eigenständige E-Commerce-Dashboard (Übersicht, Produkte, Produkt-Pipeline, Lieferanten, Bestellungen, Kunden, Zahlungen, Retouren, Finanzen, Automationen, Systeme, Quality Gate, Einstellungen) — gebaut im selben Aufbau wie `/master` (Topbar + Sidebar-Tabs). Die vorher auf 6 Einzelseiten verteilte Funktionalität wurde konsolidiert, keine Funktion entfernt: alte Routen (`/produkt-pipeline`, `/lieferanten`, `/kunden`, `/bestellungen`, `/retouren`, `/automation`) leiten jetzt clientseitig auf `/e-commerce?tab=<bereich>` weiter. Master-Zentrale-Sidebar verlinkt direkt auf die neuen Tab-URLs.
+
+**Lokal live geprüft (`npm start`, Claude-in-Chrome auf `localhost:3000`):** Master-Zentrale → Betriebe → E-Commerce „Öffnen" landet ausschließlich im E-Commerce-Dashboard; alle 13 Tabs mit echten Daten (6 Produkte, 6 Lieferanten, 0 Kunden/Bestellungen/Retouren) geprüft; `/lieferanten` leitet sichtbar zu `/e-commerce?tab=lieferanten` weiter; Zahlungen-Tab zeigt echten Provider-Status; Systeme-Tab korrekt auf 4 relevante Einträge gefiltert; Quality Gate zeigt den echten, zentralen Gate-Status.
+
+**Tests:** 6 neue Tests (`tests/ecommerce-dashboard.test.js`) — u. a. struktureller Beweis, dass das E-Commerce-Dashboard Werknetz24 nie referenziert und `/api/master/businesses` nie selbst aufruft, sowie ein automatischer Abgleich, dass Server-Registry (`lib/master-store.js`) und Client-Fallback (`app/master/page.jsx`) bei den Betriebs-Links nicht auseinanderlaufen können. Gesamtsuite 61/61 grün, `npm run build` erfolgreich (weiterhin 12/12 API-Funktionen, 25 Routen). Volle Details: `docs/MULTI-BUSINESS-ARCHITECTURE.md`.
+
 **Getestet:** 8 neue Tests (`tests/multi-business-separation.test.js`) beweisen u. a. strukturell, dass `ecommerce-store.js` den Werknetz24-Connector nie importiert, und dass `listTasks`/`listFinance` mit `business_id`-Filter keine Vermischung zulassen. Gesamtsuite 55/55 grün, `npm run build` erfolgreich (weiterhin 12 API-Funktionen, 25 Routen). **Nicht deployed** (laut Auftrag).
 
 ## Master-Zentrale

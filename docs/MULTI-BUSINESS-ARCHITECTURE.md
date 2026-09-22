@@ -1,6 +1,63 @@
 # Multi-Business-Architektur
 
-Stand: 2026-09-21 (Phase 1 – Multi-Business-Struktur)
+Stand: 2026-09-21 (Phase 2 – E-Commerce-Dashboard)
+
+## Phase 2 – Eigenständiges E-Commerce-Dashboard (21.09.2026)
+
+`app/e-commerce/page.jsx` ist jetzt das vollständige, eigenständige Dashboard des Geschäftsbereichs
+`business_id: "ecommerce"` — im selben Aufbau wie `/master` (Topbar + Sidebar mit Tabs), mit genau
+den 13 im Auftrag geforderten Bereichen: Übersicht, Produkte, Produkt-Pipeline, Lieferanten,
+Bestellungen, Kunden, Zahlungen, Retouren, Finanzen, Automationen, Systeme, Quality Gate,
+Einstellungen.
+
+**Konsolidierung statt Neubau:** Die vorher auf sechs einzelne Seiten verteilte Funktionalität
+(`/produkt-pipeline`, `/lieferanten`, `/kunden`, `/bestellungen`, `/retouren`, `/automation`) wurde
+unverändert in die jeweiligen Tabs übernommen — dieselben API-Aufrufe, dieselbe Geschäftslogik,
+nur in einer gemeinsamen Navigation zusammengeführt. **Keine Funktion wurde entfernt:** Jede alte
+Route existiert weiterhin, leitet aber jetzt clientseitig auf `/e-commerce?tab=<bereich>` weiter
+(`window.location.replace`), damit kein bestehender Link (z. B. aus der Master-Zentrale oder ein
+Lesezeichen) ins Leere läuft, aber trotzdem nur EINE UI pro Datensatz existiert.
+
+**Neue Tabs, ausschließlich mit bereits bestehenden, echten APIs (keine neue Route-Datei, keine
+Fake-Daten):**
+- **Produkte** – Katalogsicht auf `listProducts()` (Name, Kategorie, Lieferant, Preis, Pipeline-
+  Status), ergänzt die bestehende, workflow-orientierte Produkt-Pipeline-Ansicht um eine reine
+  Übersichts-/Such-Ansicht.
+- **Zahlungen** – echter Provider-Status aus `GET /api/providers` (`lib/providers.js`, unverändert)
+  statt erfundener Zahlungsdaten; PayPal-Status ergänzt aus der Systems-Registry.
+- **Finanzen** – `GET/POST /api/master/finance?business_id=ecommerce` (Phase-1-Filter); jede aus
+  diesem Tab angelegte Buchung erhält serverseitig zwingend `business_id: "ecommerce"` (im Request
+  vom Client mitgesendet, s. Sicherheitsabwägung unten).
+- **Systeme** – gefilterte, **schreibgeschützte** Sicht auf `GET /api/master/systems`, beschränkt
+  auf die für E-Commerce relevanten Einträge (`supabase`, `stripe`, `paypal`, `shopify`).
+  Bearbeitung bleibt bewusst ausschließlich in der Master-Zentrale (`/master` → Systeme), um nicht
+  zwei unterschiedliche Bearbeitungsoberflächen für dieselben Datensätze zu betreiben.
+- **Quality Gate** – zeigt das eine, zentrale `GET /api/master/quality-gate` (kein zweites,
+  paralleles E-Commerce-Quality-Gate, um keine widersprüchlichen Freigabestände zu riskieren).
+- **Einstellungen** – E-Commerce-eigene Grundregeln, mit explizitem Verweis, dass Werknetz24-Daten
+  hier nie geladen werden.
+
+**Werknetz24-Trennung, jetzt auch im Dashboard-Code strukturell geprüft:** `app/e-commerce/page.jsx`
+importiert den Werknetz24-Connector nicht und referenziert `werknetz24.de` an keiner Stelle — dies
+ist jetzt Teil von `tests/ecommerce-dashboard.test.js`, nicht nur eine Absicht. Werknetz24 bleibt
+ausschließlich über die Master-Zentrale (`/master` → Betriebe → „Öffnen") erreichbar.
+
+**Master-Zentrale-Navigation aktualisiert:** Die Sidebar-Kurzlinks in `app/master/page.jsx`
+verlinken jetzt direkt auf `/e-commerce` bzw. `/e-commerce?tab=<bereich>` statt auf die alten,
+jetzt weiterleitenden Routen — ein Klick führt ohne Umweg zum richtigen Tab. Ein neuer Test
+(`tests/ecommerce-dashboard.test.js`) vergleicht die Betriebs-Links aus `lib/master-store.js`
+(Server-Registry) und `app/master/page.jsx` (Client-Fallback vor dem ersten API-Laden) automatisch
+gegeneinander, damit beide nie auseinanderlaufen können.
+
+**Bewusste Sicherheitsabwägung (Finanzen-Tab):** `createFinanceEntry` im E-Commerce-Dashboard setzt
+`business_id: "ecommerce"` im Request-Body, den der Client sendet — nicht serverseitig erzwungen
+(anders als z. B. bei `deriveOrderGateInputs`, wo der Server die Freigabe-Flags selbst ableitet).
+Das ist hier vertretbar, weil `POST /api/master/finance` ohnehin durch `MASTER_API_SECRET`
+geschützt ist (nur Inhaber des Admin-Secrets können überhaupt buchen) und eine falsch gesetzte
+`business_id` durch `isKnownBusinessId()` (Phase 1) höchstens zu einer falschen Zuordnung, nie zu
+einer Sicherheitslücke führen kann. Für eine echte Multi-Tenant-Trennung mit nicht
+vertrauenswürdigen Aufrufern wäre eine serverseitige Ableitung nötig — hier nicht erforderlich, da
+alle Schreibzugriffe ohnehin auf ein einzelnes, geteiltes Admin-Secret beschränkt sind.
 
 ## Ziel
 
