@@ -150,17 +150,25 @@ Routen eingebaut, keine 13. Datei angelegt:
 ## Frontend
 
 - `/master` (Master-Zentrale): Tab **Betriebe** zeigt alle Betriebe mit `Öffnen →` zum jeweils
-  eigenen Dashboard (Werknetz24 → `https://werknetz24.de/admin-zentrale`, E-Commerce →
-  `/e-commerce`, "Weiterer Betrieb" bewusst ohne Link/`#`, solange kein echter Betrieb dahinter
-  steht). Tab **Aufgaben** und **Finanzen** zeigen jetzt einen Geschäftsbereich-Filter und ein
-  Badge pro Zeile, damit sichtbar bleibt, welcher Betrieb betroffen ist – keine stille Vermischung
-  in der Oberfläche.
+  eigenen, dedizierten Bereich (Werknetz24 → `/werknetz24`, E-Commerce → `/e-commerce`, "Weiterer
+  Betrieb" bewusst ohne Link/`#`, solange kein echter Betrieb dahinter steht). Die Businesses-Karte
+  selbst zeigt bewusst nur Aggregat-Info (Status/Umsatz/Module), keine betriebsspezifischen
+  Detail-Widgets mehr (22.09.2026, Adnans ausdrücklicher Wunsch "eigene Seite pro Betrieb, nichts
+  vermischen" – vorher war ein Werknetz24-Kalender-Widget direkt hier eingebettet). Tab
+  **Aufgaben** und **Finanzen** zeigen weiterhin einen Geschäftsbereich-Filter und ein Badge pro
+  Zeile, damit sichtbar bleibt, welcher Betrieb betroffen ist – keine stille Vermischung in der
+  Oberfläche.
 - `/e-commerce` (+ `/produkt-pipeline`, `/lieferanten`, `/kunden`, `/bestellungen`, `/retouren`,
   `/shop`): eigenständiges E-Commerce-Dashboard mit eigener Navigation, unverändert seit Phase 3,
   bezieht ausschließlich Daten aus `lib/ecommerce-store.js`.
-- Werknetz24 hat **kein eigenes Dashboard in diesem Repository** – es referenziert bewusst das
-  bestehende, produktive `werknetz24.de/admin-zentrale`, um das System nicht zu duplizieren oder zu
-  ersetzen.
+- `/werknetz24` (seit 22.09.2026): eigenständige Werknetz24-Seite, eigener Topbar+Sidebar-Aufbau
+  (wie `/e-commerce`). Zeigt **ausschließlich** Werknetz24-Daten – echten Live-Status (Übersicht)
+  und Kalender (ansehen + Termin anlegen, über die sichere Bruecke, s.
+  `lib/werknetz24-connector.js`). Dupliziert die eigentliche Werknetz24-Verwaltung bewusst NICHT –
+  ein eigener Tab "Verbindung" erklärt ehrlich, was über die Bruecke verfügbar ist und was nicht,
+  mit klarem Link zur vollständigen, produktiven Verwaltung unter
+  `https://werknetz24.de/admin-zentrale` (Lisa, Kunden, Leads, Rechnungen, Systemwächter u. a.
+  bleiben dort, kein Vortäuschen nicht vorhandener Funktionen hier).
 
 ## Tests (`tests/multi-business-separation.test.js`)
 
