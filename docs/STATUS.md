@@ -209,6 +209,12 @@ Auftrag: Master-Zentrale zur echten Steuerzentrale für Werknetz24 + E-Commerce 
 - Zentrale Suche über Kunden/Produkte/Bestellungen/Rechnungen/Aufgaben/Systeme — nicht begonnen, eigenständiges größeres Feature.
 - Lisa/Famulor/Easybell-Fernsteuerung — blockiert durch fehlenden `FAMULOR_API_KEY` (Adnans Entscheidung, kostenpflichtig).
 
+## Update 22.09.2026 (2) — Werknetz24-Kalender live gebaut, echter Google-Bug entdeckt
+
+Commit [`cd58585`](https://github.com/adnan-51-bit/adnan/commit/cd58585) (Gegenstück zu `10a0f2e` im `werknetz24-landing`-Repo): Master-Zentrale zeigt jetzt auf der Werknetz24-Betriebskarte echte anstehende Kalendertermine und kann neue anlegen (`WerknetzKalender`-Komponente, `/api/master/businesses?werknetz24Kalender=1` + neuer POST-Zweig). 67/67 Tests grün, Build erfolgreich, live deployed.
+
+**Beim Live-Test entdeckt (nicht durch diese Änderung verursacht):** `GET /api/master/businesses?werknetz24Kalender=1` liefert `{"configured":true,"ok":false,"error":"invalid_grant"}` — Werknetz24s Google-Verbindung (`GOOGLE_REFRESH_TOKEN`) ist aktuell ungültig/abgelaufen. Betrifft wahrscheinlich auch Lisas Live-Terminbuchung während echter Anrufe (`kalender-pruefen`/`kalender-buchen`), nicht nur diese neue Anzeige. **Fix braucht Adnans eigenen Google-Login** (Klick auf "Gmail verbinden" in `admin-zentrale.html` — deckt laut Code auch den Calendar-Scope ab), kann nicht selbst behoben werden.
+
 ## Nächster STOP-Punkt
 
 **Deployment-Gate erreicht und bestätigt (Phase 5, 21.09.2026); `MASTER_API_SECRET` und `WERKNETZ24_STATUS_SECRET` seit 21.09.2026 gesetzt und live verifiziert.** Vor echtem Geschäftsbetrieb weiterhin nötig: `SUPABASE_*` (nur mit echtem Supabase-Konto — Adnan hat noch keins, bewusst nicht selbst angelegt, bleibt Fallback-Speicher), und vor allem: **rechtliche Pflichttexte (Impressum/Datenschutz/AGB/Widerruf) erstellen** — 🔴 BLOCKER, s. `docs/QUALITY-GATE-PHASE-4.md`.
