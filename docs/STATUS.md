@@ -195,6 +195,20 @@ Produktionsfreigabe erfordert weiterhin:
 - Kritische Fehler stoppen Folgeprozesse.
 - Produktionsstatus wird nur nach nachweisbarer Prüfung auf 🟢 gesetzt.
 
+## Update 22.09.2026 — "Kommandozentrale"-Auftrag: Analyse + erster Baustein
+
+Auftrag: Master-Zentrale zur echten Steuerzentrale für Werknetz24 + E-Commerce (Agenten, Fehlerzentrale, direkte Navigation, später auch Schreibzugriff auf Werknetz24-Funktionen wie Lisa/Kalender/Rechnungen) ausbauen.
+
+**Analyse zuerst** (im `werknetz24-landing`-Repo dokumentiert, `docs/MASTER-CONTROL-ARCHITECTURE.md`): kartiert pro Werknetz24-Bereich den echten Code-Stand gegen den Zielzustand. Wichtigste Funde: `werknetz24-landing` hat nur noch 1 freien Vercel-Hobby-Funktionsslot; Easybell/Famulor/Lisa haben keinen serverseitig in Vercel hinterlegten API-Schlüssel — eine echte Fernsteuerung von Lisa aus der Master-Zentrale ist aktuell technisch nicht möglich, unabhängig vom Auftrag.
+
+**Umgesetzt (Commit `3f80dd0`, live):** "Fehler & Warnungen" als eigener, direkt erreichbarer Sidebar-Punkt (vorher im Code vorhandene, aber nie verlinkte `Alerts`-Komponente aktiviert und auf echtes Datenformat korrigiert). Übersicht zeigt jetzt Quality-Gate-Status und letzte Aktivitäten (Audit-Log), alle KPIs/Panels anklickbar. Details: `docs/DEPLOYMENT-GATE.md`.
+
+**Bewusst nicht gebaut (Fake-Daten-Risiko oder Geld-/Kundendaten-Risiko):**
+- Agenten-Zentrale mit Live-Status/Start/Stop — keine Infrastruktur vorhanden, die das nachverfolgt.
+- Echte Schreibsteuerung von Werknetz24 (Kalender/Rechnungen/Aufgaben anlegen aus der Master-Zentrale heraus) — technisch möglich, aber bewusst zurückgestellt, bis ein Sicherheits-/Bestätigungsmechanismus für Schreibzugriffe auf ein produktives System mit echtem Geld steht (Vorschlag in `MASTER-CONTROL-ARCHITECTURE.md`).
+- Zentrale Suche über Kunden/Produkte/Bestellungen/Rechnungen/Aufgaben/Systeme — nicht begonnen, eigenständiges größeres Feature.
+- Lisa/Famulor/Easybell-Fernsteuerung — blockiert durch fehlenden `FAMULOR_API_KEY` (Adnans Entscheidung, kostenpflichtig).
+
 ## Nächster STOP-Punkt
 
 **Deployment-Gate erreicht und bestätigt (Phase 5, 21.09.2026); `MASTER_API_SECRET` und `WERKNETZ24_STATUS_SECRET` seit 21.09.2026 gesetzt und live verifiziert.** Vor echtem Geschäftsbetrieb weiterhin nötig: `SUPABASE_*` (nur mit echtem Supabase-Konto — Adnan hat noch keins, bewusst nicht selbst angelegt, bleibt Fallback-Speicher), und vor allem: **rechtliche Pflichttexte (Impressum/Datenschutz/AGB/Widerruf) erstellen** — 🔴 BLOCKER, s. `docs/QUALITY-GATE-PHASE-4.md`.

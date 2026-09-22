@@ -43,3 +43,15 @@ Produktivstatus wird erst auf 🟢 gesetzt, wenn:
 - Custom 404 vorhanden (live bestätigt).
 - API-Route-Handler bleiben serverseitig.
 - Schreibzugriffe sind seit Phase 4 durch `MASTER_API_SECRET` geschützt, seit 21.09.2026 mit echtem, live verifiziertem Secret (fail-closed, 401 ohne/200 mit korrektem Token).
+
+## Update 22.09.2026 — "Kommandozentrale"-Auftrag, Teil 1 (Fehler & Warnungen, Übersicht)
+
+Commit [`3f80dd0`](https://github.com/adnan-51-bit/adnan/commit/3f80dd0), GitHub CI ✅ success, Vercel-Deployment ✅ success (automatisch bei Push, wie bei allen vorherigen Commits — kein manuell ausgelöster Deploy).
+
+**Live verifiziert:** `GET /master` → `200`, enthält "Fehler & Warnungen" im gerenderten HTML (vorher nicht erreichbar, s. u.). `GET /api/master/quality-gate` weiterhin korrekt `503`. `GET /e-commerce` weiterhin `200`, unverändert.
+
+**Was gebaut wurde:** Die bereits im Code vorhandene, aber nie in Sidebar/Tab-Dispatch verlinkte `Alerts`-Komponente wurde erreichbar gemacht ("Fehler & Warnungen") und von einem veralteten, hartcodierten Tupel-Datenformat auf das tatsächliche Objekt-Format von `/api/master/systems` umgestellt (vorher wäre sie mit Live-Daten als "undefined" erschienen). Übersicht zeigt jetzt zusätzlich den echten Quality-Gate-Status und die letzten 5 Audit-Log-Einträge; KPIs/Panels sind anklickbar (direkte Navigation).
+
+**Was das NICHT ist:** Kein neuer Endpunkt, kein neues Secret, keine neue Fehler-Datenschicht mit Ursache/Maßnahme/Logs pro Einzelfehler — das bleibt offen (s. `MASTER-CONTROL-ARCHITECTURE.md` im `werknetz24-landing`-Repo). Die "Agenten-Zentrale" aus demselben Auftrag wurde bewusst NICHT gebaut, da es aktuell keine Infrastruktur gibt, die den Status/letzte Aktivität/Fehler eines "Agenten" tatsächlich nachverfolgt — das wäre sonst erfundener Status.
+
+Getestet: `npm test` 61/61 grün, `npm run build` erfolgreich (25 Routen, weiterhin 12 API-Funktionen).
