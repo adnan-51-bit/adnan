@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server";
 import { listBusinesses, updateBusiness, storageMode } from "../../../../lib/master-store";
 import { checkAdminSecret } from "../../../../lib/auth.js";
+import { fetchWerknetz24Kalender, createWerknetz24KalenderTermin } from "../../../../lib/werknetz24-connector.js";
 
 export const runtime = "nodejs";
 
 export async function GET(request){
   try{
-    const id = new URL(request.url).searchParams.get("id");
+    const params = new URL(request.url).searchParams;
+    // Werknetz24-Kalender (22.09.2026, "Kommandozentrale"-Folgeauftrag) - eigener Zweig statt
+    // neuer Route-Datei (12/12 Serverless-Funktionen bereits belegt, s. PROJECT-AUDIT.md im
+    // Schwester-Repo). Bewusst hier statt in lib/master-store.js, da es kein lokaler
+    // Betriebs-Datensatz ist, sondern ein Live-Proxy zu einem fremden System.
+    if (params.get("werknetz24Kalender")) {
+      const kalender = await fetchWerknetz24Kalender();
+      return NextResponse.json({ ok: true, kalender });
+    }
+    const id = params.get("id");
     const businesses = await listBusinesses();
     if (id) {
       const business = businesses.find(b => b.id === id);
@@ -14,6 +24,29 @@ export async function GET(request){
       return NextResponse.json({ok:true,storage:storageMode(),business});
     }
     return NextResponse.json({ok:true,storage:storageMode(),businesses});
+  }catch(error){
+    return NextResponse.json({ok:false,error:error.message},{status:500});
+  }
+}
+
+// Termin bei Werknetz24 anlegen - eigener POST-Zweig (Route hatte vorher nur GET/PATCH), durch
+// MASTER_API_SECRET geschuetzt wie jeder andere Schreibzugriff in dieser API. Leitet intern an
+// createWerknetz24KalenderTermin() weiter, das seinerseits das separate WERKNETZ24_WRITE_SECRET
+// gegenueber Werknetz24 verwendet - zwei unabhaengige Schutzschichten (wer die Master-Zentrale
+// bedienen darf, und ob Werknetz24 den Schreibzugriff ueberhaupt zulaesst).
+export async function POST(request){
+  const authError = checkAdminSecret(request);
+  if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
+  try{
+    const body = await request.json();
+    if (body?.action !== "werknetz24-kalender-termin") {
+      return NextResponse.json({ ok: false, error: "Unbekannte oder fehlende action" }, { status: 400 });
+    }
+    const { summary, description, startISO, endISO } = body;
+    const result = await createWerknetz24KalenderTermin({ summary, description, startISO, endISO });
+    if (!result.configured) return NextResponse.json({ ok: false, error: result.reason }, { status: 503 });
+    if (!result.ok) return NextResponse.json({ ok: false, error: result.error }, { status: 502 });
+    return NextResponse.json({ ok: true, termin: result.termin }, { status: 201 });
   }catch(error){
     return NextResponse.json({ok:false,error:error.message},{status:500});
   }
