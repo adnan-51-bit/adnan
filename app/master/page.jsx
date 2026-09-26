@@ -58,7 +58,7 @@ export default function MasterDashboard(){
 
   useEffect(()=>{ adminFetch("/api/master/businesses").then(r=>r.json()).then(data=>{ if(data?.businesses) setBusinesses(data.businesses); if(data?.storage) setStorage(data.storage); }).finally(()=>setLoading(false)); },[]);
   useEffect(()=>{ fetch("/api/master/tasks").then(r=>r.json()).then(data=>{ if(data?.tasks) setTasks(data.tasks); if(data?.storage) setStorage(data.storage); }).finally(()=>setTasksLoading(false)); },[]);
-  useEffect(()=>{ fetch("/api/master/finance").then(r=>r.json()).then(data=>{ if(data?.entries) setFinance(data.entries); if(data?.storage) setStorage(data.storage); }).finally(()=>setFinanceLoading(false)); },[]);
+  useEffect(()=>{ adminFetch("/api/master/finance").then(r=>r.json()).then(data=>{ if(data?.entries) setFinance(data.entries); if(data?.storage) setStorage(data.storage); }).finally(()=>setFinanceLoading(false)); },[]);
   // Jeder Aufruf fuehrt die automatischen Checks in lib/master-systems.js neu aus - damit ist
   // "Erneut prüfen"/"Retry" in Fehler- und Agenten-Zentrale eine echte Wiederholung.
   const reloadSystems=()=>{ setSystemsLoading(true); return fetch("/api/master/systems",{cache:"no-store"}).then(r=>r.json()).then(data=>{ if(data?.systems) setSystems(data.systems); if(data?.storage) setStorage(data.storage); }).finally(()=>setSystemsLoading(false)); };
@@ -66,7 +66,7 @@ export default function MasterDashboard(){
   // Quality Gate antwortet bewusst mit HTTP 503, solange die Produktion nicht freigegeben ist
   // (lib/quality-gate.js) - trotzdem ein normaler JSON-Body, .json() funktioniert ohne r.ok-Check.
   useEffect(()=>{ fetch("/api/master/quality-gate").then(r=>r.json()).then(data=>setQualityGate(data)).catch(()=>setQualityGate({ok:false,productionReady:false,error:"nicht erreichbar"})).finally(()=>setQgLoading(false)); },[]);
-  useEffect(()=>{ fetch("/api/master/audit").then(r=>r.json()).then(d=>setRecentActivity((d.entries||[]).slice(0,5))).catch(()=>{}); },[]);
+  useEffect(()=>{ adminFetch("/api/master/audit").then(r=>r.json()).then(d=>setRecentActivity((d.entries||[]).slice(0,5))).catch(()=>{}); },[]);
 
   const visibleBusinesses=useMemo(()=>businesses.filter(b=>
     !search || (b.name+" "+b.type+" "+b.status).toLowerCase().includes(search.toLowerCase())
@@ -212,7 +212,7 @@ function Settings(){return <><div className="pageTitle"><div><span>MASTER SETTIN
 
 function Audit(){
   const [entries,setEntries]=useState([]); const [loading,setLoading]=useState(true);
-  useEffect(()=>{fetch("/api/master/audit").then(r=>r.json()).then(d=>setEntries(d.entries||[])).finally(()=>setLoading(false))},[]);
+  useEffect(()=>{adminFetch("/api/master/audit").then(r=>r.json()).then(d=>setEntries(d.entries||[])).finally(()=>setLoading(false))},[]);
   return <><div className="pageTitle"><div><span>SECURITY & TRACEABILITY</span><h2>Audit-Log</h2></div></div><Panel title="Letzte Änderungen">{loading?<p>Daten werden geladen…</p>:entries.length===0?<p>Noch keine protokollierten Änderungen.</p>:entries.map((e,i)=><div className="taskMini" key={e.id||i}><span>{e.action}</span><div><strong>{e.entity_type} {e.entity_id||""}</strong><small>{e.actor} · {e.created_at}</small></div></div>)}</Panel></>
 }
 

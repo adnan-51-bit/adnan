@@ -22,6 +22,13 @@ export async function GET(request) {
   const type = url.searchParams.get("type") || "orders";
   const id = url.searchParams.get("id");
 
+  // Seit Supabase-Persistenz (26.09.2026): Kunden, Bestellungen und Retouren enthalten echte
+  // Personen-/Bestelldaten und sind nur noch mit MASTER_API_SECRET lesbar. Produkte/Lieferanten
+  // (oeffentliche Recherche, keine Personendaten) bleiben wie bisher offen lesbar.
+  if (["customers", "orders", "returns"].includes(type)) {
+    const authError = checkAdminSecret(request);
+    if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
+  }
   try {
     if (type === "products") return NextResponse.json({ ok: true, storage: storageMode(), products: await listProducts() });
     if (type === "suppliers") return NextResponse.json({ ok: true, storage: storageMode(), suppliers: await listSuppliers() });

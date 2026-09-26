@@ -92,18 +92,22 @@ function ECommerceDashboard() {
     const [p, s, c, o, r] = await Promise.all([
       fetch("/api/orders?type=products").then(res => res.json()),
       fetch("/api/orders?type=suppliers").then(res => res.json()),
-      fetch("/api/orders?type=customers").then(res => res.json()),
-      fetch("/api/orders?type=orders").then(res => res.json()),
-      fetch("/api/orders?type=returns").then(res => res.json()),
+      adminFetch("/api/orders?type=customers").then(res => res.json()),
+      adminFetch("/api/orders?type=orders").then(res => res.json()),
+      adminFetch("/api/orders?type=returns").then(res => res.json()),
     ]);
     setProducts(p.products || []); setSuppliers(s.suppliers || []); setCustomers(c.customers || []);
     setOrders(o.orders || []); setReturns(r.returns || []);
+    // Seit Supabase-Persistenz nur mit Admin-Secret lesbar - ohne Anmeldung ehrlich sagen, dass
+    // die Zahlen unvollständig sind, statt stillschweigend "0 Kunden" zu zeigen.
+    if (!c.ok || !o.ok || !r.ok) setNotice("Kunden, Bestellungen und Retouren sind nur mit Admin-Secret sichtbar – die Anzeige hier ist ohne Anmeldung unvollständig.");
     setCoreLoading(false);
   }
   async function reloadFinance() {
     setFinanceLoading(true);
-    const data = await fetch("/api/master/finance?business_id=" + BUSINESS_ID).then(r => r.json());
+    const data = await adminFetch("/api/master/finance?business_id=" + BUSINESS_ID).then(r => r.json());
     setFinance(data.entries || []);
+    if (!data.ok) setNotice("Finanzbuchungen sind nur mit Admin-Secret sichtbar – ohne Anmeldung unvollständig.");
     setFinanceLoading(false);
   }
 

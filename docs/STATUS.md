@@ -236,3 +236,7 @@ Grundlage: `docs/FULL-SYSTEM-AUDIT.md` im Repo `werknetz24-landing`. Commits `ab
 | Persistenz (Supabase) | 🔵 | unverändert Fallback-Speicher |
 
 Tests: **93/93**, `npm run build` ✅ (26 Routen, weiterhin 12 API-Routen, keine neue Route-Datei).
+
+## Update 26.09.2026 (2) — Persistenz: Supabase Free verbunden (lokal verifiziert, noch nicht deployt)
+
+🟢 Datenbank eingerichtet, Migrationen angewandt, echter Persistenztest bestanden (siehe `docs/DATABASE.md`). 🟡 Production erst nach Deploy auf Supabase umgestellt. Neu: Leseschutz für Kunden/Bestellungen/Retouren/Finanzen/Audit, Systemmonitor prüft Supabase per echter Leseprobe (🟢/🔴 statt pauschal 🟡). Tests 97/97, Build ✅.

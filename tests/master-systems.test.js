@@ -51,20 +51,36 @@ test("listSystems: gesetztes STRIPE_WEBHOOK_SECRET macht Stripe live gelb statt 
   delete process.env.STRIPE_WEBHOOK_SECRET;
 });
 
-test("listSystems: gesetzte SUPABASE_URL/SUPABASE_SECRET_KEY machen Supabase gelb statt blau, aber NICHT automatisch grün (echter Verbindungstest steht noch aus)", async (t) => {
+// Seit Supabase Free verbunden ist (26.09.2026): Supabase wird nicht mehr pauschal gelb gemeldet,
+// sondern per echter Leseprobe geprüft - 🟢 nur bei Antwort, 🔴 bei Fehler, nie vorgetäuscht.
+function supabaseMock(probeOk) {
+  return async (url) => {
+    if (String(url).includes("api.github.com")) return { ok: true, json: async () => ({ state: "success" }) };
+    if (String(url).includes("/businesses?select=id&limit=1")) return probeOk ? { ok: true, status: 200, json: async () => [{ id: "werknetz24" }] } : { ok: false, status: 503, json: async () => ({}) };
+    return { ok: true, status: 200, json: async () => [{ id: "supabase", name: "Supabase", status: "🟡", note: "alt", next_action: "alt", last_checked_at: null, source: "manual" }] };
+  };
+}
+
+test("listSystems: Supabase konfiguriert + Leseprobe erfolgreich -> 🟢", async (t) => {
   clearAutoEnv();
   process.env.SUPABASE_URL = "https://fake.supabase.co";
   process.env.SUPABASE_SECRET_KEY = "fake-key";
-  // Bei konfiguriertem Supabase liest listSystems() die Betriebs-Datensaetze selbst aus Supabase
-  // statt aus dem lokalen Seed - Mock liefert einen realistischen Datensatz (Supabase-Zeile fuer
-  // "supabase"), damit applyAutoOverlay() ihn ueberhaupt finden/ueberschreiben kann.
-  t.mock.method(global, "fetch", async (url) => {
-    if (String(url).includes("api.github.com")) return { ok: true, json: async () => ({ state: "success" }) };
-    return { ok: true, status: 200, json: async () => [{ id: "supabase", name: "Supabase", status: "🟡", note: "alt", next_action: "alt", last_checked_at: null, source: "manual" }] };
-  });
+  t.mock.method(global, "fetch", supabaseMock(true));
+  const { systems } = await listSystems();
+  assert.equal(systems.find(s => s.id === "supabase").status, "🟢");
+  delete process.env.SUPABASE_URL;
+  delete process.env.SUPABASE_SECRET_KEY;
+});
+
+test("listSystems: Supabase konfiguriert, aber Leseprobe scheitert -> 🔴 mit HTTP-Status, nicht grün", async (t) => {
+  clearAutoEnv();
+  process.env.SUPABASE_URL = "https://fake.supabase.co";
+  process.env.SUPABASE_SECRET_KEY = "fake-key";
+  t.mock.method(global, "fetch", supabaseMock(false));
   const { systems } = await listSystems();
   const supabase = systems.find(s => s.id === "supabase");
-  assert.equal(supabase.status, "🟡");
+  assert.equal(supabase.status, "🔴");
+  assert.match(supabase.note, /503/);
   delete process.env.SUPABASE_URL;
   delete process.env.SUPABASE_SECRET_KEY;
 });

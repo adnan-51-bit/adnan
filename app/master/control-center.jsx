@@ -192,7 +192,7 @@ export function AgentenZentrale({ systems, onReloadSystems }) {
   useEffect(() => {
     ladeW24();
     fetch("/api/automation").then(r => r.json()).then(setAutomation).catch(() => setAutomation(null));
-    fetch("/api/orders").then(r => r.json()).then(setOrders).catch(() => setOrders(null));
+    adminFetch("/api/orders").then(r => r.json()).then(setOrders).catch(() => setOrders(null));
   }, [ladeW24]);
 
   async function retrySystemwaechter() {
