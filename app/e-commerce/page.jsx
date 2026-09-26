@@ -475,9 +475,23 @@ function Systeme({ systems, loading }) {
   </>;
 }
 
+// Start-Checkliste des eigenen Shops (26.09.2026) - echte Pruefung aus lib/shop.js, nur mit Secret sichtbar.
+function ShopStart() {
+  const [d, setD] = useState(null);
+  useEffect(() => { adminFetch("/api/orders?type=shop").then(r => r.json()).then(setD).catch(() => setD({ ok: false })); }, []);
+  const liste = d?.checkliste;
+  return <Panel title={"Shop-Start (" + (d?.offen ? "🟢 geöffnet" : "🔒 geschlossen") + ")"}>
+    {!d && <p>Daten werden geladen…</p>}
+    {d && !liste && <p className="muted">Checkliste nur mit Admin-Secret sichtbar.</p>}
+    {(liste || []).map(c => <div className="row" key={c.id}><div><strong>{c.ok ? "✅" : "⬜"} {c.titel}</strong><small>{c.hinweis}</small></div></div>)}
+    <p className="note">Shop-Seite: <a href="/laden" target="_blank" rel="noreferrer">/laden ↗</a> – nimmt erst Bestellungen an, wenn alle Punkte erfüllt sind.</p>
+  </Panel>;
+}
+
 function QualityGate({ gate, loading }) {
   return <>
     <div className="pageTitle"><div><span>QUALITY GATE</span><h2>Produktionsfreigabe</h2></div></div>
+    <ShopStart />
     {loading ? <Panel title="Quality Gate"><p>Daten werden geladen…</p></Panel> : <>
       <div className="kpis"><Kpi label="Status" value={gate?.productionReady ? "🟢 bereit" : "🔴 gesperrt"} /><Kpi label="Geprüft" value={gate?.checkedAt ? new Date(gate.checkedAt).toLocaleString("de-DE") : "—"} /></div>
       <Panel title="Checks">{(gate?.checks || []).map(c => <div className="row" key={c.id}><div><strong>{c.id}</strong><small>{c.message}</small></div><span>{c.status}</span></div>)}

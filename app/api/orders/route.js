@@ -21,6 +21,7 @@ import {
 //    an. Jetzt 404; neue Bestellungen nur ueber action "create" mit echtem Kunden + echten Produkten.
 const GATED_EVENTS = new Set(["order.created", "order.validated", "supplier.order.requested"]);
 import { checkAdminSecret } from "../../../lib/auth.js";
+import { shopStartGate, oeffentlichesProdukt, berechneWarenkorb, pruefeKundendaten, erstelleStripeCheckout } from "../../../lib/shop.js";
 
 // Phase 3 (20.09.2026): dieser einzelne Route-Datei bedient jetzt den gesamten E-Commerce-
 // Datenbereich (Produkte, Lieferanten, Kunden, Bestellungen, Retouren) ueber ?type= - genau wie
@@ -36,6 +37,18 @@ export async function GET(request) {
   // Seit Supabase-Persistenz (26.09.2026): Kunden, Bestellungen und Retouren enthalten echte
   // Personen-/Bestelldaten und sind nur noch mit MASTER_API_SECRET lesbar. Produkte/Lieferanten
   // (oeffentliche Recherche, keine Personendaten) bleiben wie bisher offen lesbar.
+  // Eigener Shop (26.09.2026): oeffentlich nur "offen?" + verkaufbare Produkte (ohne Einkaufspreise);
+  // die Start-Checkliste nur mit Secret. Kein eigener Route-File wegen des Vercel-Limits (12 Funktionen).
+  if (type === "shop") {
+    try {
+      const gate = shopStartGate({ products: await listProducts() });
+      const body = { ok: true, offen: gate.offen, produkte: gate.offen ? gate.verkaufbar.map(oeffentlichesProdukt) : [] };
+      if (!checkAdminSecret(request)) body.checkliste = gate.checks;
+      return NextResponse.json(body);
+    } catch (error) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    }
+  }
   if (["customers", "orders", "returns"].includes(type)) {
     const authError = checkAdminSecret(request);
     if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
@@ -56,6 +69,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  if (new URL(request.url).searchParams.get("type") === "shop-bestellung") return shopBestellung(request);
   const authError = checkAdminSecret(request);
   if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
   const url = new URL(request.url);
@@ -142,6 +156,30 @@ export async function PATCH(request) {
     }
 
     return NextResponse.json({ ok: false, error: "Unbekannter type" }, { status: 400 });
+  } catch (error) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+  }
+}
+
+// Oeffentliche Bestellung aus dem Shop (26.09.2026). Geschlossen (503), solange die Start-Checkliste
+// nicht komplett ist. Preise nur serverseitig; Kunde + Bestellung werden angelegt, dann Stripe Checkout.
+async function shopBestellung(request) {
+  try {
+    const products = await listProducts();
+    const gate = shopStartGate({ products });
+    if (!gate.offen) return NextResponse.json({ ok: false, error: "Der Shop ist noch nicht geöffnet." }, { status: 503 });
+    const body = await request.json();
+    const kunde = pruefeKundendaten(body?.kunde);
+    const warenkorb = berechneWarenkorb(body?.positionen, products);
+    const customer = await createCustomer({ name: kunde.name, email: kunde.email, adresse: JSON.stringify(kunde.adresse) });
+    const order = await createOrder({ kunde_id: customer.id, positionen: warenkorb.zeilen.map(z => ({ produkt_id: z.produkt_id, menge: z.menge })) });
+    try {
+      const checkout = await erstelleStripeCheckout({ secretKey: process.env.STRIPE_SECRET_KEY, order, warenkorb, kunde, baseUrl: process.env.SHOP_BASE_URL || "https://adnan-sandy.vercel.app" });
+      return NextResponse.json({ ok: true, bestellung: order.id, summe_cent: warenkorb.summe_cent, zahlung_url: checkout.url }, { status: 201 });
+    } catch (error) {
+      await updateOrder(order.id, { status: "cancelled" });
+      return NextResponse.json({ ok: false, error: "Bezahlung konnte nicht gestartet werden. Bitte später erneut versuchen." }, { status: 502 });
+    }
   } catch (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
   }
