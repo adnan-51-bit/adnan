@@ -44,3 +44,10 @@ The schema now includes `master_systems` and `master_settings` in addition to bu
 - **Lesesperre:** Kunden, Bestellungen, Retouren, Finanzen und Audit-Log sind über die API nur noch mit `MASTER_API_SECRET` lesbar (`tests/leseschutz.test.js`).
 - **Persistenztest (echt, lokaler Produktions-Build gegen die echte DB):** Aufgabe, Finanzbuchung, Produkt und Kunde angelegt → nach Neuladen vorhanden → nach komplettem Server-Neustart vorhanden → Trennung ok → Testdatensätze inkl. ihrer Audit-Einträge wieder gelöscht (Bestand danach: 4 Aufgaben, 0 Finanzen, 6 Produkte, 0 Kunden, 0 Audit).
 - **Offen:** Production nutzt die Datenbank erst nach dem nächsten Deploy (Env-Variablen gelten nur für neue Deployments). Supabase Free pausiert Projekte nach längerer Inaktivität. Backup-Strategie noch nicht festgelegt (Free-Plan ohne Point-in-Time-Recovery).
+
+### Live verifiziert nach Deploy (26.09.2026)
+- Commits `d24e009` + `d81024f` auf `main`, CI ✅, Vercel Production Ready.
+- Production meldet `storage: supabase` auf `businesses`, `tasks`, `orders`, `systems` und `/api/health`; Systemmonitor „Supabase 🟢, Leseprobe erfolgreich“; Quality Gate `persistence: pass`.
+- **Über die Deployment-Grenze getestet:** markierter Testdatensatz direkt in die DB geschrieben → in Production sichtbar → Production neu deployt (`vercel redeploy`) → weiterhin sichtbar → gelöscht → in Production verschwunden (Bestand wieder 6 Produkte).
+- Lesesperre live: Kunden, Bestellungen, Retouren, Finanzen, Audit → 401 ohne Secret. Produkte/Lieferanten/Aufgaben lesbar.
+- Live-Fund und Fix: Die Fehlerzentrale wertete die jetzt geschützte Route `/api/orders?type=orders` (401) als API-Ausfall → `d81024f`.
