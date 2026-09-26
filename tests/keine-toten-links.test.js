@@ -49,3 +49,20 @@ test("Master: 'System' und 'Integrationen' sind direkt anklickbar und fuehren zu
   assert.match(m, /\["integrations","⇄","Integrationen"\]/);
   assert.match(m, /tab==="integrations" && <IntegrationenZentrale/);
 });
+
+test("'Alle Bereiche' enthaelt jeden geforderten Bereich mit Lesen/Schreiben/Steuern/Status/Check/Fehler/Aktion", () => {
+  const cc = read("app/master/control-center.jsx");
+  for (const b of ["Master-Zentrale", "Werknetz24", "E-Commerce", "Agenten", "Finanzen", "Kunden (E-Commerce)", "Kunden (Werknetz24)", "Leads", "Rechnungen", "Lisa / Telefon", "Famulor", "Easybell", "Google Calendar", "Gmail", "Stripe", "PayPal", "WhatsApp", "Shopify / Shop-Anbindung", "SEO / Marketing", "Sicherheit", "Systemstatus", "Datenbank (Supabase)", "GitHub", "Vercel", "Dokumentation", "Obsidian"]) {
+    assert.ok(cc.includes(`bereich: "${b}"`), "Bereich fehlt: " + b);
+  }
+  for (const spalte of ["Lesen", "Schreiben", "Steuern", "Status", "Letzter Check", "Letzter Fehler", "Aktion"]) assert.ok(cc.includes(`<th>${spalte}</th>`), spalte);
+  const m = read("app/master/page.jsx");
+  assert.match(m, /\["bereiche","▦","Alle Bereiche"\]/);
+  assert.match(m, /goTo\?\.\("bereiche"\)\}><b>Alle Bereiche<\/b>/);
+});
+
+test("Sprungziele in 'Alle Bereiche' zeigen nur auf existierende Tabs", () => {
+  const cc = read("app/master/control-center.jsx");
+  const tabs = zielTabs["/master"];
+  for (const m of cc.matchAll(/ziel: \{ tab: "([a-z-]+)" \}/g)) assert.ok(tabs.has(m[1]), "Tab fehlt: " + m[1]);
+});

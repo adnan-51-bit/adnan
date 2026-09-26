@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { adminFetch } from "../../lib/admin-fetch.js";
-import { Fehlerzentrale, AgentenZentrale, Werknetz24Systeme, IntegrationenZentrale } from "./control-center.jsx";
+import { Fehlerzentrale, AgentenZentrale, Werknetz24Systeme, IntegrationenZentrale, BereicheZentrale } from "./control-center.jsx";
 
 // Direkt adressierbare Bereiche (Full-System-Audit Phase 2, 26.09.2026): /master?tab=alerts öffnet
 // sofort die Fehlerzentrale usw. - keine Zwischenseite, Links von außen möglich.
-const TABS=[["overview","◈","Übersicht"],["businesses","▣","Betriebe"],["agents","◎","Agenten-Zentrale"],["alerts","⚠","Fehlerzentrale"],["tasks","✓","Aufgaben"],["systems","◉","Systemmonitoring"],["integrations","⇄","Integrationen"],["finance","€","Finanzen"],["automation","↻","Automationen"],["audit","▤","Audit-Log"],["settings","⚙","Einstellungen"]];
+const TABS=[["overview","◈","Übersicht"],["bereiche","▦","Alle Bereiche"],["businesses","▣","Betriebe"],["agents","◎","Agenten-Zentrale"],["alerts","⚠","Fehlerzentrale"],["tasks","✓","Aufgaben"],["systems","◉","Systemmonitoring"],["integrations","⇄","Integrationen"],["finance","€","Finanzen"],["automation","↻","Automationen"],["audit","▤","Audit-Log"],["settings","⚙","Einstellungen"]];
 const VALID_TABS=new Set(TABS.map(([id])=>id));
 
 const initialBusinesses = [
@@ -115,6 +115,7 @@ export default function MasterDashboard(){
         {tab==="alerts" && <Fehlerzentrale systems={systems} tasks={tasks} qualityGate={qualityGate} onReloadSystems={reloadSystems} goTo={setTab}/>}
         {tab==="agents" && <AgentenZentrale systems={systems} onReloadSystems={reloadSystems}/>}
         {tab==="integrations" && <IntegrationenZentrale systems={systems}/>}
+        {tab==="bereiche" && <BereicheZentrale systems={systems} businesses={businesses} qualityGate={qualityGate} goTo={setTab}/>}
         {tab==="tasks" && <Tasks tasks={tasks} businesses={businesses} loading={tasksLoading} onSave={saveTask} onCreate={createTask}/>}
         {tab==="systems" && <><Systems systems={systems} loading={systemsLoading} filter={systemFilter} setFilter={setSystemFilter} editing={systemEditing} setEditing={setSystemEditing} onSave={saveSystem}/><Werknetz24Systeme/></>}
         {tab==="finance" && <Finance entries={finance} businesses={businesses} loading={financeLoading} onCreate={async form=>{const r=await adminFetch("/api/master/finance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)});const d=await r.json();if(!r.ok||!d?.entry)throw new Error(d?.error||"Speichern fehlgeschlagen");setFinance(prev=>[d.entry,...prev]);setNotice("Finanzbuchung gespeichert.");}}/>}
@@ -135,7 +136,7 @@ function Overview({businesses,tasks,systems,qualityGate,qgLoading,recentActivity
   const qgBlocking=qualityGate?.blocking?.length||0;
   return <>
     <div className="pageTitle"><div><span>CONTROL CENTER</span><h2>Was passiert gerade?</h2></div><div className="quick"><a href="/produkt-pipeline">Produkt prüfen</a><a href="/automation">Automation testen</a></div></div>
-    <nav className="areaNav" aria-label="Direktnavigation"><a href="/werknetz24"><b>Werknetz24</b><small>eigener Bereich</small></a><a href="/e-commerce"><b>E-Commerce</b><small>eigener Bereich</small></a><button onClick={()=>goTo?.("agents")}><b>Agenten</b><small>Agenten-Zentrale</small></button><button onClick={()=>goTo?.("alerts")}><b>Fehler</b><small>Fehlerzentrale</small></button><button onClick={()=>goTo?.("systems")}><b>System</b><small>Systemmonitoring</small></button><button onClick={()=>goTo?.("integrations")}><b>Integrationen</b><small>alle Anbieter</small></button><button onClick={()=>goTo?.("finance")}><b>Finanzen</b><small>Finanzbereich</small></button></nav>
+    <nav className="areaNav" aria-label="Direktnavigation"><button onClick={()=>goTo?.("bereiche")}><b>Alle Bereiche</b><small>Status + Aktionen</small></button><a href="/werknetz24"><b>Werknetz24</b><small>eigener Bereich</small></a><a href="/e-commerce"><b>E-Commerce</b><small>eigener Bereich</small></a><button onClick={()=>goTo?.("agents")}><b>Agenten</b><small>Agenten-Zentrale</small></button><button onClick={()=>goTo?.("alerts")}><b>Fehler</b><small>Fehlerzentrale</small></button><button onClick={()=>goTo?.("systems")}><b>System</b><small>Systemmonitoring</small></button><button onClick={()=>goTo?.("integrations")}><b>Integrationen</b><small>alle Anbieter</small></button><button onClick={()=>goTo?.("finance")}><b>Finanzen</b><small>Finanzbereich</small></button></nav>
     {/* Direktsprünge in die Datenbereiche (26.09.2026). Kunden gibt es in BEIDEN Bereichen - bewusst zwei
         getrennte Ziele statt einer vermischten Liste. Leads/Rechnungen existieren nur bei Werknetz24. */}
     <nav className="areaNav dataNav" aria-label="Daten direkt öffnen"><a href="/e-commerce?tab=kunden"><b>Kunden</b><small>E-Commerce</small></a><a href="https://werknetz24.de/admin-zentrale#kunden" target="_blank" rel="noreferrer"><b>Kunden</b><small>Werknetz24 ↗</small></a><a href="https://werknetz24.de/admin-zentrale#leads" target="_blank" rel="noreferrer"><b>Leads</b><small>Werknetz24 ↗</small></a><a href="/werknetz24?tab=rechnungen"><b>Rechnungen</b><small>Werknetz24</small></a><a href="/e-commerce?tab=bestellungen"><b>Bestellungen</b><small>E-Commerce</small></a><a href="/e-commerce?tab=produkte"><b>Produkte</b><small>E-Commerce</small></a></nav>

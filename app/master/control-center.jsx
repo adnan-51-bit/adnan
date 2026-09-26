@@ -381,6 +381,70 @@ export function IntegrationenZentrale({ systems }) {
   </>;
 }
 
+// Alle Bereiche auf einen Blick (Master-Auftrag, 26.09.2026): pro Bereich Lesen/Schreiben/Steuern
+// (so wie am 26.09.2026 live getestet, s. docs/FINAL-INTEGRATION-AUDIT.md im werknetz24-landing-Repo),
+// Status + letzter Check + letzter Fehler aus den ECHTEN Quellen (Master-Systemmonitor, Werknetz24-
+// Live-Status/Systemwaechter/Agenten, Quality Gate) und ein direkter Sprung. Wo keine Live-Pruefung
+// existiert, steht das dort - kein erfundener Status.
+const JA = "✓", NEIN = "✗";
+export function BereicheZentrale({ systems, businesses, qualityGate, goTo }) {
+  const w24 = useWerknetz24Incidents();
+  const [agenten, setAgenten] = useState(null);
+  useEffect(() => { adminFetch("/api/master/businesses?werknetz24Agenten=1").then(r => r.json()).then(d => setAgenten(d?.agenten?.ok ? d.agenten.agenten : null)).catch(() => setAgenten(null)); }, []);
+  const ls = businesses.find(b => b.id === "werknetz24")?.liveStatus;
+  const sys = Object.fromEntries((w24.data?.systeme || []).map(s => [s.key, s]));
+  const inc = w24.data?.incidents || [];
+  const ms = id => systems.find(s => s.id === id);
+  const incFuer = key => inc.find(i => i.key === key);
+  const w24Status = key => { const s = sys[key]; const i = incFuer(key); return { status: !w24.data ? "—" : s ? AMPEL[s.status] || "⚪" : "⚪", check: s?.letzte_pruefung || null, fehler: i ? i.fehlermeldung : null }; };
+  const mStatus = id => { const s = ms(id); return { status: s ? s.status : "—", check: s?.last_checked_at || null, fehler: s && (s.status === "🔴" || s.status === "🟡") ? s.note : null }; };
+  const agent = id => (agenten || []).find(a => a.id === id);
+  const agStatus = id => { const a = agent(id); const map = { aktiv: "🟢", gestoert: "🔴", nicht_bestaetigt: "🟡", nicht_protokolliert: "⚪", aus: "⚪" }; return { status: !agenten ? "—" : a ? map[a.status] || "⚪" : "⚪", check: a?.letzter_lauf || null, fehler: a?.letzter_fehler || null }; };
+  const schlechteste = liste => { const rang = { "🔴": 0, "🟡": 1, "🔵": 2, "⚪": 3, "🟢": 4, "—": 5 }; return liste.reduce((a, b) => (rang[b] ?? 9) < (rang[a] ?? 9) ? b : a, "🟢"); };
+  const qgBlock = qualityGate?.blocking || [];
+  const W = h => ({ href: W24_ADMIN + "#" + h, extern: true });
+
+  const zeilen = [
+    { bereich: "Master-Zentrale", l: JA, s: JA + " mit Secret", st: JA, ...(() => { const x = [ms("supabase")?.status, ms("vercel")?.status, ms("github")?.status].filter(Boolean); return { status: schlechteste(x), check: ms("supabase")?.last_checked_at, fehler: null }; })(), ziel: { tab: "overview" } },
+    { bereich: "Werknetz24", l: JA + " mit Secret", s: NEIN + " (in der Verwaltung)", st: JA + " Prüfung", status: ls?.ok ? ({ gruen: "🟢", gelb: "🟡", rot: "🔴" }[ls.data.systemStatus.gesamtstatus] || "⚪") : "—", check: ls?.data?.checkedAt || null, fehler: ls?.ok ? `${ls.data.technischeProbleme.offeneIncidents} offene Probleme` : (ls?.error || null), ziel: { href: "/werknetz24" } },
+    { bereich: "E-Commerce", l: JA, s: JA + " mit Secret", st: JA + " Pipeline/Bestellungen", status: qgBlock.length ? "🟡" : "🟢", check: qualityGate?.checkedAt || null, fehler: qgBlock.length ? "Quality Gate blockiert: " + qgBlock.join(", ") : null, ziel: { href: "/e-commerce" } },
+    { bereich: "Agenten", l: JA, s: "–", st: "Retry", status: !agenten ? "—" : schlechteste(agenten.map(a => ({ aktiv: "🟢", gestoert: "🔴", nicht_bestaetigt: "🟡" }[a.status])).filter(Boolean)), check: null, fehler: (agenten || []).filter(a => a.status === "gestoert").map(a => a.name).join(", ") || null, ziel: { tab: "agents" } },
+    { bereich: "Finanzen", l: JA, s: JA + " Master/E-Commerce", st: NEIN, status: ls?.ok ? "🟢" : "—", check: ls?.data?.checkedAt || null, fehler: null, ziel: { tab: "finance" } },
+    { bereich: "Kunden (E-Commerce)", l: JA, s: JA, st: NEIN, ...mStatus("supabase"), ziel: { href: "/e-commerce?tab=kunden" } },
+    { bereich: "Kunden (Werknetz24)", l: JA + " Anzahl", s: NEIN + " (Verwaltung)", st: NEIN, status: ls?.ok ? "🟢" : "—", check: ls?.data?.checkedAt || null, fehler: null, ziel: W("kunden") },
+    { bereich: "Leads", l: JA + " Anzahl", s: NEIN + " (Verwaltung)", st: NEIN, status: ls?.ok ? "🟢" : "—", check: ls?.data?.checkedAt || null, fehler: null, ziel: W("leads") },
+    { bereich: "Rechnungen", l: JA, s: NEIN + " (Verwaltung)", st: NEIN, status: ls?.ok ? "🟢" : "—", check: ls?.data?.checkedAt || null, fehler: null, ziel: { href: "/werknetz24?tab=rechnungen" } },
+    { bereich: "Lisa / Telefon", l: "indirekt", s: NEIN, st: NEIN, ...agStatus("lisa-famulor"), ziel: W("lisa-nutzung") },
+    { bereich: "Famulor", l: NEIN, s: NEIN, st: NEIN, ...(() => { const v = (agent("lisa-famulor")?.verbindungen || []).find(x => (x.variablen || []).includes("FAMULOR_API_KEY")); return { status: !agenten ? "—" : !v ? "⚪" : v.konfiguriert ? "🟡" : "🔴", check: null, fehler: v && !v.konfiguriert ? "FEHLT: FAMULOR_API_KEY" : v ? "Schlüssel da, Live-Abruf nicht bestätigt" : null }; })(), ziel: W("lisa-nutzung") },
+    { bereich: "Easybell", l: NEIN, s: NEIN, st: NEIN, ...mStatus("easybell"), ziel: { tab: "integrations" } },
+    { bereich: "Google Calendar", l: "wenn verbunden", s: "wenn verbunden", st: NEIN, ...w24Status("google-calendar"), ziel: W("einstellungen") },
+    { bereich: "Gmail", l: "wenn verbunden", s: NEIN, st: "Auto-Antwort-Schalter (Verwaltung)", ...w24Status("gmail"), ziel: W("einstellungen") },
+    { bereich: "Stripe", l: "Werknetz24", s: NEIN, st: NEIN, ...w24Status("stripe"), ziel: W("stripe") },
+    { bereich: "PayPal", l: "Werknetz24", s: NEIN, st: NEIN, ...w24Status("paypal"), ziel: { tab: "integrations" } },
+    { bereich: "WhatsApp", l: NEIN, s: NEIN, st: NEIN, ...(() => { const a = agent("whatsapp-bot"); const fehlt = (a?.verbindungen || []).filter(v => !v.konfiguriert).flatMap(v => v.variablen); return { status: !agenten ? "—" : fehlt.length ? "🔴" : "🟡", check: a?.letzter_lauf || null, fehler: fehlt.length ? "FEHLT: " + fehlt.join(", ") : null }; })(), ziel: W("agenten") },
+    { bereich: "Shopify / Shop-Anbindung", l: NEIN, s: NEIN, st: NEIN, ...mStatus("shopify"), ziel: { tab: "integrations" } },
+    { bereich: "SEO / Marketing", l: "in der Verwaltung", s: "in der Verwaltung", st: NEIN, status: "⚪", check: null, fehler: "kein automatischer Live-Check in der Master-Zentrale", ziel: W("marketing-hub") },
+    { bereich: "Sicherheit", l: JA, s: "–", st: NEIN, ...w24Status("sicherheit"), ziel: W("fehler") },
+    { bereich: "Systemstatus", l: JA, s: "Systemstatus (Secret)", st: JA + " Recheck", status: schlechteste(systems.filter(s => s.source === "auto").map(s => s.status)), check: systems.find(s => s.source === "auto")?.last_checked_at || null, fehler: null, ziel: { tab: "systems" } },
+    { bereich: "Datenbank (Supabase)", l: JA, s: JA, st: NEIN, ...mStatus("supabase"), ziel: { tab: "integrations" } },
+    { bereich: "GitHub", l: JA, s: "–", st: NEIN, ...mStatus("github"), ziel: { href: "https://github.com/adnan-51-bit/adnan", extern: true } },
+    { bereich: "Vercel", l: JA, s: "–", st: NEIN, ...mStatus("vercel"), ziel: { href: "https://vercel.com/adnan-adobot", extern: true } },
+    { bereich: "Dokumentation", l: JA, s: "–", st: NEIN, status: "⚪", check: null, fehler: "statisch (GitHub), kein Live-Status", ziel: { href: "https://github.com/adnan-51-bit/werknetz24-landing/tree/main/docs", extern: true } },
+    { bereich: "Obsidian", l: "nur auf Adnans PC", s: "–", st: NEIN, status: "⚪", check: null, fehler: "lokaler Vault, aus dem Internet nicht prüfbar", ziel: { href: "obsidian://open?vault=Werknetz24-Vault&file=Werknetz24%20Testzentrale", extern: true } },
+  ];
+  const oeffne = z => z.ziel.tab ? <button className="ccBtn dark" onClick={() => goTo(z.ziel.tab)}>Öffnen</button> : <a className="ccBtn dark" href={z.ziel.href} target={z.ziel.extern ? "_blank" : undefined} rel="noreferrer">Öffnen{z.ziel.extern ? " ↗" : ""}</a>;
+  return <>
+    <div className="pageTitle"><div><span>ALL AREAS</span><h2>Alle Bereiche</h2></div></div>
+    {w24.error && <div className="ccNotice warn">Werknetz24-Daten nicht geladen: {w24.error}</div>}
+    <section className="panel"><div className="ccTableWrap"><table className="ccTable">
+      <thead><tr><th>Bereich</th><th>Lesen</th><th>Schreiben</th><th>Steuern</th><th>Status</th><th>Letzter Check</th><th>Letzter Fehler</th><th>Aktion</th></tr></thead>
+      <tbody>{zeilen.map(z => <tr key={z.bereich}><td><strong>{z.bereich}</strong></td><td><small>{z.l}</small></td><td><small>{z.s}</small></td><td><small>{z.st}</small></td><td>{z.status}</td><td><small>{z.check ? fmt(z.check) : "—"}</small></td><td><small>{z.fehler || "—"}</small></td><td>{oeffne(z)}</td></tr>)}</tbody>
+    </table></div></section>
+    <section className="panel"><h3>Legende</h3><p>🟢 funktioniert (echte Prüfung) · 🟡 Warnung / nicht bestätigt · 🔴 Fehler oder fehlende Konfiguration · ⚪ nicht konfiguriert bzw. kein Live-Check möglich · 🔵 externe Integration ohne Schnittstelle · „—“ ohne Anmeldung nicht abrufbar. Lesen/Schreiben/Steuern entsprechen dem am 26.09.2026 live getesteten Stand.</p></section>
+    <CcStyles />
+  </>;
+}
+
 // Werknetz24-Systemwächter-Zustände für die Systeme-Ansicht (live, nur lesend).
 export function Werknetz24Systeme() {
   const w24 = useWerknetz24Incidents();
