@@ -14,6 +14,7 @@
 import { useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { adminFetch } from "../../lib/admin-fetch.js";
+import { AnmeldeKnopf } from "../_teile/anmelde-knopf.jsx";
 
 const BUSINESS_ID = "ecommerce";
 
@@ -202,7 +203,7 @@ function ECommerceDashboard() {
   return <main className="app">
     <header className="topbar">
       <div><span className="eyebrow">MASTER-ZENTRALE · E-COMMERCE</span><h1>E-Commerce Dashboard</h1><p>Produkte, Lieferanten, Bestellungen, Kunden, Zahlungen und Finanzen des Geschäftsbereichs „E-Commerce" — eigenständig, getrennt von Werknetz24.</p></div>
-      <div className="topActions"><span className="live"><i />business_id: {BUSINESS_ID}</span><a href="/master">← Master-Zentrale</a></div>
+      <div className="topActions"><span className="live"><i />business_id: {BUSINESS_ID}</span><a href="/master">← Master-Zentrale</a><AnmeldeKnopf /></div>
     </header>
     <div className="layout">
       <aside className="sidebar">

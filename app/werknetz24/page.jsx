@@ -16,6 +16,7 @@
 
 import { useEffect, useState } from "react";
 import { adminFetch } from "../../lib/admin-fetch.js";
+import { AnmeldeKnopf } from "../_teile/anmelde-knopf.jsx";
 
 const TABS = [
   ["overview", "◈", "Übersicht"],
@@ -63,6 +64,7 @@ export default function Werknetz24Page() {
       <div className="topActions">
         <a href="/master">← Master-Zentrale</a>
         <a href="https://werknetz24.de/admin-zentrale" target="_blank" rel="noreferrer">Vollständige Verwaltung ↗</a>
+        <AnmeldeKnopf />
       </div>
     </header>
     <div className="layout">
