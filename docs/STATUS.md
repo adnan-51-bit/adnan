@@ -240,3 +240,8 @@ Tests: **93/93**, `npm run build` ✅ (26 Routen, weiterhin 12 API-Routen, keine
 ## Update 26.09.2026 (2) — Persistenz: Supabase Free verbunden (lokal verifiziert, noch nicht deployt)
 
 🟢 Datenbank eingerichtet, Migrationen angewandt, echter Persistenztest bestanden (siehe `docs/DATABASE.md`). 🟡 Production erst nach Deploy auf Supabase umgestellt. Neu: Leseschutz für Kunden/Bestellungen/Retouren/Finanzen/Audit, Systemmonitor prüft Supabase per echter Leseprobe (🟢/🔴 statt pauschal 🟡). Tests 97/97, Build ✅.
+
+## Update 26.09.2026 (3) — Reparaturphase: E-Commerce + Agenten (lokal, noch nicht deployt)
+- **E-Commerce:** 3 reproduzierte Fehler im Bestellweg behoben; Ereignisse und Webhook-Belege persistent. E2E gegen die echte DB 23/23.
+- **Agenten-Zentrale:** Werknetz24 (8 Betriebs-Agenten), E-Commerce (Engine mit echter letzter Aktivität) und Master (Systemmonitor) strikt getrennt. Je Agent: aktuelle Aufgabe, benötigte Verbindungen, Test/Reparatur. Entwicklungs-Werkzeuge separat. Details in `werknetz24-landing/docs/FINAL-INTEGRATION-AUDIT.md`.
+- Tests 111/111, Build ✅.
