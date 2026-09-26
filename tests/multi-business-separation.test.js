@@ -146,3 +146,15 @@ test("createFinance rejects an unknown business_id and listFinance(business_id) 
   assert.ok(ecomOnly.some(e => e.id === ecomEntry.id));
   assert.ok(!ecomOnly.some(e => e.id === crossEntry.id));
 });
+
+// Phase 2 (26.09.2026): Fehler- und Agenten-Zentrale ordnen jeden Eintrag einem Bereich zu und
+// das E-Commerce-Dashboard bleibt frei von Werknetz24-Aufrufen.
+test("Fehler-/Agenten-Zentrale fuehren business_id je Eintrag, E-Commerce ruft weiterhin keine Werknetz24-Daten ab", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const cc = await readFile(new URL("../app/master/control-center.jsx", import.meta.url), "utf8");
+  for (const biz of ['business_id: "werknetz24"', 'business_id: "ecommerce"', 'business_id: "master"']) {
+    assert.ok(cc.includes(biz), "fehlt: " + biz);
+  }
+  const ecom = await readFile(new URL("../app/e-commerce/page.jsx", import.meta.url), "utf8");
+  assert.doesNotMatch(ecom, /werknetz24(Incidents|Agenten|Kalender|Aufgaben|Rechnungen)/);
+});

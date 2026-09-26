@@ -75,7 +75,7 @@ test("listSystems: manuelle Systeme (Famulor/Easybell/PayPal) bleiben unverände
   const { systems } = await listSystems();
   const famulor = systems.find(s => s.id === "famulor");
   assert.equal(famulor.source, "manual");
-  assert.equal(famulor.status, "🟢"); // unveränderter Seed-Wert, keine Überschreibung
+  assert.equal(famulor.status, "🟡"); // Seed-Wert (seit Audit F9 ehrlich 🟡 statt fest 🟢), keine Überschreibung
 });
 
 test("listSystems: GitHub-CI-Fehlschlag wird ehrlich als rot gemeldet", async (t) => {

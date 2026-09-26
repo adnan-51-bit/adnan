@@ -62,3 +62,62 @@ test("Betriebsliste bleibt ohne Secret lesbar, liefert aber keinen Werknetz24-li
     delete process.env.WERKNETZ24_STATUS_SECRET;
   }
 });
+
+// Phase 2 (26.09.2026): Agenten-Zentrale + Fehlerzentrale-Aktionen.
+const { POST } = await import("../app/api/master/businesses/route.js");
+
+function post(body, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.authorization = "Bearer " + token;
+  return new Request("https://example.test/api/master/businesses", { method: "POST", headers, body: JSON.stringify(body) });
+}
+
+test("werknetz24Agenten ist ohne Secret gesperrt", async () => {
+  process.env.MASTER_API_SECRET = SECRET;
+  const res = await GET(req("?werknetz24Agenten=1"));
+  assert.equal(res.status, 401);
+});
+
+test("Systemcheck/Incident-Abschluss: ohne MASTER_API_SECRET 401, ohne WERKNETZ24_WRITE_SECRET ehrlich 503", async () => {
+  process.env.MASTER_API_SECRET = SECRET;
+  delete process.env.WERKNETZ24_WRITE_SECRET;
+  assert.equal((await POST(post({ action: "werknetz24-systemcheck" }))).status, 401);
+  assert.equal((await POST(post({ action: "werknetz24-systemcheck" }, SECRET))).status, 503);
+  assert.equal((await POST(post({ action: "werknetz24-incident-abschliessen", incidentId: "i1" }, SECRET))).status, 503);
+  assert.equal((await POST(post({ action: "werknetz24-incident-abschliessen" }, SECRET))).status, 400);
+});
+
+test("Incident-Abschluss: 409 von Werknetz24 (Pruefung nicht gruen) wird unveraendert durchgereicht", async () => {
+  process.env.MASTER_API_SECRET = SECRET;
+  process.env.WERKNETZ24_WRITE_SECRET = "write-secret";
+  const originalFetch = globalThis.fetch;
+  let gesendet = null;
+  globalThis.fetch = async (url, opts) => { gesendet = { url, opts }; return new Response(JSON.stringify({ ok: false, error: "nicht grün", aktueller_status: "rot" }), { status: 409 }); };
+  try {
+    const res = await POST(post({ action: "werknetz24-incident-abschliessen", incidentId: "i1" }, SECRET));
+    assert.equal(res.status, 409);
+    const body = await res.json();
+    assert.equal(body.aktueller_status, "rot");
+    assert.match(gesendet.url, /master-zentrale-incident-abschliessen/);
+    assert.equal(gesendet.opts.headers.Authorization, "Bearer write-secret");
+  } finally {
+    globalThis.fetch = originalFetch;
+    delete process.env.WERKNETZ24_WRITE_SECRET;
+  }
+});
+
+test("Systemcheck: echte Antwort von Werknetz24 wird weitergegeben", async () => {
+  process.env.MASTER_API_SECRET = SECRET;
+  process.env.WERKNETZ24_WRITE_SECRET = "write-secret";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({ ok: true, geprueft: "2026-09-26T08:00:00.000Z", systeme: [{ key: "gmail", status: "rot" }], neueIncidents: 0 }), { status: 200 });
+  try {
+    const res = await POST(post({ action: "werknetz24-systemcheck" }, SECRET));
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.systeme[0].key, "gmail");
+  } finally {
+    globalThis.fetch = originalFetch;
+    delete process.env.WERKNETZ24_WRITE_SECRET;
+  }
+});

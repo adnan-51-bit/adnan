@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { listBusinesses, updateBusiness, storageMode } from "../../../../lib/master-store";
 import { checkAdminSecret } from "../../../../lib/auth.js";
-import { fetchWerknetz24Kalender, createWerknetz24KalenderTermin, fetchWerknetz24Aufgaben, fetchWerknetz24Rechnungen, fetchWerknetz24Incidents } from "../../../../lib/werknetz24-connector.js";
+import { fetchWerknetz24Kalender, createWerknetz24KalenderTermin, fetchWerknetz24Aufgaben, fetchWerknetz24Rechnungen, fetchWerknetz24Incidents, fetchWerknetz24Agenten, runWerknetz24Systemcheck, closeWerknetz24Incident } from "../../../../lib/werknetz24-connector.js";
 
 export const runtime = "nodejs";
 
@@ -14,7 +14,7 @@ export async function GET(request){
     // Werknetz24-Daten (inkl. aggregiertem liveStatus) gibt es jetzt nur mit MASTER_API_SECRET,
     // die restliche Betriebsliste bleibt wie bisher ohne Anmeldung lesbar.
     const authError = checkAdminSecret(request);
-    const werknetz24Detail = ["werknetz24Kalender", "werknetz24Aufgaben", "werknetz24Rechnungen", "werknetz24Incidents"].some(k => params.get(k));
+    const werknetz24Detail = ["werknetz24Kalender", "werknetz24Aufgaben", "werknetz24Rechnungen", "werknetz24Incidents", "werknetz24Agenten"].some(k => params.get(k));
     if (werknetz24Detail && authError) {
       return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
     }
@@ -38,9 +38,13 @@ export async function GET(request){
       const incidents = await fetchWerknetz24Incidents();
       return NextResponse.json({ ok: true, incidents });
     }
+    if (params.get("werknetz24Agenten")) {
+      const agenten = await fetchWerknetz24Agenten();
+      return NextResponse.json({ ok: true, agenten });
+    }
     const id = params.get("id");
     const businesses = (await listBusinesses()).map(b => {
-      if (!authError || !("liveStatus" in b)) return b;
+      if (!authError || !("liveStatus" in b)) return withLiveHealth(b);
       return { ...b, liveStatus: { configured: true, ok: false, error: "Anmeldung erforderlich (Admin-Secret)" } };
     });
     if (id) {
@@ -64,6 +68,23 @@ export async function POST(request){
   if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
   try{
     const body = await request.json();
+    // Fehlerzentrale-Aktionen (Phase 2, 26.09.2026): echte Werknetz24-Aktionen, gleiche doppelte
+    // Schutzschicht wie der Kalender (MASTER_API_SECRET hier, WERKNETZ24_WRITE_SECRET gegenueber
+    // Werknetz24). Aendern keine Kunden-/Zahlungsdaten.
+    if (body?.action === "werknetz24-systemcheck") {
+      const result = await runWerknetz24Systemcheck();
+      if (!result.configured) return NextResponse.json({ ok: false, error: result.reason }, { status: 503 });
+      if (!result.ok) return NextResponse.json({ ok: false, error: result.error }, { status: 502 });
+      return NextResponse.json({ ok: true, ...result.data });
+    }
+    if (body?.action === "werknetz24-incident-abschliessen") {
+      if (typeof body.incidentId !== "string" || !body.incidentId) return NextResponse.json({ ok: false, error: "incidentId fehlt" }, { status: 400 });
+      const result = await closeWerknetz24Incident(body.incidentId);
+      if (!result.configured) return NextResponse.json({ ok: false, error: result.reason }, { status: 503 });
+      // 409 von Werknetz24 (Pruefung nicht gruen) unveraendert durchreichen - kein "behoben" ohne Nachweis.
+      if (!result.ok) return NextResponse.json({ ok: false, error: result.error, ...(result.data || {}) }, { status: result.status === 409 ? 409 : 502 });
+      return NextResponse.json({ ok: true, abschluss: result.data.abschluss });
+    }
     if (body?.action !== "werknetz24-kalender-termin") {
       return NextResponse.json({ ok: false, error: "Unbekannte oder fehlende action" }, { status: 400 });
     }
@@ -90,4 +111,12 @@ export async function PATCH(request){
   }catch(error){
     return NextResponse.json({ok:false,error:error.message},{status:500});
   }
+}
+
+// Ampel der Werknetz24-Karte aus dem echten Live-Status ableiten (Audit-Fund F9: fest "🟡" stand
+// neben einem live "🔴"). Nur wenn der Live-Status tatsaechlich vorliegt, sonst bleibt der Wert.
+function withLiveHealth(b) {
+  const gesamt = b?.liveStatus?.ok ? b.liveStatus.data?.systemStatus?.gesamtstatus : null;
+  const ampel = { gruen: "🟢", gelb: "🟡", rot: "🔴" }[gesamt];
+  return ampel ? { ...b, health: ampel } : b;
 }
