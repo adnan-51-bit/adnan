@@ -1,0 +1,22 @@
+// Reparaturphase Werknetz24 (26.09.2026): keine Schein-Steuerung auf /werknetz24.
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+
+const src = readFileSync(new URL("../app/werknetz24/page.jsx", import.meta.url), "utf8");
+
+test("'+ Termin' ist nur aktiv, wenn der Kalender wirklich erreichbar ist", () => {
+  assert.match(src, /const kalenderBereit = !loading && kalender\?\.configured && kalender\?\.ok;/);
+  assert.match(src, /<button[^\n]*disabled=\{!kalenderBereit\}[^\n]*>\+ Termin<\/button>/);
+});
+
+test("invalid_grant wird als offene Konfiguration mit echtem Weg zur Neuverbindung erklaert", () => {
+  assert.match(src, /invalid_grant/);
+  assert.match(src, /KONFIGURATION OFFEN/);
+  assert.match(src, /werknetz24\.de\/admin-zentrale#einstellungen/);
+});
+
+test("Verbindung-Tab behauptet Termin-Anlegen nicht mehr pauschal", () => {
+  assert.doesNotMatch(src, /Kalender ansehen und neue Termine anlegen/);
+  assert.match(src, /nur wenn der Kalender erreichbar ist/);
+});
