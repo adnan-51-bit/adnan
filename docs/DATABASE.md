@@ -51,3 +51,14 @@ The schema now includes `master_systems` and `master_settings` in addition to bu
 - **Über die Deployment-Grenze getestet:** markierter Testdatensatz direkt in die DB geschrieben → in Production sichtbar → Production neu deployt (`vercel redeploy`) → weiterhin sichtbar → gelöscht → in Production verschwunden (Bestand wieder 6 Produkte).
 - Lesesperre live: Kunden, Bestellungen, Retouren, Finanzen, Audit → 401 ohne Secret. Produkte/Lieferanten/Aufgaben lesbar.
 - Live-Fund und Fix: Die Fehlerzentrale wertete die jetzt geschützte Route `/api/orders?type=orders` (401) als API-Ausfall → `d81024f`.
+
+## Update 26.09.2026 (3) — E-Commerce: Ereignisse + Webhook-Belege persistent, Bestellweg repariert
+- Migration `20260926150000_ecommerce_ereignisse.sql`: `ecommerce_order_events` (eindeutiger `idempotency_key`, from/to-Status) und `ecommerce_webhook_receipts`. Angewandt, RLS aktiv.
+- Die drei reproduzierten Fehler sind behoben:
+  1. „Zahlung bestätigen“ setzte neue Bestellungen auf blockiert.
+  2. Duplikatschutz erst nach dem Statuswechsel.
+  3. Unbekannte ID legte eine neue Bestellung mit anderer ID an.
+- Neu: `action: "create"` (nur echter Kunde + echte Produkte).
+- `/api/automation` und `/api/providers` melden den echten Speicher statt fest „not_configured“.
+- `lib/store.js`, `lib/idempotency.js`, `lib/persistence.js` werden nicht mehr verwendet (nicht gelöscht).
+- E2E gegen die echte DB: 23/23 Prüfungen (inkl. Neustart), Testdaten danach vollständig entfernt.

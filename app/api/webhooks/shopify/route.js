@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyHmac } from "../../../../lib/webhook-security";
-import { isDuplicate } from "../../../../lib/idempotency";
+import { claimWebhookReceipt, storageMode } from "../../../../lib/ecommerce-store.js";
 
 export const runtime = "nodejs";
 
@@ -19,7 +19,8 @@ export async function POST(request) {
     return NextResponse.json({ ok: false, error: "invalid webhook signature" }, { status: 401 });
   }
 
-  if (webhookId && isDuplicate("shopify:" + webhookId)) {
+  // Duplikatschutz dauerhaft (26.09.2026): vorher nur im Prozessspeicher, nach Neustart wirkungslos.
+  if (webhookId && !(await claimWebhookReceipt("shopify:" + webhookId, "shopify"))) {
     return NextResponse.json({ ok: true, duplicate: true });
   }
 
@@ -34,7 +35,7 @@ export async function POST(request) {
     topic,
     webhookId,
     orderId: payload.id ?? payload.order?.id ?? null,
-    persistence: "not_configured",
-    next: "route event to persistent order/event store"
+    persistence: storageMode(),
+    next: "Bestellanlage aus Shopify-Daten ist noch nicht angebunden (kein Shop verbunden)"
   });
 }

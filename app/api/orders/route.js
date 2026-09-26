@@ -1,14 +1,25 @@
 import { NextResponse } from "next/server";
 import { createOrderEvent, evaluateOrderAutomation, nextOrderState } from "../../../lib/automation.js";
-import { saveEvent, storeStats } from "../../../lib/store.js";
 import {
   listProducts, createProduct, advanceProductPipeline, updateProduct,
   listSuppliers, createSupplier, updateSupplier,
   listCustomers, createCustomer,
   listOrders, getOrderById, createOrder, updateOrder, deriveOrderGateInputs,
   listReturns, createReturn, updateReturn,
+  recordOrderEvent, finalizeOrderEvent, listOrderEvents, orderStats,
   storageMode,
 } from "../../../lib/ecommerce-store.js";
+
+// Reparaturphase E-Commerce (26.09.2026, reproduzierte Fehler):
+// 1) Das Freigabe-Gate (Produkt veroeffentlicht, Lieferant verifiziert, Marge positiv) lief bei
+//    JEDEM Ereignis - "Zahlung bestaetigen" auf einer neuen Bestellung setzte sie deshalb auf
+//    "blockiert" (Blocker: payment_not_confirmed). Es gilt jetzt nur fuer die Schritte, die Richtung
+//    Lieferung fuehren.
+// 2) Der Duplikatschutz griff erst NACH dem Statuswechsel. Jetzt wird das Ereignis zuerst dauerhaft
+//    gespeichert (eindeutiger Schluessel in der DB); ein Duplikat bewirkt nichts.
+// 3) Eine unbekannte Bestell-ID legte eine NEUE Bestellung mit anderer ID (und Platzhalter-Kunde)
+//    an. Jetzt 404; neue Bestellungen nur ueber action "create" mit echtem Kunden + echten Produkten.
+const GATED_EVENTS = new Set(["order.created", "order.validated", "supplier.order.requested"]);
 import { checkAdminSecret } from "../../../lib/auth.js";
 
 // Phase 3 (20.09.2026): dieser einzelne Route-Datei bedient jetzt den gesamten E-Commerce-
@@ -35,8 +46,8 @@ export async function GET(request) {
     if (type === "customers") return NextResponse.json({ ok: true, storage: storageMode(), customers: await listCustomers() });
     if (type === "returns") return NextResponse.json({ ok: true, storage: storageMode(), returns: await listReturns() });
     if (type === "orders") {
-      if (id) return NextResponse.json({ ok: true, order: await getOrderById(id) });
-      return NextResponse.json({ ok: true, storage: storageMode(), orders: await listOrders(), stats: storeStats() });
+      if (id) return NextResponse.json({ ok: true, order: await getOrderById(id), events: await listOrderEvents(id) });
+      return NextResponse.json({ ok: true, storage: storageMode(), orders: await listOrders(), stats: await orderStats() });
     }
     return NextResponse.json({ ok: false, error: "Unbekannter type" }, { status: 400 });
   } catch (error) {
@@ -66,26 +77,37 @@ export async function POST(request) {
     if (type === "returns") return NextResponse.json({ ok: true, return: await createReturn(body) });
 
     if (type === "orders") {
-      // Neue Bestellung: nur kunde_id + positionen aus dem Body, KEINE Statusflags (die werden
-      // nie vom Aufrufer diktiert). Fuer Statusuebergaenge s. type=orders&action=event unten.
+      // Neue Bestellung: nur kunde_id + positionen, KEINE Statusflags (die werden nie vom Aufrufer
+      // diktiert). Kunde und Produkte muessen real existieren - kein Platzhalter-Kunde.
+      if (body.action === "create") {
+        const kunden = await listCustomers();
+        if (!kunden.some(k => k.id === body.kunde_id)) return NextResponse.json({ ok: false, error: "Kunde nicht gefunden" }, { status: 400 });
+        const produkte = await listProducts();
+        const unbekannt = (Array.isArray(body.positionen) ? body.positionen : []).filter(p => !produkte.some(x => x.id === p?.produkt_id));
+        if (unbekannt.length) return NextResponse.json({ ok: false, error: "Unbekanntes Produkt in den Positionen" }, { status: 400 });
+        return NextResponse.json({ ok: true, order: await createOrder({ kunde_id: body.kunde_id, positionen: body.positionen }) }, { status: 201 });
+      }
+      // Statusuebergang per Ereignis (id + type).
       if (!body.action) {
         if (!body.id) return NextResponse.json({ ok: false, error: "id is required" }, { status: 400 });
-        // Kompatibilitaet mit dem alten Event-basierten Aufrufmuster (id + type + payload):
-        // legt die Bestellung bei Bedarf an und wertet danach sofort den echten Gate-Status aus.
-        let order = await getOrderById(body.id);
-        if (!order) {
-          order = await createOrder({ id: body.id, kunde_id: body.kunde_id || "kunde_unbekannt", positionen: body.positionen || body.payload?.positionen || [] }).catch(() => null);
-        }
-        if (!order) return NextResponse.json({ ok: false, error: "Bestellung konnte nicht angelegt werden (kunde_id/positionen fehlen)" }, { status: 400 });
-
-        const derived = await deriveOrderGateInputs(order);
-        const gate = evaluateOrderAutomation(derived);
+        const order = await getOrderById(body.id);
+        if (!order) return NextResponse.json({ ok: false, error: "Bestellung nicht gefunden - neue Bestellungen nur ueber action \"create\"" }, { status: 404 });
         const eventType = body.type || "order.created";
         const event = createOrderEvent({ type: eventType, orderId: order.id, payload: body.payload || {} });
-        const nextState = gate.canAutoFulfill ? nextOrderState(order.status, eventType) : "blocked";
-        const updated = await updateOrder(order.id, { status: nextState });
-        const stored = saveEvent(event, order.id + ":" + eventType);
-        return NextResponse.json({ ok: true, order: updated, event: stored.event, duplicate: stored.duplicate, gate });
+
+        // Zuerst dauerhaft festhalten; ein Duplikat fuehrt zu keinem weiteren Statuswechsel.
+        const stored = await recordOrderEvent({ id: event.id, orderId: order.id, type: eventType, fromStatus: order.status, payload: event.payload }, order.id + ":" + eventType);
+        if (stored.duplicate) return NextResponse.json({ ok: true, duplicate: true, order, event: stored.event });
+
+        let gate = null;
+        let nextState = nextOrderState(order.status, eventType);
+        if (GATED_EVENTS.has(eventType) && nextState !== order.status) {
+          gate = evaluateOrderAutomation(await deriveOrderGateInputs(order));
+          if (!gate.canAutoFulfill) nextState = "blocked";
+        }
+        const updated = nextState === order.status ? order : await updateOrder(order.id, { status: nextState });
+        await finalizeOrderEvent(event.id, nextState);
+        return NextResponse.json({ ok: true, duplicate: false, order: updated, event: { ...stored.event, to_status: nextState }, gate });
       }
       return NextResponse.json({ ok: false, error: "Unbekannte action" }, { status: 400 });
     }
