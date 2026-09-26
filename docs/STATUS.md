@@ -245,3 +245,6 @@ Tests: **93/93**, `npm run build` ✅ (26 Routen, weiterhin 12 API-Routen, keine
 - **E-Commerce:** 3 reproduzierte Fehler im Bestellweg behoben; Ereignisse und Webhook-Belege persistent. E2E gegen die echte DB 23/23.
 - **Agenten-Zentrale:** Werknetz24 (8 Betriebs-Agenten), E-Commerce (Engine mit echter letzter Aktivität) und Master (Systemmonitor) strikt getrennt. Je Agent: aktuelle Aufgabe, benötigte Verbindungen, Test/Reparatur. Entwicklungs-Werkzeuge separat. Details in `werknetz24-landing/docs/FINAL-INTEGRATION-AUDIT.md`.
 - Tests 111/111, Build ✅.
+
+## Update 26.09.2026 (4) — Reparaturphase abgeschlossen, live geprüft
+Production live und eingeloggt getestet: Master, Werknetz24-Anbindung, E-Commerce, Agenten, Persistenz (Supabase), Navigation, Trennung. `MASTER_API_SECRET` am 26.09. neu erzeugt und gesetzt (Wert nur lokal gespeichert, nie ausgegeben). Endtabelle: `werknetz24-landing/docs/FINAL-INTEGRATION-AUDIT.md` („ABSCHLUSS DER REPARATURPHASE“). Tests 114/114, Build ✅.

@@ -65,3 +65,6 @@ Getestet: `npm test` 61/61 grün, `npm run build` erfolgreich (25 Routen, weiter
 
 ## Update 26.09.2026 (2) — Persistenz deployt
 `d24e009` (Supabase-Persistenz + Leseschutz) und `d81024f` (Fehlerzentrale-Fix) → CI ✅, Production Ready, live geprüft (s. `docs/DATABASE.md`). Browser-Rundgang: 28 Tabs, alle Richtungen der Navigation, keine JS-Fehler; einzige Konsolenmeldungen 503 Quality Gate (gewollt, nur noch `payments` blockiert) und 401 (anonym).
+
+## Update 26.09.2026 (3) — Reparaturphase deployt
+Production-Deploys `adnan` bis `3617022` sowie `werkbot24-landing` Ready. CI ✅. Live: 34 anonyme + 21 eingeloggte API-Prüfungen und Playwright-Rundgänge (anonym + eingeloggt) ohne JS-Fehler und ohne 5xx. Einzige Quality-Gate-Sperre: `payments` (gewollt).
