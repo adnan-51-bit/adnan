@@ -336,3 +336,13 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - PATCH kann den Pipeline-Status nicht mehr überspringen (vorher: ungeprüftes Produkt direkt auf READY möglich).
 - Tests: 135/135. Browsertest 25/25 (geöffneter Zustand simuliert), App-Runde 90/90. Build ok, 12 Funktionen.
 - Anleitung und Start-Checkliste: `docs/SORTIERT24.md`.
+
+## Update 26.09.2026 (15) — Anmeldeseite statt Browser-Fenster
+- Anlass: Adnan kam nicht in die Master-Zentrale. Im Browser war der 13-stellige Werknetz24-Code gespeichert, der Server lehnte ihn ab, und das alte `window.prompt` sagte nie „Code falsch“. Der 64-stellige Master-Code lag nur in einer Datei.
+- Neu:
+  - `/anmelden` mit klarer Meldung und Rücksprung (nur interne Pfade)
+  - „⎆ Anmelden / ⎋ Abmelden“ in den Kopfzeilen von Master, E-Commerce und Werknetz24-Übersicht, auch mobil sichtbar
+  - Ein vom Server abgelehnter gespeicherter Code wird automatisch entfernt.
+  - Schreiben ohne Anmeldung → Weiterleitung zur Anmeldeseite; kein Browser-Fenster mehr.
+- Adnans Entscheidung: eigenen Master-Code vergeben. **Er setzt `MASTER_API_SECRET` selbst in Vercel**, Claude ändert ihn nicht.
+- Tests 138/138, live: Anmelden/Abmelden/falscher Code/Rücksprung auf Desktop + Handy, 0 JS-Fehler, 0 Browser-Fenster.
