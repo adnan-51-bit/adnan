@@ -305,3 +305,28 @@ Integrationen-Übersicht, Direktnavigation System/Integrationen, Mobil-Regressio
 
 ## Endstand 26.09.2026, ca. 20:45
 - Technisch abgeschlossen, Production live, Git sauber (`8ed2201`). Offen nur Werknetz24-Zugänge (Adnan) sowie E-Commerce-Zahlungen/Shopify (Entscheidung).
+
+## Update 26.09.2026 (13) — Eigener Shop vorbereitet (geschlossen)
+Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (kein Shopify).
+- **Kundenseiten:**
+  - `/laden`: Produkte, Warenkorb, Bestellformular
+  - `/laden/danke`: Rückkehr nach der Bezahlung
+  - `/laden/{impressum,datenschutz,agb,widerruf}`: zeigen „wird vor Eröffnung veröffentlicht“, bis echte, geprüfte Texte in `lib/shop-rechtstexte.js` stehen
+- **Bestellung** (`POST /api/orders?type=shop-bestellung`):
+  - Preise nur serverseitig
+  - legt Kunde + Bestellung an, dann Stripe Checkout (ohne SDK, Idempotency-Key)
+  - Scheitert Stripe, wird die Bestellung storniert
+- **Zahlungsbestätigung** (`/api/payments/stripe`):
+  - Stripe-Signaturprüfung (Toleranz 5 min)
+  - jedes Ereignis nur einmal (`ecommerce_webhook_receipts`)
+  - nur `checkout.session.completed` + paid + `business_id=ecommerce` → Bestellung `paid`
+- **Start-Checkliste** (`lib/shop.js`, sichtbar in E-Commerce → Quality Gate):
+  1. Rechtstexte vollständig + `SHOP_RECHTSTEXTE_FREIGEGEBEN`
+  2. `STRIPE_SECRET_KEY`
+  3. `STRIPE_WEBHOOK_SECRET`
+  4. ≥ 1 Produkt READY/PUBLISHED mit echter positiver Marge
+  5. Supabase
+  6. `SHOP_LIVE`
+  - Live-Stand: nur 5 erfüllt → **geschlossen**.
+- **Shopname** zentral in `lib/shop-marke.js`, Platzhalter „Online-Shop“.
+- **Tests:** 131/131, 9 neue. Weiterhin 12 Server-Funktionen (Vercel-Limit). Live: Bestellung 503, Webhook 503, Seiten 200, Browser 0 Fehler.
