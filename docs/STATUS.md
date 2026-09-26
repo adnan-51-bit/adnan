@@ -254,3 +254,13 @@ Kunden/Leads/Rechnungen/Bestellungen/Produkte direkt aus `/master` (Test gegen t
 
 ## Update 26.09.2026 (6) — Endstand
 Integrationen-Übersicht, Direktnavigation System/Integrationen, Mobil-Regression behoben (`f90a8ff`). Finaler Live-Test bestanden (anonym + eingeloggt). Offen nur: Google-Zustimmung, `WA_APP_SECRET`, `FAMULOR_API_KEY` (Konto-Aktionen Adnan). Tests 117/117.
+
+## Update 26.09.2026 (7) — „Alle Bereiche“ + Qualitätsgate-Durchlauf
+- Neuer Tab `/master?tab=bereiche`: jeder Bereich mit Lesen/Schreiben/Steuern/Status/Letzter Check/Letzter Fehler/Aktion, nur echte Quellen.
+- Behoben und live geprüft:
+  - feste Status ersetzt
+  - Systemstatus nennt rote Systeme
+  - Stripe je Betrieb getrennt
+  - „Anmeldung erforderlich“ statt „nicht erreichbar“
+- Tests 120/120, Build ok, Live-Rundgang 0 JS-Fehler.
+- Details: werknetz24-landing `docs/FINAL-INTEGRATION-AUDIT.md`.
