@@ -290,3 +290,11 @@ Integrationen-Übersicht, Direktnavigation System/Integrationen, Mobil-Regressio
 ## Update 26.09.2026 (10) — Nachprüfung nach „eingetragen“
 - Die drei Werte (`GOOGLE_REFRESH_TOKEN` neu, `WA_APP_SECRET`, `FAMULOR_API_KEY`) sind in Vercel nicht angekommen. Werknetz24 wurde dennoch neu deployt: Google weiterhin `invalid_grant`.
 - Vollständige Live-Regression Master/Werknetz24/E-Commerce bestanden, keine Code-Änderung nötig. Tests 121/121, Build ok.
+
+## Update 26.09.2026 (11) — Final Quality Gate
+- Neu: „⎋ Abmelden“ in der Seitenleiste (`logoutMaster()` in `lib/admin-fetch.js`). Vorher gab es keinen Logout, das Secret blieb dauerhaft im Browser. Live getestet.
+- Negativtests live bestanden:
+  - falscher Bearer → 401
+  - fehlende Pflichtfelder / ungültige E-Mail / kaputtes JSON → 400
+  - Shopify-Webhook → 503
+- Regression: Tests 122/122, Build ok, 0 JS-Fehler.

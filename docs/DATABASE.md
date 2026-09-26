@@ -87,3 +87,7 @@ The schema now includes `master_systems` and `master_settings` in addition to bu
 ## Nachprüfung 26.09.2026, ca. 18:20
 - Live-Persistenz erneut bestanden (anlegen → ändern → neue Sitzung → lesen → aufgeräumt, Audit ohne Reste). Trennungs-Constraints erneut bestätigt.
 - Bestand danach: 4 Aufgaben, 0 Buchungen, 0 E-Commerce-Kunden, 1 Audit-Eintrag (echte Änderung an Aufgabe 1).
+
+## Final Quality Gate 26.09.2026, ca. 19:30
+- Persistenz erneut live bestanden (anlegen → ändern → neue Sitzung → lesen → aufgeräumt), Trennung 4/4. Bestand unverändert: 4 Aufgaben, 0 Buchungen, 0 E-Com-Kunden, 1 Audit-Eintrag.
+- Werknetz24 (Redis, nicht Supabase): Ich hatte eine Testanfrage versehentlich erzeugt. Sie ist per neuem Admin-`DELETE` entfernt, 5 echte Anfragen unverändert.
