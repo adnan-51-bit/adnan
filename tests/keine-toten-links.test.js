@@ -52,7 +52,7 @@ test("Master: 'System' und 'Integrationen' sind direkt anklickbar und fuehren zu
 
 test("'Alle Bereiche' enthaelt jeden geforderten Bereich mit Lesen/Schreiben/Steuern/Status/Check/Fehler/Aktion", () => {
   const cc = read("app/master/control-center.jsx");
-  for (const b of ["Master-Zentrale", "Werknetz24", "E-Commerce", "Agenten", "Finanzen", "Kunden (E-Commerce)", "Kunden (Werknetz24)", "Leads", "Rechnungen", "Lisa / Telefon", "Famulor", "Easybell", "Google Calendar", "Gmail", "Stripe", "PayPal", "WhatsApp", "Shopify / Shop-Anbindung", "SEO / Marketing", "Sicherheit", "Systemstatus", "Datenbank (Supabase)", "GitHub", "Vercel", "Dokumentation", "Obsidian"]) {
+  for (const b of ["Master-Zentrale", "Werknetz24", "E-Commerce", "Agenten", "Finanzen", "Kunden (E-Commerce)", "Kunden (Werknetz24)", "Leads", "Rechnungen", "Lisa / Telefon", "Famulor", "Easybell", "Google Calendar", "Gmail", "Stripe (Werknetz24)", "Stripe (E-Commerce)", "PayPal (Werknetz24)", "WhatsApp", "Shopify / Shop-Anbindung", "SEO / Marketing", "Sicherheit", "Systemstatus", "Datenbank (Supabase)", "GitHub", "Vercel", "Dokumentation", "Obsidian"]) {
     assert.ok(cc.includes(`bereich: "${b}"`), "Bereich fehlt: " + b);
   }
   for (const spalte of ["Lesen", "Schreiben", "Steuern", "Status", "Letzter Check", "Letzter Fehler", "Aktion"]) assert.ok(cc.includes(`<th>${spalte}</th>`), spalte);
