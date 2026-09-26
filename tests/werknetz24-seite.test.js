@@ -33,3 +33,8 @@ test("Werknetz24-Seite zeigt Kunden/Leads nur als Zahlen aus dem Status", () => 
   assert.match(src, /label="Kunden" value=\{status\.data\.kunden\.gesamt\}/);
   assert.match(src, /label="Leads" value=\{status\.data\.leads\.gesamt\}/);
 });
+
+test("fehlende Anmeldung wird nicht als 'Werknetz24 nicht erreichbar' angezeigt", () => {
+  assert.match(readFileSync("app/api/master/businesses/route.js", "utf8"), /authRequired: true, error: "Anmeldung erforderlich/);
+  for (const f of ["app/master/page.jsx", "app/werknetz24/page.jsx"]) assert.match(readFileSync(f, "utf8"), /status\.authRequired \? "🔒 Werknetz24-Live-Daten: "/);
+});

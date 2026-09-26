@@ -93,7 +93,7 @@ function Overview({ business }) {
     <div className="pageTitle"><div><span>STATUS</span><h2>Werknetz24 auf einen Blick</h2></div></div>
     {!status ? <Panel title="Live-Status"><p>Lädt…</p></Panel>
       : !status.configured ? <Panel title="Live-Status"><p>🔵 Noch nicht konfiguriert ({status.reason})</p></Panel>
-      : !status.ok ? <Panel title="Live-Status"><p>🟡 Werknetz24 nicht erreichbar: {status.error}</p></Panel>
+      : !status.ok ? <Panel title="Live-Status"><p>{status.authRequired ? "🔒 Werknetz24-Live-Daten: " : "🟡 Werknetz24 nicht erreichbar: "}{status.error}</p></Panel>
       : <div className="kpis">
           <Kpi label="Systemstatus" value={{ gruen: "🟢", gelb: "🟡", rot: "🔴", unbekannt: "⚪" }[status.data.systemStatus?.gesamtstatus] || "⚪"} note={`${status.data.systemStatus.counts.gruen}🟢 ${status.data.systemStatus.counts.gelb}🟡 ${status.data.systemStatus.counts.rot}🔴`} />
           <Kpi label="Offene Probleme" value={status.data.technischeProbleme.offeneIncidents} note="Systemwächter-Incidents" />

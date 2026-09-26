@@ -45,7 +45,7 @@ export async function GET(request){
     const id = params.get("id");
     const businesses = (await listBusinesses()).map(b => {
       if (!authError || !("liveStatus" in b)) return withLiveHealth(b);
-      return { ...b, liveStatus: { configured: true, ok: false, error: "Anmeldung erforderlich (Admin-Secret)" } };
+      return { ...b, liveStatus: { configured: true, ok: false, authRequired: true, error: "Anmeldung erforderlich (Admin-Secret)" } };
     });
     if (id) {
       const business = businesses.find(b => b.id === id);

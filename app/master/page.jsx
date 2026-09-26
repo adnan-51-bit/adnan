@@ -172,7 +172,7 @@ function Businesses({businesses,search,setSearch,editing,setEditing,saveBusiness
 // Zeigt ehrlich EXTERNAL/OPEN an, solange kein Secret konfiguriert ist - nie erfundene Werte.
 function LiveStatus({status}){
   if(!status.configured) return <div className="liveStatusBox unconfigured">🔵 EXTERNAL — Werknetz24-Verbindung noch nicht konfiguriert ({status.reason})</div>;
-  if(!status.ok) return <div className="liveStatusBox error">🟡 Werknetz24 nicht erreichbar: {status.error}</div>;
+  if(!status.ok) return <div className="liveStatusBox error">{status.authRequired ? "🔒 Werknetz24-Live-Daten: " : "🟡 Werknetz24 nicht erreichbar: "}{status.error}</div>;
   const d=status.data;
   const ampel={gruen:"🟢",gelb:"🟡",rot:"🔴",unbekannt:"⚪"}[d.systemStatus?.gesamtstatus]||"⚪";
   return <div className="liveStatusBox ok">
