@@ -280,3 +280,9 @@ Integrationen-Übersicht, Direktnavigation System/Integrationen, Mobil-Regressio
   - Google (Zustimmung), `WA_APP_SECRET`, `FAMULOR_API_KEY` (im Famulor-Konto existiert noch kein Schlüssel)
   - E-Commerce-Stripe (bewusst gesperrt), Shopify nicht eingerichtet
 - Details: DATABASE.md und werknetz24-landing `docs/FINAL-INTEGRATION-AUDIT.md`.
+
+## Update 26.09.2026 (9) — Finaler Fertigstellungs-Auftrag
+- Master-Code unverändert. Tests 121/121, Build ok.
+- Live-Regression bestanden: Navigation, Persistenz, 401-Schutz, 404, mobil, 0 JS-Fehler.
+- „Sicherheit“ zeigt nach dem Werknetz24-Fix nur noch „ADMIN_SECRET ungewöhnlich kurz“.
+- Shopify-Webhook fail-closed (503), E-Commerce-Stripe weiterhin bewusst gesperrt.
