@@ -2,7 +2,7 @@
 // nicht erneut fragen (live gemessen: 46 Abfragen bei einem Rundgang); Schreibaktionen fragen weiter.
 import test, { beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import { adminFetch } from "../lib/admin-fetch.js";
+import { adminFetch, logoutMaster, hasStoredSecret } from "../lib/admin-fetch.js";
 
 function memoryStorage() {
   const m = new Map();
@@ -49,4 +49,15 @@ test("falsches gespeichertes Secret: bei 401 wird genau einmal neu gefragt", asy
   assert.equal(r.status, 200);
   assert.equal(prompts, 1);
   assert.deepEqual(requests, ["Bearer falsch", "Bearer richtig"]);
+});
+
+test("Abmelden: entfernt gespeichertes Secret; danach wird wieder gefragt, ohne Secret gesendet", async () => {
+  antwort = "richtig";
+  assert.equal((await adminFetch("/x")).status, 200);
+  assert.equal(hasStoredSecret(), true);
+  logoutMaster();
+  assert.equal(hasStoredSecret(), false);
+  antwort = null; // Nutzer bricht die neue Abfrage ab
+  assert.equal((await adminFetch("/x")).status, 401);
+  assert.equal(requests.at(-1), null, "nach dem Abmelden darf kein altes Secret mehr mitgeschickt werden");
 });

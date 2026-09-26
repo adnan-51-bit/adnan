@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { adminFetch } from "../../lib/admin-fetch.js";
+import { adminFetch, logoutMaster, hasStoredSecret } from "../../lib/admin-fetch.js";
 import { Fehlerzentrale, AgentenZentrale, Werknetz24Systeme, IntegrationenZentrale, BereicheZentrale } from "./control-center.jsx";
 
 // Direkt adressierbare Bereiche (Full-System-Audit Phase 2, 26.09.2026): /master?tab=alerts öffnet
@@ -106,7 +106,7 @@ export default function MasterDashboard(){
       <aside className="sidebar">
         <div className="sideAreas"><span>Geschäftsbereiche</span><a href="/werknetz24">▸ Werknetz24</a><a href="/e-commerce">▸ E-Commerce</a></div>
         {TABS.map(([id,icon,label])=><button key={id} className={tab===id?"selected":""} onClick={()=>setTab(id)}><b>{icon}</b>{label}</button>)}
-        <div className="sideBottom"><a href="/e-commerce?tab=pipeline">↳ Produkt-Pipeline</a><a href="/e-commerce?tab=lieferanten">↳ Lieferanten</a><a href="/e-commerce?tab=automation">↳ Automationen</a><a href="https://werknetz24.de/admin-zentrale" target="_blank" rel="noreferrer">↳ Werknetz24-Verwaltung ↗</a></div>
+        <div className="sideBottom"><a href="/e-commerce?tab=pipeline">↳ Produkt-Pipeline</a><a href="/e-commerce?tab=lieferanten">↳ Lieferanten</a><a href="/e-commerce?tab=automation">↳ Automationen</a><a href="https://werknetz24.de/admin-zentrale" target="_blank" rel="noreferrer">↳ Werknetz24-Verwaltung ↗</a><Abmelden/></div>
       </aside>
 
       <section className="content">{loading && <div className="notice">Master-Daten werden geladen…</div>}
@@ -129,6 +129,14 @@ export default function MasterDashboard(){
     <footer>Master-Zentrale · Statusänderungen werden über die zentrale API protokolliert. Keine externe Zahlung, Bestellung oder Vertragsänderung wird durch dieses Dashboard ausgelöst.</footer>
     <style jsx>{styles}</style>
   </main>
+}
+
+// Abmelden (26.09.2026): nur sichtbar, wenn in diesem Browser ein Secret gespeichert ist.
+function Abmelden(){
+  const [angemeldet,setAngemeldet]=useState(false);
+  useEffect(()=>{ setAngemeldet(hasStoredSecret()); },[]);
+  if(!angemeldet) return null;
+  return <a href="/master" data-testid="abmelden" onClick={e=>{ e.preventDefault(); if(!window.confirm("Wirklich abmelden? Das gespeicherte Admin-Secret wird aus diesem Browser entfernt.")) return; logoutMaster(); window.location.href="/master"; }}>⎋ Abmelden</a>;
 }
 
 function Overview({businesses,tasks,tasksLocked,systems,qualityGate,qgLoading,recentActivity,goTo}){
