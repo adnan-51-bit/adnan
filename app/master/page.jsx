@@ -48,7 +48,7 @@ export default function MasterDashboard(){
   const [qgLoading,setQgLoading]=useState(true);
   const [recentActivity,setRecentActivity]=useState([]);
 
-  useEffect(()=>{ fetch("/api/master/businesses").then(r=>r.json()).then(data=>{ if(data?.businesses) setBusinesses(data.businesses); if(data?.storage) setStorage(data.storage); }).finally(()=>setLoading(false)); },[]);
+  useEffect(()=>{ adminFetch("/api/master/businesses").then(r=>r.json()).then(data=>{ if(data?.businesses) setBusinesses(data.businesses); if(data?.storage) setStorage(data.storage); }).finally(()=>setLoading(false)); },[]);
   useEffect(()=>{ fetch("/api/master/tasks").then(r=>r.json()).then(data=>{ if(data?.tasks) setTasks(data.tasks); if(data?.storage) setStorage(data.storage); }).finally(()=>setTasksLoading(false)); },[]);
   useEffect(()=>{ fetch("/api/master/finance").then(r=>r.json()).then(data=>{ if(data?.entries) setFinance(data.entries); if(data?.storage) setStorage(data.storage); }).finally(()=>setFinanceLoading(false)); },[]);
   useEffect(()=>{ fetch("/api/master/systems").then(r=>r.json()).then(data=>{ if(data?.systems) setSystems(data.systems); if(data?.storage) setStorage(data.storage); }).finally(()=>setSystemsLoading(false)); },[]);

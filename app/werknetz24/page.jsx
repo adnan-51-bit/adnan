@@ -25,13 +25,24 @@ const TABS = [
   ["verbindung", "🔗", "Verbindung"],
 ];
 
+const ADMIN_DEEP_LINKS = [
+  ["fehler", "Fehlerzentrale"],
+  ["systemstatus", "Systemstatus"],
+  ["agenten", "Agenten"],
+  ["lisa-nutzung", "Lisa / Telefonie"],
+  ["kunden", "Kunden"],
+  ["leads", "Leads"],
+  ["buchhaltung", "Finanzen"],
+  ["automation-hub", "Automationen"],
+];
+
 export default function Werknetz24Page() {
   const [tab, setTab] = useState("overview");
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/master/businesses?id=werknetz24")
+    adminFetch("/api/master/businesses?id=werknetz24")
       .then(r => r.json())
       .then(d => setBusiness(d.business))
       .finally(() => setLoading(false));
@@ -71,7 +82,7 @@ function Overview({ business }) {
   const status = business?.liveStatus;
   const [incidents, setIncidents] = useState(null);
   useEffect(() => {
-    fetch("/api/master/businesses?werknetz24Incidents=1").then(r => r.json()).then(d => setIncidents(d.incidents)).catch(() => {});
+    adminFetch("/api/master/businesses?werknetz24Incidents=1").then(r => r.json()).then(d => setIncidents(d.incidents)).catch(() => {});
   }, []);
   return <>
     <div className="pageTitle"><div><span>STATUS</span><h2>Werknetz24 auf einen Blick</h2></div></div>
@@ -86,6 +97,10 @@ function Overview({ business }) {
         </div>}
     {incidents?.ok && incidents.incidents.length > 0 && <Panel title="Was ist rot? (Systemwächter-Incidents)">{incidents.incidents.map((i, idx) => <div className="taskMini" key={idx}><div><strong>{i.system || "unbekanntes System"}</strong><small>{i.erste_erkennung ? new Date(i.erste_erkennung).toLocaleString("de-DE") : "—"}</small></div><span>{i.prioritaet || "—"}</span></div>)}</Panel>}
     <Panel title="Module"><div className="chips">{(business?.modules || []).map(m => <i key={m}>{m}</i>)}</div></Panel>
+    {/* Direkt-Sprünge (Full-System-Audit 26.09.2026): nutzen den bereits vorhandenen Deep-Link
+        "#<seite>" der Werknetz24-Admin-Zentrale (showPage), statt nur auf deren Startseite zu
+        verlinken. Nur Seiten-IDs, die dort real existieren (page-<id>). */}
+    <Panel title="Direkt in Werknetz24 öffnen"><div className="chips">{ADMIN_DEEP_LINKS.map(([id, label]) => <a key={id} href={`https://werknetz24.de/admin-zentrale#${id}`} target="_blank" rel="noreferrer">{label} ↗</a>)}</div></Panel>
   </>;
 }
 
@@ -101,7 +116,7 @@ function WerknetzKalender() {
 
   function load() {
     setLoading(true);
-    fetch("/api/master/businesses?werknetz24Kalender=1")
+    adminFetch("/api/master/businesses?werknetz24Kalender=1")
       .then(r => r.json())
       .then(d => setKalender(d.kalender))
       .catch(() => setKalender({ configured: false, reason: "Abruf fehlgeschlagen" }))
@@ -158,7 +173,7 @@ function WerknetzAufgaben() {
   const [aufgaben, setAufgaben] = useState(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    fetch("/api/master/businesses?werknetz24Aufgaben=1").then(r => r.json()).then(d => setAufgaben(d.aufgaben)).finally(() => setLoading(false));
+    adminFetch("/api/master/businesses?werknetz24Aufgaben=1").then(r => r.json()).then(d => setAufgaben(d.aufgaben)).finally(() => setLoading(false));
   }, []);
   const offen = aufgaben?.ok ? aufgaben.aufgaben.filter(a => !a.erledigt) : [];
   const erledigt = aufgaben?.ok ? aufgaben.aufgaben.filter(a => a.erledigt) : [];
@@ -178,7 +193,7 @@ function WerknetzRechnungen() {
   const [rechnungen, setRechnungen] = useState(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    fetch("/api/master/businesses?werknetz24Rechnungen=1").then(r => r.json()).then(d => setRechnungen(d.rechnungen)).finally(() => setLoading(false));
+    adminFetch("/api/master/businesses?werknetz24Rechnungen=1").then(r => r.json()).then(d => setRechnungen(d.rechnungen)).finally(() => setLoading(false));
   }, []);
   const fmt = cents => new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format((cents || 0) / 100);
   return <>

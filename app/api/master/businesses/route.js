@@ -8,6 +8,16 @@ export const runtime = "nodejs";
 export async function GET(request){
   try{
     const params = new URL(request.url).searchParams;
+    // Full-System-Audit 26.09.2026 (Fund 🔴): die Werknetz24-GET-Zweige waren ohne Anmeldung
+    // abrufbar - jeder mit der URL bekam echte Werknetz24-Aufgaben, Rechnungen, Incidents und
+    // Kalendertermine; das WERKNETZ24_STATUS_SECRET war durch diesen offenen Proxy wirkungslos.
+    // Werknetz24-Daten (inkl. aggregiertem liveStatus) gibt es jetzt nur mit MASTER_API_SECRET,
+    // die restliche Betriebsliste bleibt wie bisher ohne Anmeldung lesbar.
+    const authError = checkAdminSecret(request);
+    const werknetz24Detail = ["werknetz24Kalender", "werknetz24Aufgaben", "werknetz24Rechnungen", "werknetz24Incidents"].some(k => params.get(k));
+    if (werknetz24Detail && authError) {
+      return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
+    }
     // Werknetz24-Kalender (22.09.2026, "Kommandozentrale"-Folgeauftrag) - eigener Zweig statt
     // neuer Route-Datei (12/12 Serverless-Funktionen bereits belegt, s. PROJECT-AUDIT.md im
     // Schwester-Repo). Bewusst hier statt in lib/master-store.js, da es kein lokaler
@@ -29,7 +39,10 @@ export async function GET(request){
       return NextResponse.json({ ok: true, incidents });
     }
     const id = params.get("id");
-    const businesses = await listBusinesses();
+    const businesses = (await listBusinesses()).map(b => {
+      if (!authError || !("liveStatus" in b)) return b;
+      return { ...b, liveStatus: { configured: true, ok: false, error: "Anmeldung erforderlich (Admin-Secret)" } };
+    });
     if (id) {
       const business = businesses.find(b => b.id === id);
       if (!business) return NextResponse.json({ok:false,error:"Business nicht gefunden"},{status:404});
