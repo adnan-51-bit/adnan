@@ -111,7 +111,7 @@ export function Fehlerzentrale({ systems, tasks, qualityGate, onReloadSystems, g
   }
   // Master-Zentrale: Systeme mit 🔴/🟡 (automatische Checks laufen bei jedem Laden neu)
   for (const s of systems.filter(s => s.status === "🔴" || s.status === "🟡")) {
-    const biz = ["stripe", "shopify"].includes(s.id) ? "ecommerce" : ["famulor", "easybell"].includes(s.id) ? "werknetz24" : "master";
+    const biz = ["stripe", "shopify", "paypal"].includes(s.id) ? "ecommerce" : ["famulor", "easybell"].includes(s.id) ? "werknetz24" : "master";
     fehler.push({
       key: "sys-" + s.id, severity: s.status, business_id: biz, bereich: "System", titel: s.name,
       fehler: s.note || "—", detail: `Quelle: ${s.source === "auto" ? "automatische Prüfung" : "manuell gepflegt"} · geprüft ${fmt(s.last_checked_at)}`,
@@ -164,7 +164,7 @@ export function Fehlerzentrale({ systems, tasks, qualityGate, onReloadSystems, g
       </article>)}
     </section>
     <section className="panel"><h3>So funktioniert „Reparieren“</h3><p>„Prüfung erneut ausführen“ startet den echten Werknetz24-Systemwächter. Ist das betroffene System danach grün, erscheint 🟢 und der Fehler kann mit automatischem Nachweis abgeschlossen werden – vorher verweigert Werknetz24 den Abschluss. „Erneut prüfen“ wiederholt die automatischen Master-Checks. Wo eine Reparatur ein Konto, Login oder Secret braucht, steht die konkrete Anleitung statt eines Buttons.</p></section>
-    <style jsx>{ccStyles}</style>
+    <CcStyles/>
   </>;
 }
 
@@ -255,7 +255,7 @@ export function AgentenZentrale({ systems, onReloadSystems }) {
       </table></div>
     </section>
     <section className="panel"><h3>Warum überall „OPEN“ bei Start/Stop/Pause?</h3><p>Keiner dieser Agenten ist ein dauerhaft laufender Prozess – sie werden von Anrufen, Webhooks oder dem täglichen Cron ausgelöst. Ein echtes Start/Stop/Pause gibt es technisch nicht; es wird deshalb nicht vorgetäuscht. Echt steuerbar ist „Retry“ beim Systemwächter (startet die Werknetz24-Prüfung) und beim Master-Systemmonitor (wiederholt die automatischen Checks).</p></section>
-    <style jsx>{ccStyles}</style>
+    <CcStyles/>
   </>;
 }
 
@@ -267,9 +267,15 @@ export function Werknetz24Systeme() {
     <div className="panelTitle"><h3>Werknetz24 · Systemwächter (live)</h3><a className="ccBtn" href={W24_ADMIN + "#systemstatus"} target="_blank" rel="noreferrer">Systemstatus in Werknetz24 ↗</a></div>
     {w24.loading ? <p>Lädt…</p> : w24.error ? <p>🟡 Nicht abrufbar: {w24.error}</p> : systeme.length === 0 ? <p>Keine Prüfergebnisse protokolliert.</p> :
       <div className="ccGrid">{systeme.sort((a, b) => (a.status === "rot" ? -1 : 1) - (b.status === "rot" ? -1 : 1)).map(s => <div className="ccSys" key={s.key}><b>{AMPEL[s.status] || "⚪"} {s.key}</b><small>geprüft {fmt(s.letzte_pruefung)}</small><small>zuletzt grün {fmt(s.letzte_erfolgreiche_pruefung)}{s.fehlerserie ? ` · Fehlerserie ${s.fehlerserie}` : ""}</small></div>)}</div>}
-    <style jsx>{ccStyles}</style>
+    <CcStyles/>
   </section>;
 }
+
+// Bewusst KEIN <style jsx>: styled-jsx vergibt fuer Styles aus einer Variablen die ID "undefined" -
+// dieselbe wie die der Seite (app/master/page.jsx), und ueberspringt diese Styles dann als
+// "bereits eingefuegt" (live gefunden: Klassen "jsx-undefined", Fehlerzentrale ungestaltet).
+// Ein normales <style>-Element mit festem, statischem Inhalt umgeht das.
+function CcStyles() { return <style dangerouslySetInnerHTML={{ __html: ccStyles }} />; }
 
 const ccStyles = `
 .ccRow{display:flex;gap:14px;justify-content:space-between;align-items:flex-start;padding:14px;border:1px solid #eaecf0;border-left-width:4px;border-radius:10px;margin-bottom:10px;background:#fff}
