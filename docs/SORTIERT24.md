@@ -26,7 +26,7 @@ Eigenes E-Commerce-Projekt, strikt getrennt von Werknetz24:
 4. **Versandkosten:** `VERSANDKOSTEN_CENT` in `lib/shop-marke.js`, Wert aus echten Lieferantenkonditionen (0 = kostenlos).
 5. **Produkt:** Mindestens eines mit echtem Einkaufspreis, positiver Marge und Pipeline-Status „Bereit“/„Veröffentlicht“.
 6. **Datenbank:** Supabase ✅
-7. **Freischalten:** `SHOP_LIVE=true`, erst wenn 1–6 erfüllt sind.
+7. **Freischalten:** `SHOP_LIVE=true`, erst wenn 1–6 erfüllt sind. Gleichzeitig in `app/laden/layout.jsx` die Suchmaschinen-Sperre (`robots: index false`) entfernen.
 
 Alle Variablen kommen ins Vercel-Projekt `adnan` (Production), danach neu deployen.
 

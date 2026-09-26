@@ -166,3 +166,11 @@ test("Admin: Pipeline-Status lässt sich per PATCH nicht überspringen", async (
   const ok = await orders.PATCH(new Request("http://t/api/orders?type=products", { method: "PATCH", headers: { "content-type": "application/json", authorization: "Bearer test-secret" }, body: JSON.stringify({ id: p.id, beschreibung: "Neu", bestand: 4 }) }));
   assert.equal(ok.status, 200);
 });
+
+test("Shop hat eigenen Seitentitel (nicht den der Werknetz24-Zentrale) und ist bis zur Eröffnung nicht indexierbar", async () => {
+  const { metadata } = await import("../app/laden/layout.jsx").catch(() => ({}));
+  const src = (await import("node:fs")).readFileSync(new URL("../app/laden/layout.jsx", import.meta.url), "utf8");
+  assert.match(src, /title: SHOP_NAME/);
+  assert.match(src, /index: false/);
+  assert.equal(metadata === undefined || metadata.title === "Sortiert24", true);
+});
