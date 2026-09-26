@@ -62,3 +62,24 @@ The schema now includes `master_systems` and `master_settings` in addition to bu
 - `/api/automation` und `/api/providers` melden den echten Speicher statt fest „not_configured“.
 - `lib/store.js`, `lib/idempotency.js`, `lib/persistence.js` werden nicht mehr verwendet (nicht gelöscht).
 - E2E gegen die echte DB: 23/23 Prüfungen (inkl. Neustart), Testdaten danach vollständig entfernt.
+
+## Prüfung 26.09.2026, ca. 17:30 (Master-Auftrag)
+- **Migrationen:** 6 Dateien in `supabase/migrations`, alle 6 in `schema_migrations_applied` eingetragen, keine fehlt.
+- **Tabellen:** 15 in `public`, bei allen ist RLS aktiv und es gibt 0 öffentliche Policies. Zugriff nur serverseitig (service_role).
+  - `master_tasks` ist die Vorgänger-Tabelle von `master_tasks_v2`, im Code nicht mehr genutzt. Nicht gelöscht, um keine Daten zu verlieren.
+- **Öffentliche Schlüssel:** Anon- und Publishable-Key erhalten auf alle geprüften Tabellen 401.
+- **Trennung:** CHECK-Constraints lehnen Werknetz24-Datensätze in `ecommerce_*` und unbekannte `business_id` ab (Transaktion mit ROLLBACK).
+- **Live-Persistenz** über die echte API, mit markierten Testdaten:
+
+  | Schritt | Ergebnis |
+  |---|---|
+  | anlegen (Aufgabe, Finanzbuchung, E-Commerce-Kunde) | ✓ |
+  | **aktualisieren** (Aufgabe → Erledigt) | ✓ |
+  | neue Sitzung und neues Deployment → erneut gelesen, Aktualisierung erhalten | ✓ |
+  | aufgeräumt, inkl. Audit-Einträge | ✓ |
+
+  - Das Aufräum-Skript findet Testdaten jetzt über ihre Markierung in der DB. Ein doppelter Lauf hinterlässt keine Reste mehr (vorher 4 verwaiste Audit-Zeilen, entfernt).
+- **Behoben:**
+  - `PATCH /api/master/tasks` meldete „nicht gefunden“ und „unbekannte business_id“ als 500 → jetzt 404/400.
+  - Im Speicher-Modus (ohne Supabase) legte ein PATCH auf eine unbekannte ID eine Geister-Aufgabe an → jetzt „Task not found“.
+  - `GET /api/master/tasks` war als einziger Datenendpunkt ohne Anmeldung lesbar → jetzt 401 wie Finanzen/Audit. Die Oberfläche zeigt ohne Anmeldung „—, Anmeldung erforderlich“ statt „0 offene Aufgaben“.

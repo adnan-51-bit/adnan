@@ -264,3 +264,19 @@ Integrationen-Übersicht, Direktnavigation System/Integrationen, Mobil-Regressio
   - „Anmeldung erforderlich“ statt „nicht erreichbar“
 - Tests 120/120, Build ok, Live-Rundgang 0 JS-Fehler.
 - Details: werknetz24-landing `docs/FINAL-INTEGRATION-AUDIT.md`.
+
+## Update 26.09.2026 (8) — Master-Auftrag Gesamtprüfung
+- Behoben und live geprüft:
+  - Aufgaben-Lesen nur mit Secret, ohne Anmeldung ehrliche Anzeige
+  - PATCH-Fehlercodes 404/400
+  - Geister-Aufgabe im Speicher-Modus
+  - Aufgabe „Persistenz fertigstellen“ nach Live-Nachweis auf Erledigt gesetzt
+- Tests 121/121, Build ok; beide Vercel-Projekte: alle Deployments der letzten Stunden „Ready“.
+- Live:
+  - Navigation Master ↔ Werknetz24 ↔ E-Commerce hin und zurück
+  - 404-Seite, unbekannter Tab fällt auf die Übersicht zurück
+  - 0 JS-Fehler; mobil ohne Überlauf
+- Offen, extern:
+  - Google (Zustimmung), `WA_APP_SECRET`, `FAMULOR_API_KEY` (im Famulor-Konto existiert noch kein Schlüssel)
+  - E-Commerce-Stripe (bewusst gesperrt), Shopify nicht eingerichtet
+- Details: DATABASE.md und werknetz24-landing `docs/FINAL-INTEGRATION-AUDIT.md`.
