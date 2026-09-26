@@ -302,3 +302,6 @@ Integrationen-Übersicht, Direktnavigation System/Integrationen, Mobil-Regressio
 ## Update 26.09.2026 (12) — Browsertour + E-Commerce-Ablauf live
 - Alle 15 Routen + 30 Tabs angemeldet, Desktop + Handy: 0 JS-Fehler. 4 Handy-Überläufe behoben (`f3ffef3`), live 90/90 ok.
 - Bestellablauf live über die Production-API 13/13 (inkl. Quality-Gate-Sperre nach Zahlung, Fehlerfälle, Retoure, Persistenz, Trennung), aufgeräumt.
+
+## Endstand 26.09.2026, ca. 20:45
+- Technisch abgeschlossen, Production live, Git sauber (`8ed2201`). Offen nur Werknetz24-Zugänge (Adnan) sowie E-Commerce-Zahlungen/Shopify (Entscheidung).
