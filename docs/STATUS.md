@@ -248,3 +248,6 @@ Tests: **93/93**, `npm run build` ✅ (26 Routen, weiterhin 12 API-Routen, keine
 
 ## Update 26.09.2026 (4) — Reparaturphase abgeschlossen, live geprüft
 Production live und eingeloggt getestet: Master, Werknetz24-Anbindung, E-Commerce, Agenten, Persistenz (Supabase), Navigation, Trennung. `MASTER_API_SECRET` am 26.09. neu erzeugt und gesetzt (Wert nur lokal gespeichert, nie ausgegeben). Endtabelle: `werknetz24-landing/docs/FINAL-INTEGRATION-AUDIT.md` („ABSCHLUSS DER REPARATURPHASE“). Tests 114/114, Build ✅.
+
+## Update 26.09.2026 (5) — Direktnavigation Datenbereiche + Live-Schreibtest
+Kunden/Leads/Rechnungen/Bestellungen/Produkte direkt aus `/master` (Test gegen tote Links). Production-Schreibtest mit Fehlerfällen bestanden, Daten überstehen ein neues Deployment (Testdaten danach gelöscht). Tests 116/116.
