@@ -11,6 +11,7 @@ delete process.env.SUPABASE_URL; delete process.env.SUPABASE_SECRET_KEY;
 const orders = await import("../app/api/orders/route.js");
 const finance = await import("../app/api/master/finance/route.js");
 const audit = await import("../app/api/master/audit/route.js");
+const tasks = await import("../app/api/master/tasks/route.js");
 
 const SECRET = "test-master-secret";
 const req = (path, token) => new Request("https://example.test" + path, token ? { headers: { authorization: "Bearer " + token } } : {});
@@ -34,4 +35,13 @@ test("Produkte und Lieferanten bleiben ohne Secret lesbar (keine Personendaten)"
   process.env.MASTER_API_SECRET = SECRET;
   assert.equal((await orders.GET(req("/api/orders?type=products"))).status, 200);
   assert.equal((await orders.GET(req("/api/orders?type=suppliers"))).status, 200);
+});
+
+test("Aufgaben: GET nur mit Secret; PATCH meldet Nutzerfehler als 404/400 statt 500", async () => {
+  process.env.MASTER_API_SECRET = SECRET;
+  assert.equal((await tasks.GET(req("/api/master/tasks"))).status, 401);
+  assert.equal((await tasks.GET(req("/api/master/tasks", SECRET))).status, 200);
+  const patch = body => tasks.PATCH(new Request("https://example.test/api/master/tasks", { method: "PATCH", headers: { authorization: "Bearer " + SECRET, "content-type": "application/json" }, body: JSON.stringify(body) }));
+  assert.equal((await patch({ id: "gibt-es-nicht", status: "done" })).status, 404);
+  assert.equal((await patch({ id: "gibt-es-nicht", business_id: "erfunden" })).status, 400);
 });

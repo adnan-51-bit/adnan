@@ -47,6 +47,7 @@ export default function MasterDashboard(){
   const [storage,setStorage]=useState("unbekannt");
   const [systemFilter,setSystemFilter]=useState("all");
   const [tasksLoading,setTasksLoading]=useState(true);
+  const [tasksLocked,setTasksLocked]=useState(false);
   const [finance,setFinance]=useState([]);
   const [financeLoading,setFinanceLoading]=useState(true);
   const [systems,setSystems]=useState([]);
@@ -57,7 +58,7 @@ export default function MasterDashboard(){
   const [recentActivity,setRecentActivity]=useState([]);
 
   useEffect(()=>{ adminFetch("/api/master/businesses").then(r=>r.json()).then(data=>{ if(data?.businesses) setBusinesses(data.businesses); if(data?.storage) setStorage(data.storage); }).finally(()=>setLoading(false)); },[]);
-  useEffect(()=>{ fetch("/api/master/tasks").then(r=>r.json()).then(data=>{ if(data?.tasks) setTasks(data.tasks); if(data?.storage) setStorage(data.storage); }).finally(()=>setTasksLoading(false)); },[]);
+  useEffect(()=>{ adminFetch("/api/master/tasks").then(r=>{ setTasksLocked(r.status===401); return r.json(); }).then(data=>{ if(data?.tasks) setTasks(data.tasks); if(data?.storage) setStorage(data.storage); }).finally(()=>setTasksLoading(false)); },[]);
   useEffect(()=>{ adminFetch("/api/master/finance").then(r=>r.json()).then(data=>{ if(data?.entries) setFinance(data.entries); if(data?.storage) setStorage(data.storage); }).finally(()=>setFinanceLoading(false)); },[]);
   // Jeder Aufruf fuehrt die automatischen Checks in lib/master-systems.js neu aus - damit ist
   // "Erneut prüfen"/"Retry" in Fehler- und Agenten-Zentrale eine echte Wiederholung.
@@ -110,12 +111,13 @@ export default function MasterDashboard(){
 
       <section className="content">{loading && <div className="notice">Master-Daten werden geladen…</div>}
         {notice && <div className="notice">{notice}<button onClick={()=>setNotice("")}>×</button></div>}
-        {tab==="overview" && <Overview businesses={businesses} tasks={tasks} systems={systems} qualityGate={qualityGate} qgLoading={qgLoading} recentActivity={recentActivity} goTo={setTab}/>}
+        {tab==="overview" && <Overview businesses={businesses} tasks={tasks} tasksLocked={tasksLocked} systems={systems} qualityGate={qualityGate} qgLoading={qgLoading} recentActivity={recentActivity} goTo={setTab}/>}
         {tab==="businesses" && <Businesses businesses={visibleBusinesses} search={search} setSearch={setSearch} editing={editing} setEditing={setEditing} saveBusiness={saveBusiness}/>}
         {tab==="alerts" && <Fehlerzentrale systems={systems} tasks={tasks} qualityGate={qualityGate} onReloadSystems={reloadSystems} goTo={setTab}/>}
         {tab==="agents" && <AgentenZentrale systems={systems} onReloadSystems={reloadSystems}/>}
         {tab==="integrations" && <IntegrationenZentrale systems={systems}/>}
         {tab==="bereiche" && <BereicheZentrale systems={systems} businesses={businesses} qualityGate={qualityGate} goTo={setTab}/>}
+        {tab==="tasks" && tasksLocked && <div className="panel">Aufgaben sind nur mit Admin-Secret sichtbar – Anmeldung erforderlich.</div>}
         {tab==="tasks" && <Tasks tasks={tasks} businesses={businesses} loading={tasksLoading} onSave={saveTask} onCreate={createTask}/>}
         {tab==="systems" && <><Systems systems={systems} loading={systemsLoading} filter={systemFilter} setFilter={setSystemFilter} editing={systemEditing} setEditing={setSystemEditing} onSave={saveSystem}/><Werknetz24Systeme/></>}
         {tab==="finance" && <Finance entries={finance} businesses={businesses} loading={financeLoading} onCreate={async form=>{const r=await adminFetch("/api/master/finance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)});const d=await r.json();if(!r.ok||!d?.entry)throw new Error(d?.error||"Speichern fehlgeschlagen");setFinance(prev=>[d.entry,...prev]);setNotice("Finanzbuchung gespeichert.");}}/>}
@@ -129,7 +131,7 @@ export default function MasterDashboard(){
   </main>
 }
 
-function Overview({businesses,tasks,systems,qualityGate,qgLoading,recentActivity,goTo}){
+function Overview({businesses,tasks,tasksLocked,systems,qualityGate,qgLoading,recentActivity,goTo}){
   const openTasks=tasks.filter(t=>t.status!=="Erledigt").length;
   const blocked=systems.filter(s=>s.status==="🔴").length;
   const qgLabel=qgLoading?"…":qualityGate?.productionReady?"🟢 Bereit":"🔴 Gesperrt";
@@ -142,13 +144,13 @@ function Overview({businesses,tasks,systems,qualityGate,qgLoading,recentActivity
     <nav className="areaNav dataNav" aria-label="Daten direkt öffnen"><a href="/e-commerce?tab=kunden"><b>Kunden</b><small>E-Commerce</small></a><a href="https://werknetz24.de/admin-zentrale#kunden" target="_blank" rel="noreferrer"><b>Kunden</b><small>Werknetz24 ↗</small></a><a href="https://werknetz24.de/admin-zentrale#leads" target="_blank" rel="noreferrer"><b>Leads</b><small>Werknetz24 ↗</small></a><a href="/werknetz24?tab=rechnungen"><b>Rechnungen</b><small>Werknetz24</small></a><a href="/e-commerce?tab=bestellungen"><b>Bestellungen</b><small>E-Commerce</small></a><a href="/e-commerce?tab=produkte"><b>Produkte</b><small>E-Commerce</small></a></nav>
     <div className="kpis">
       <Kpi label="Betriebe" value={businesses.length} note="zentral verwaltet"/>
-      <Kpi label="Offene Aufgaben" value={openTasks} note="Priorisierung aktiv" onClick={()=>goTo?.("tasks")}/>
+      <Kpi label="Offene Aufgaben" value={tasksLocked?"—":openTasks} note={tasksLocked?"Anmeldung erforderlich":"Priorisierung aktiv"} onClick={()=>goTo?.("tasks")}/>
       <Kpi label="Systeme kritisch" value={blocked} note="müssen vor Live-Betrieb geprüft werden" onClick={()=>goTo?.("alerts")}/>
       <Kpi label="Quality Gate" value={qgLabel} note={qgBlocking?qgBlocking+" Blocker offen":"alle Checks bestanden"} onClick={()=>window.open("/e-commerce?tab=quality-gate","_self")}/>
     </div>
     <div className="columns">
       <Panel title="Betriebsübersicht" action="Betriebe →" onClick={()=>goTo?.("businesses")}>{businesses.map(b=><div className="row" key={b.id}><div><strong>{b.name}</strong><small>{b.type}</small></div><span>{b.health} {b.status}</span></div>)}</Panel>
-      <Panel title="Nächste Aufgaben" action="Alle →" onClick={()=>goTo?.("tasks")}><>{tasks.filter(t=>t.status!=="Erledigt").slice(0,4).map(t=><div className="taskMini" key={t.id}><span className={t.priority==="Hoch"?"high":""}>{t.priority}</span><div><strong>{t.title}</strong><small>{t.area} · {t.status}</small></div></div>)}</></Panel>
+      <Panel title="Nächste Aufgaben" action="Alle →" onClick={()=>goTo?.("tasks")}><>{tasksLocked&&<p>Anmeldung erforderlich (Admin-Secret).</p>}{tasks.filter(t=>t.status!=="Erledigt").slice(0,4).map(t=><div className="taskMini" key={t.id}><span className={t.priority==="Hoch"?"high":""}>{t.priority}</span><div><strong>{t.title}</strong><small>{t.area} · {t.status}</small></div></div>)}</></Panel>
     </div>
     <Panel title="System-Lage" action="Fehlerzentrale →" onClick={()=>goTo?.("alerts")}><div className="systemGrid">{systems.map(s=><div className="system" key={s.id}><b>{s.status} {s.name}</b><small>{s.note}</small></div>)}</div></Panel>
     <Panel title="Letzte Aktivitäten" action="Audit-Log →" onClick={()=>goTo?.("audit")}>{recentActivity.length===0?<p>Noch keine protokollierten Änderungen.</p>:recentActivity.map((e,i)=><div className="taskMini" key={e.id||i}><span>{e.action}</span><div><strong>{e.entity_type} {e.entity_id||""}</strong><small>{e.actor} · {e.created_at}</small></div></div>)}</Panel>
