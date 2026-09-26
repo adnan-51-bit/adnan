@@ -251,3 +251,6 @@ Production live und eingeloggt getestet: Master, Werknetz24-Anbindung, E-Commerc
 
 ## Update 26.09.2026 (5) — Direktnavigation Datenbereiche + Live-Schreibtest
 Kunden/Leads/Rechnungen/Bestellungen/Produkte direkt aus `/master` (Test gegen tote Links). Production-Schreibtest mit Fehlerfällen bestanden, Daten überstehen ein neues Deployment (Testdaten danach gelöscht). Tests 116/116.
+
+## Update 26.09.2026 (6) — Endstand
+Integrationen-Übersicht, Direktnavigation System/Integrationen, Mobil-Regression behoben (`f90a8ff`). Finaler Live-Test bestanden (anonym + eingeloggt). Offen nur: Google-Zustimmung, `WA_APP_SECRET`, `FAMULOR_API_KEY` (Konto-Aktionen Adnan). Tests 117/117.
