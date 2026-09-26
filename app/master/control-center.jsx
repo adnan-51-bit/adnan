@@ -320,6 +320,65 @@ export function AgentenZentrale({ systems, onReloadSystems }) {
   </>;
 }
 
+// Integrationen je Anbieter (Master-Auftrag, 26.09.2026): eine Zeile pro echter Integration, mit
+// Bereich und Quelle. Zusammengefuehrt aus bereits echten Pruefungen - Master-Systemmonitor
+// (/api/master/systems), Werknetz24-Systemwaechter (letzte echte Pruefung) und den benoetigten
+// Verbindungen der Werknetz24-Agenten (Variable gesetzt?). Nichts wird als verbunden angezeigt,
+// was nicht geprueft wurde; ohne Anmeldung bleiben die Werknetz24-Zeilen ehrlich "nicht abrufbar".
+const MASTER_ZU_AMPEL = { "🟢": "🟢", "🟡": "🟡", "🔴": "🔴", "⚪": "⚪", "🔵": "🔵" };
+export function IntegrationenZentrale({ systems }) {
+  const w24 = useWerknetz24Incidents();
+  const [agenten, setAgenten] = useState(null);
+  useEffect(() => {
+    adminFetch("/api/master/businesses?werknetz24Agenten=1").then(r => r.json()).then(d => setAgenten(d?.agenten?.ok ? d.agenten.agenten : null)).catch(() => setAgenten(null));
+  }, []);
+  const sys = Object.fromEntries((w24.data?.systeme || []).map(s => [s.key, s]));
+  const agent = id => (agenten || []).find(a => a.id === id);
+  const verb = (agentId, variable) => agent(agentId)?.verbindungen?.find(v => v.variablen.includes(variable));
+  const ms = id => systems.find(s => s.id === id);
+  const w24Zeile = (name, key, hinweis) => {
+    const s = sys[key];
+    return { name, bereich: "Werknetz24", ampel: !w24.data ? "—" : s ? AMPEL[s.status] || "⚪" : "⚪", detail: !w24.data ? "nicht abrufbar (" + (w24.error || "lädt") + ")" : s ? `Systemwächter-Prüfung ${fmt(s.letzte_pruefung)}${s.status !== "gruen" && s.letzte_erfolgreiche_pruefung ? " · zuletzt grün " + fmt(s.letzte_erfolgreiche_pruefung) : ""}` : "keine Prüfung protokolliert", hinweis, link: W24_ADMIN + "#systemstatus" };
+  };
+  const cfgZeile = (name, agentId, variablen, hinweis) => {
+    if (!agenten) return { name, bereich: "Werknetz24", ampel: "—", detail: "nicht abrufbar (Anmeldung/Verbindung)", hinweis, link: W24_ADMIN + "#agenten" };
+    const fehlt = variablen.filter(v => !verb(agentId, v)?.konfiguriert);
+    return { name, bereich: "Werknetz24", ampel: fehlt.length ? "🔴" : "🟡", detail: fehlt.length ? "KONFIGURATION OFFEN: " + fehlt.join(", ") : "Konfiguration vorhanden – kein automatischer Live-Test möglich", hinweis, link: W24_ADMIN + "#agenten" };
+  };
+  const masterZeile = (name, id, bereich) => { const s = ms(id); return { name, bereich, ampel: s ? MASTER_ZU_AMPEL[s.status] || s.status : "—", detail: s ? `${s.note}${s.source === "auto" ? " (automatisch geprüft)" : " (manuell gepflegt)"}` : "—", hinweis: s?.next_action && s.next_action !== "—" ? s.next_action : null, tab: "systems" }; };
+  const zeilen = [
+    masterZeile("Vercel", "vercel", "Plattform"),
+    masterZeile("GitHub", "github", "Plattform"),
+    masterZeile("Supabase (Datenbank)", "supabase", "Master + E-Commerce"),
+    w24Zeile("Upstash Redis (Datenbank)", "admin-api-redis", null),
+    w24Zeile("Google Calendar", "google-calendar", "Neu verbinden: Werknetz24 → Einstellungen → „Gmail verbinden“"),
+    w24Zeile("Gmail", "gmail", "Neu verbinden: Werknetz24 → Einstellungen → „Gmail verbinden“"),
+    w24Zeile("E-Mail (Resend)", "email-berichte", null),
+    w24Zeile("Stripe", "stripe", null),
+    masterZeile("Stripe", "stripe", "E-Commerce"),
+    w24Zeile("PayPal", "paypal", null),
+    masterZeile("PayPal", "paypal", "E-Commerce"),
+    masterZeile("Shopify", "shopify", "E-Commerce"),
+    w24Zeile("Slack", "slack", null),
+    masterZeile("Slack", "slack", "Master"),
+    w24Zeile("Twilio (SMS)", "twilio", null),
+    w24Zeile("Telefonweg Easybell → Famulor → Lisa", "telefonweg", "Nur manuell bestätigter Stand (kein Live-Check möglich)"),
+    cfgZeile("Famulor-API (Lisa-Steuerung)", "lisa-famulor", ["FAMULOR_API_KEY"], "Schlüssel in app.famulor.de anlegen, in Vercel als FAMULOR_API_KEY eintragen"),
+    masterZeile("Easybell", "easybell", "Werknetz24"),
+    cfgZeile("WhatsApp (Meta)", "whatsapp-bot", ["WA_ACCESS_TOKEN", "WA_PHONE_NUMBER_ID", "WA_APP_SECRET"], "WA_APP_SECRET aus dem Meta-Dashboard in Vercel setzen"),
+    w24Zeile("Sicherheit (Secrets)", "sicherheit", null),
+  ];
+  return <>
+    <div className="pageTitle"><div><span>INTEGRATIONS</span><h2>Integrationen</h2></div><div className="quick"><a className="ccBtn" href={W24_ADMIN + "#systemstatus"} target="_blank" rel="noreferrer">Werknetz24-Systemstatus ↗</a></div></div>
+    <section className="panel"><div className="ccTableWrap"><table className="ccTable">
+      <thead><tr><th>Integration</th><th>Bereich</th><th>Status</th><th>Quelle / letzte Prüfung</th><th>Nächster Schritt</th><th></th></tr></thead>
+      <tbody>{zeilen.map((z, i) => <tr key={i}><td><strong>{z.name}</strong></td><td>{z.bereich}</td><td>{z.ampel}</td><td><small>{z.detail}</small></td><td><small>{z.hinweis || "—"}</small></td><td>{z.link ? <a className="ccBtn" href={z.link} target="_blank" rel="noreferrer">Öffnen</a> : null}</td></tr>)}</tbody>
+    </table></div></section>
+    <section className="panel"><h3>Legende</h3><p>🟢 läuft (letzte echte Prüfung erfolgreich) · 🟡 Warnung / nicht live prüfbar · 🔴 Fehler oder KONFIGURATION OFFEN · ⚪ nicht konfiguriert · 🔵 externe Integration ohne Schnittstelle. „—“ = ohne Anmeldung nicht abrufbar.</p></section>
+    <CcStyles />
+  </>;
+}
+
 // Werknetz24-Systemwächter-Zustände für die Systeme-Ansicht (live, nur lesend).
 export function Werknetz24Systeme() {
   const w24 = useWerknetz24Incidents();

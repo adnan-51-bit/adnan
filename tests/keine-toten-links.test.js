@@ -41,3 +41,11 @@ test("Master-Direktnavigation enthält Kunden (beide Bereiche getrennt), Leads, 
   assert.match(m, /admin-zentrale#leads/);
   assert.match(m, /href="\/werknetz24\?tab=rechnungen"/);
 });
+
+test("Master: 'System' und 'Integrationen' sind direkt anklickbar und fuehren zu existierenden Tabs", () => {
+  const m = read("app/master/page.jsx");
+  assert.match(m, /goTo\?\.\("systems"\)\}><b>System<\/b>/);
+  assert.match(m, /goTo\?\.\("integrations"\)\}><b>Integrationen<\/b>/);
+  assert.match(m, /\["integrations","⇄","Integrationen"\]/);
+  assert.match(m, /tab==="integrations" && <IntegrationenZentrale/);
+});
