@@ -83,3 +83,7 @@ The schema now includes `master_systems` and `master_settings` in addition to bu
   - `PATCH /api/master/tasks` meldete „nicht gefunden“ und „unbekannte business_id“ als 500 → jetzt 404/400.
   - Im Speicher-Modus (ohne Supabase) legte ein PATCH auf eine unbekannte ID eine Geister-Aufgabe an → jetzt „Task not found“.
   - `GET /api/master/tasks` war als einziger Datenendpunkt ohne Anmeldung lesbar → jetzt 401 wie Finanzen/Audit. Die Oberfläche zeigt ohne Anmeldung „—, Anmeldung erforderlich“ statt „0 offene Aufgaben“.
+
+## Nachprüfung 26.09.2026, ca. 18:20
+- Live-Persistenz erneut bestanden (anlegen → ändern → neue Sitzung → lesen → aufgeräumt, Audit ohne Reste). Trennungs-Constraints erneut bestätigt.
+- Bestand danach: 4 Aufgaben, 0 Buchungen, 0 E-Commerce-Kunden, 1 Audit-Eintrag (echte Änderung an Aufgabe 1).

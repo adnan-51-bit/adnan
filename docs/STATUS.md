@@ -286,3 +286,7 @@ Integrationen-Übersicht, Direktnavigation System/Integrationen, Mobil-Regressio
 - Live-Regression bestanden: Navigation, Persistenz, 401-Schutz, 404, mobil, 0 JS-Fehler.
 - „Sicherheit“ zeigt nach dem Werknetz24-Fix nur noch „ADMIN_SECRET ungewöhnlich kurz“.
 - Shopify-Webhook fail-closed (503), E-Commerce-Stripe weiterhin bewusst gesperrt.
+
+## Update 26.09.2026 (10) — Nachprüfung nach „eingetragen“
+- Die drei Werte (`GOOGLE_REFRESH_TOKEN` neu, `WA_APP_SECRET`, `FAMULOR_API_KEY`) sind in Vercel nicht angekommen. Werknetz24 wurde dennoch neu deployt: Google weiterhin `invalid_grant`.
+- Vollständige Live-Regression Master/Werknetz24/E-Commerce bestanden, keine Code-Änderung nötig. Tests 121/121, Build ok.
