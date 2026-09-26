@@ -38,7 +38,11 @@ const ADMIN_DEEP_LINKS = [
 ];
 
 export default function Werknetz24Page() {
-  const [tab, setTab] = useState("overview");
+  const [tab, setTabState] = useState("overview");
+  // Direkt adressierbar (26.09.2026): /werknetz24?tab=rechnungen usw. - damit "Rechnungen" in der
+  // Master-Zentrale ohne Zwischenseite direkt hier landet. Unbekannte Werte bleiben bei der Übersicht.
+  useEffect(() => { const t = new URLSearchParams(window.location.search).get("tab"); if (t && TABS.some(([id]) => id === t)) setTabState(t); }, []);
+  const setTab = t => { setTabState(t); try { const u = new URL(window.location.href); if (t === "overview") u.searchParams.delete("tab"); else u.searchParams.set("tab", t); window.history.replaceState(null, "", u); } catch { /* Komfort */ } };
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
 
