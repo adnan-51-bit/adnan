@@ -158,3 +158,8 @@ test("Fehler-/Agenten-Zentrale fuehren business_id je Eintrag, E-Commerce ruft w
   const ecom = await readFile(new URL("../app/e-commerce/page.jsx", import.meta.url), "utf8");
   assert.doesNotMatch(ecom, /werknetz24(Incidents|Agenten|Kalender|Aufgaben|Rechnungen)/);
 });
+
+test("Betriebe erscheinen in fester Reihenfolge (Werknetz24, E-Commerce, weitere) - auch aus der DB", async () => {
+  const ids = (await listBusinesses()).map(b => b.id);
+  assert.deepEqual(ids, ["werknetz24", "ecommerce", "future"]);
+});
