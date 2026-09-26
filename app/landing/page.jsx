@@ -25,7 +25,7 @@ export default function LandingPage() {
         </div>
 
         <section style={{marginTop:80,background:"#fff",border:"1px solid #e4e7ec",borderRadius:18,padding:24,boxShadow:"0 15px 40px rgba(16,24,40,.06)"}}>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:14}}>
             {[
               ["Neue Anfragen","12","Heute"],
               ["Hohe Priorität","3","Offen"],
@@ -43,7 +43,7 @@ export default function LandingPage() {
 
         <section id="so-funktionierts" style={{padding:"90px 0 20px"}}>
           <h2 style={{fontSize:40,marginBottom:30}}>So funktioniert es</h2>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:16}}>
             {[
               ["01","Anfrage kommt rein","Eine Anfrage wird zentral erfasst."],
               ["02","Anfrage wird strukturiert","Quelle, Kategorie und Priorität werden übersichtlich dargestellt."],
