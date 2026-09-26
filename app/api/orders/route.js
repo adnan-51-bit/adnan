@@ -21,6 +21,7 @@ import {
 //    an. Jetzt 404; neue Bestellungen nur ueber action "create" mit echtem Kunden + echten Produkten.
 const GATED_EVENTS = new Set(["order.created", "order.validated", "supplier.order.requested"]);
 import { checkAdminSecret } from "../../../lib/auth.js";
+import { VERSANDKOSTEN_CENT } from "../../../lib/shop-marke.js";
 import { shopStartGate, oeffentlichesProdukt, berechneWarenkorb, pruefeKundendaten, erstelleStripeCheckout } from "../../../lib/shop.js";
 
 // Phase 3 (20.09.2026): dieser einzelne Route-Datei bedient jetzt den gesamten E-Commerce-
@@ -42,7 +43,7 @@ export async function GET(request) {
   if (type === "shop") {
     try {
       const gate = shopStartGate({ products: await listProducts() });
-      const body = { ok: true, offen: gate.offen, produkte: gate.offen ? gate.verkaufbar.map(oeffentlichesProdukt) : [] };
+      const body = { ok: true, offen: gate.offen, produkte: gate.offen ? gate.verkaufbar.map(oeffentlichesProdukt) : [], versand_cent: gate.offen ? VERSANDKOSTEN_CENT : null };
       if (!checkAdminSecret(request)) body.checkliste = gate.checks;
       return NextResponse.json(body);
     } catch (error) {
@@ -143,6 +144,9 @@ export async function PATCH(request) {
     if (!body.id) return NextResponse.json({ ok: false, error: "id is required" }, { status: 400 });
     const { id, ...patch } = body;
 
+    // Pipeline-Status nur Schritt fuer Schritt ueber POST action "advance" (26.09.2026) - sonst waere ein
+    // ungepruefte Produkt per PATCH direkt auf READY und damit im Shop verkaufbar.
+    if (type === "products" && "pipeline_status" in patch) return NextResponse.json({ ok: false, error: "Pipeline-Status nur schrittweise über die Produkt-Pipeline ändern" }, { status: 400 });
     if (type === "products") return NextResponse.json({ ok: true, product: await updateProduct(id, patch) });
     if (type === "suppliers") return NextResponse.json({ ok: true, supplier: await updateSupplier(id, patch) });
     if (type === "returns") return NextResponse.json({ ok: true, return: await updateReturn(id, patch) });

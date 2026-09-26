@@ -22,14 +22,15 @@ const ALLES = { STRIPE_SECRET_KEY: "sk_test_x", STRIPE_WEBHOOK_SECRET: "whsec_x"
 
 test("Start-Checkliste: standardmäßig geschlossen, jeder Punkt einzeln nötig", () => {
   assert.equal(shop.shopStartGate({ env: {}, products: [P], storage: "supabase" }).offen, false);
-  assert.equal(shop.shopStartGate({ env: ALLES, products: [P], storage: "supabase", texte: TEXTE }).offen, true);
+  assert.equal(shop.shopStartGate({ env: ALLES, products: [P], storage: "supabase", texte: TEXTE, versandCent: 0 }).offen, true);
   for (const k of Object.keys(ALLES)) {
     const env = { ...ALLES }; delete env[k];
-    assert.equal(shop.shopStartGate({ env, products: [P], storage: "supabase", texte: TEXTE }).offen, false, k);
+    assert.equal(shop.shopStartGate({ env, products: [P], storage: "supabase", texte: TEXTE, versandCent: 0 }).offen, false, k);
   }
-  assert.equal(shop.shopStartGate({ env: ALLES, products: [], storage: "supabase", texte: TEXTE }).offen, false, "ohne Produkt");
-  assert.equal(shop.shopStartGate({ env: ALLES, products: [P], storage: "memory", texte: TEXTE }).offen, false, "ohne Datenbank");
-  assert.equal(shop.shopStartGate({ env: ALLES, products: [P], storage: "supabase", texte: { ...TEXTE, agb: TEXTE.agb + " [Firmenname]" } }).offen, false, "Platzhalter im Rechtstext");
+  assert.equal(shop.shopStartGate({ env: ALLES, products: [], storage: "supabase", texte: TEXTE, versandCent: 0 }).offen, false, "ohne Produkt");
+  assert.equal(shop.shopStartGate({ env: ALLES, products: [P], storage: "supabase", texte: TEXTE, versandCent: null }).offen, false, "ohne festgelegte Versandkosten");
+  assert.equal(shop.shopStartGate({ env: ALLES, products: [P], storage: "memory", texte: TEXTE, versandCent: 0 }).offen, false, "ohne Datenbank");
+  assert.equal(shop.shopStartGate({ env: ALLES, products: [P], storage: "supabase", texte: { ...TEXTE, agb: TEXTE.agb + " [Firmenname]" }, versandCent: 0 }).offen, false, "Platzhalter im Rechtstext");
 });
 
 test("Echte Rechtstexte im Repo sind leer -> Shop bleibt zu, auch wenn alles andere gesetzt ist", () => {
@@ -42,12 +43,16 @@ test("Verkaufbar nur mit Freigabe-Status und positiver Marge aus echtem Einkaufs
   assert.equal(shop.istVerkaufbar({ ...P, pipeline_status: "RESEARCH" }), false);
   assert.equal(shop.istVerkaufbar({ ...P, einkaufspreis_cent: null }), false);
   assert.equal(shop.istVerkaufbar({ ...P, einkaufspreis_cent: 1700 }), false, "Marge negativ");
-  assert.deepEqual(Object.keys(shop.oeffentlichesProdukt(P)).sort(), ["id", "kategorie", "name", "preis_cent"], "kein Einkaufspreis nach außen");
+  const oe = shop.oeffentlichesProdukt({ ...P, notiz: "intern", supplier_id: "sup_x" });
+  for (const k of ["einkaufspreis_cent", "versandkosten_cent", "supplier_id", "notiz", "pipeline_status"]) assert.equal(k in oe, false, k + " darf nicht öffentlich sein");
+  assert.equal(shop.istVerkaufbar({ ...P, bestand: 0 }), false, "ausverkauft");
 });
 
 test("Warenkorb: Preis vom Server, ungültige Positionen abgelehnt", () => {
-  const w = shop.berechneWarenkorb([{ produkt_id: "p1", menge: 2, preis_cent: 1 }], [P]);
-  assert.equal(w.summe_cent, 3980);
+  const w = shop.berechneWarenkorb([{ produkt_id: "p1", menge: 2, preis_cent: 1 }], [P], 490);
+  assert.equal(w.waren_cent, 3980); assert.equal(w.versand_cent, 490); assert.equal(w.summe_cent, 4470);
+  assert.throws(() => shop.berechneWarenkorb([{ produkt_id: "p1", menge: 3 }], [{ ...P, bestand: 2 }]), /nur noch 2/);
+  assert.throws(() => shop.berechneWarenkorb([{ produkt_id: "p1", menge: 1 }, { produkt_id: "p1", menge: 1 }], [P]), /doppelt/);
   assert.throws(() => shop.berechneWarenkorb([], [P]));
   assert.throws(() => shop.berechneWarenkorb([{ produkt_id: "p1", menge: 0 }], [P]));
   assert.throws(() => shop.berechneWarenkorb([{ produkt_id: "p1", menge: 1.5 }], [P]));
@@ -85,6 +90,7 @@ test("Stripe Checkout: Betrag und Metadaten vom Server, Idempotenz pro Bestellun
   assert.equal(gesendet.f.get("metadata[order_id]"), "order_1");
   assert.equal(gesendet.f.get("metadata[business_id]"), "ecommerce");
   assert.equal(gesendet.o.headers["Idempotency-Key"], "checkout-order_1");
+  assert.equal(gesendet.f.get("shipping_address_collection[allowed_countries][0]"), "DE");
 });
 
 const req = (method, query, body, auth) => new Request("http://t/api/orders?" + query, { method, headers: { "content-type": "application/json", ...(auth ? { authorization: "Bearer test-secret" } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
@@ -93,7 +99,7 @@ test("API: Shop geschlossen -> keine Produkte, Bestellung 503; Checkliste nur mi
   const anonym = await (await orders.GET(req("GET", "type=shop"))).json();
   assert.equal(anonym.offen, false); assert.deepEqual(anonym.produkte, []); assert.equal(anonym.checkliste, undefined);
   const admin = await (await orders.GET(req("GET", "type=shop", null, true))).json();
-  assert.equal(admin.checkliste.length, 6);
+  assert.equal(admin.checkliste.length, 7);
   const r = await orders.POST(req("POST", "type=shop-bestellung", { positionen: [{ produkt_id: "prod_cable", menge: 1 }], kunde: {} }));
   assert.equal(r.status, 503);
 });
@@ -119,4 +125,44 @@ test("Webhook: ohne Secret 503, falsche Signatur 400, bezahlt -> paid genau einm
     assert.equal((await (await webhook(fremd, signiere(fremd, "whsec_test"))).json()).ignoriert, true, "Werknetz24-Zahlungen werden hier nie verbucht");
     assert.equal((await store.listOrderEvents(order.id)).filter(e => e.type === "payment.confirmed").length, 1);
   } finally { delete process.env.STRIPE_WEBHOOK_SECRET; }
+});
+
+test("Versand wird als eigene Position an Stripe übergeben", async () => {
+  let f;
+  await shop.erstelleStripeCheckout({ secretKey: "sk_test_x", order: { id: "o2" }, warenkorb: shop.berechneWarenkorb([{ produkt_id: "p1", menge: 1 }], [P], 490),
+    kunde: { email: "a@b.de" }, baseUrl: "https://s.test", fetchImpl: async (u, o) => { f = new URLSearchParams(o.body); return { ok: true, json: async () => ({ id: "cs", url: "https://x" }) }; } });
+  assert.equal(f.get("line_items[1][price_data][product_data][name]"), "Versand");
+  assert.equal(f.get("line_items[1][price_data][unit_amount]"), "490");
+});
+
+test("Bezahlte Bestellung verringert gepflegten Bestand genau einmal, unbekannter Bestand bleibt unbekannt", async () => {
+  const mit = await store.createProduct({ name: "Mit Bestand", kategorie: "Test", verkaufspreis_cent: 1000, bestand: 5 });
+  const ohne = await store.createProduct({ name: "Ohne Bestand", kategorie: "Test", verkaufspreis_cent: 1000 });
+  const k = await store.createCustomer({ name: "Bestand Test", email: "b@example.de" });
+  const o = await store.createOrder({ kunde_id: k.id, positionen: [{ produkt_id: mit.id, menge: 2 }, { produkt_id: ohne.id, menge: 1 }] });
+  await shop.verbucheZahlung(o.id, {});
+  await shop.verbucheZahlung(o.id, {});
+  const liste = await store.listProducts();
+  assert.equal(liste.find(p => p.id === mit.id).bestand, 3);
+  assert.equal(liste.find(p => p.id === ohne.id).bestand, null);
+});
+
+test("Produktfelder: nur https-Bilder, max. 8, Bestand ≥ 0", async () => {
+  assert.throws(() => store.pruefeProduktZusatz({ bilder: ["http://unsicher.de/a.jpg"] }), /https/);
+  assert.throws(() => store.pruefeProduktZusatz({ bilder: Array(9).fill("https://x.de/a.jpg") }), /8/);
+  assert.throws(() => store.pruefeProduktZusatz({ bestand: -1 }));
+  assert.deepEqual(store.pruefeProduktZusatz({ bestand: "", lieferzeit: "  " }), { bestand: null, lieferzeit: null });
+  const p = await store.createProduct({ name: "Bildtest", kategorie: "Test", verkaufspreis_cent: 500 });
+  const u = await store.updateProduct(p.id, { bilder: ["https://bilder.test/1.jpg"], beschreibung: "Echte Beschreibung", einkaufspreis_cent: 200 });
+  assert.deepEqual(u.bilder, ["https://bilder.test/1.jpg"]);
+  await assert.rejects(() => store.updateProduct(p.id, { verkaufspreis_cent: 0 }));
+});
+
+test("Admin: Pipeline-Status lässt sich per PATCH nicht überspringen", async () => {
+  const p = await store.createProduct({ name: "Pipeline Test", kategorie: "Test", verkaufspreis_cent: 900 });
+  const r = await orders.PATCH(new Request("http://t/api/orders?type=products", { method: "PATCH", headers: { "content-type": "application/json", authorization: "Bearer test-secret" }, body: JSON.stringify({ id: p.id, pipeline_status: "READY" }) }));
+  assert.equal(r.status, 400);
+  assert.equal((await store.listProducts()).find(x => x.id === p.id).pipeline_status, "IDEA");
+  const ok = await orders.PATCH(new Request("http://t/api/orders?type=products", { method: "PATCH", headers: { "content-type": "application/json", authorization: "Bearer test-secret" }, body: JSON.stringify({ id: p.id, beschreibung: "Neu", bestand: 4 }) }));
+  assert.equal(ok.status, 200);
 });
