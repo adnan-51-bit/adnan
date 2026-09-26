@@ -61,7 +61,9 @@ export function Fehlerzentrale({ systems, tasks, qualityGate, onReloadSystems, g
   const pruefeEcommerceApi = useCallback(async () => {
     const pfade = ["/api/orders?type=products", "/api/orders?type=orders", "/api/providers", "/api/automation"];
     const ergebnisse = await Promise.all(pfade.map(async p => {
-      try { const r = await fetch(p, { cache: "no-store" }); return { pfad: p, status: r.status, ok: r.ok }; }
+      // 401 = Route antwortet und ist korrekt geschützt (seit der Lesesperre für Bestellungen,
+      // 26.09.2026) - kein API-Fehler. Nur echte Ausfälle (5xx, 404, Netzwerk) zählen als 🔴.
+      try { const r = await fetch(p, { cache: "no-store" }); return { pfad: p, status: r.status, ok: r.ok || r.status === 401 }; }
       catch (e) { return { pfad: p, status: 0, ok: false, fehler: e.message }; }
     }));
     setEcomApi({ geprueft: new Date().toISOString(), ergebnisse });
