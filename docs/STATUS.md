@@ -298,3 +298,7 @@ Integrationen-Übersicht, Direktnavigation System/Integrationen, Mobil-Regressio
   - fehlende Pflichtfelder / ungültige E-Mail / kaputtes JSON → 400
   - Shopify-Webhook → 503
 - Regression: Tests 122/122, Build ok, 0 JS-Fehler.
+
+## Update 26.09.2026 (12) — Browsertour + E-Commerce-Ablauf live
+- Alle 15 Routen + 30 Tabs angemeldet, Desktop + Handy: 0 JS-Fehler. 4 Handy-Überläufe behoben (`f3ffef3`), live 90/90 ok.
+- Bestellablauf live über die Production-API 13/13 (inkl. Quality-Gate-Sperre nach Zahlung, Fehlerfälle, Retoure, Persistenz, Trennung), aufgeräumt.

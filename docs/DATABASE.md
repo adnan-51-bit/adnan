@@ -91,3 +91,7 @@ The schema now includes `master_systems` and `master_settings` in addition to bu
 ## Final Quality Gate 26.09.2026, ca. 19:30
 - Persistenz erneut live bestanden (anlegen → ändern → neue Sitzung → lesen → aufgeräumt), Trennung 4/4. Bestand unverändert: 4 Aufgaben, 0 Buchungen, 0 E-Com-Kunden, 1 Audit-Eintrag.
 - Werknetz24 (Redis, nicht Supabase): Ich hatte eine Testanfrage versehentlich erzeugt. Sie ist per neuem Admin-`DELETE` entfernt, 5 echte Anfragen unverändert.
+
+## E-Commerce-Ablauf live, 26.09.2026, ca. 20:10
+- Über die Production-API: Kunde, Bestellung, 2 Ereignisse, Retoure angelegt und nach neuer Anfrage gelesen, danach per DB entfernt (inkl. Ereignisse/Audit).
+- Bestand danach: 0 Bestellungen, 0 Ereignisse, 0 Retouren, 0 E-Com-Kunden, 1 Audit-Eintrag (echte Änderung an Aufgabe 1).
