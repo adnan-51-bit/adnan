@@ -190,3 +190,11 @@ Routen eingebaut, keine 13. Datei angelegt:
   Dashboard dafür wäre eine erfundene Funktion.
 - Kein Rollen-/Mehrbenutzer-System pro Betrieb (weiterhin ein einzelnes `MASTER_API_SECRET` für
   alle Schreibzugriffe) – unverändert seit Phase 4, nicht Gegenstand dieser Phase.
+
+## Update 26.09.2026 — Fehler- und Agenten-Zentrale ohne Vermischung
+
+- Fehlerzentrale und Agenten-Zentrale (`app/master/control-center.jsx`) zeigen Werknetz24, E-Commerce und Master **nebeneinander**, jeder Eintrag trägt seinen Bereich (`business_id: "werknetz24" | "ecommerce" | "master"`), filterbar. Es wird nichts zusammengerechnet oder in einen gemeinsamen Speicher geschrieben.
+- Werknetz24-Daten bleiben ein reiner Live-Proxy (`lib/werknetz24-connector.js`), nie im `adnan`-Speicher abgelegt; seit 26.09.2026 nur noch mit `MASTER_API_SECRET` abrufbar.
+- Werknetz24-Agenten liefert Werknetz24 selbst mit `business_id: "werknetz24"` aus (`type=master-zentrale-agenten`); E-Commerce-Engine und Master-Systemmonitor sind lokale Einträge mit eigener `business_id`.
+- `/e-commerce` ruft weiterhin keinerlei Werknetz24-Endpunkt auf (Test in `tests/multi-business-separation.test.js` erweitert).
+- Offen (Entscheidung Adnan, Audit F10): die Werknetz24-Admin-Zentrale hat eine eigene E-Commerce-Planungsliste (`planung:ecommerce` im Werknetz24-Redis) – eine zweite, von `business_id=ecommerce` getrennte Quelle.

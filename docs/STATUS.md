@@ -218,3 +218,21 @@ Commit [`cd58585`](https://github.com/adnan-51-bit/adnan/commit/cd58585) (Gegens
 ## Nächster STOP-Punkt
 
 **Deployment-Gate erreicht und bestätigt (Phase 5, 21.09.2026); `MASTER_API_SECRET` und `WERKNETZ24_STATUS_SECRET` seit 21.09.2026 gesetzt und live verifiziert.** Vor echtem Geschäftsbetrieb weiterhin nötig: `SUPABASE_*` (nur mit echtem Supabase-Konto — Adnan hat noch keins, bewusst nicht selbst angelegt, bleibt Fallback-Speicher), und vor allem: **rechtliche Pflichttexte (Impressum/Datenschutz/AGB/Widerruf) erstellen** — 🔴 BLOCKER, s. `docs/QUALITY-GATE-PHASE-4.md`.
+
+## Update 26.09.2026 — Full-System-Audit Phase 2: Master-Zentrale als Steuerzentrale
+
+Grundlage: `docs/FULL-SYSTEM-AUDIT.md` im Repo `werknetz24-landing`. Commits `ab7ee31`, `c8491d1`, `34381d0` (alle CI ✅, Vercel ✅ Production).
+
+| Bereich | Status | Verifiziert |
+|---|---|---|
+| Sicherheitslücke F1: Werknetz24-Daten ohne Anmeldung über `/api/master/businesses?werknetz24…` | 🟢 behoben | live: alle Werknetz24-Zweige `401` ohne Secret, `liveStatus` ohne Anmeldung nur „Anmeldung erforderlich“ |
+| Direktnavigation (Werknetz24, E-Commerce, Agenten, Fehler, Systeme, Finanzen) | 🟢 | Playwright live: jeder Klick landet direkt im Ziel, `/master?tab=alerts|agents|systems|finance` direkt aufrufbar, Rücknavigation aus `/werknetz24` und `/e-commerce` → `/master` |
+| Fehlerzentrale (`/master?tab=alerts`) | 🟢 anonym / 🟡 angemeldet ungeprüft | anonym live: 8 Einträge mit Bereich, [Öffnen] [Logs] [Reparieren]; mit Secret (Werknetz24-Incidents, „Prüfung erneut ausführen“, „Als behoben abschließen“) nur per Test abgedeckt, live braucht Adnans Secret |
+| Agenten-Zentrale (`/master?tab=agents`) | 🟢 anonym / 🟡 angemeldet ungeprüft | 6 echte Werknetz24-Agenten + E-Commerce-Engine + Master-Systemmonitor; Start/Stop/Pause/Neustart ehrlich OPEN, Retry real |
+| Systemmonitoring um Werknetz24-Systemwächter ergänzt | 🟢 Code / 🟡 angemeldet ungeprüft | |
+| Famulor nicht mehr fest 🟢 (F9), Werknetz24-Karte Ampel aus Live-Status | 🟢 | Test `master-systems.test.js` |
+| Secret-Abfrage nach „Abbrechen“ | 🟢 | live 46 → 1 Abfrage, `tests/admin-fetch.test.js` |
+| Styles Fehler-/Agenten-Zentrale (styled-jsx-ID-Kollision) | 🟢 | live: Klassen ohne `jsx-undefined`, Screenshots |
+| Persistenz (Supabase) | 🔵 | unverändert Fallback-Speicher |
+
+Tests: **93/93**, `npm run build` ✅ (26 Routen, weiterhin 12 API-Routen, keine neue Route-Datei).
