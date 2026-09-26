@@ -95,3 +95,7 @@ The schema now includes `master_systems` and `master_settings` in addition to bu
 ## E-Commerce-Ablauf live, 26.09.2026, ca. 20:10
 - Über die Production-API: Kunde, Bestellung, 2 Ereignisse, Retoure angelegt und nach neuer Anfrage gelesen, danach per DB entfernt (inkl. Ereignisse/Audit).
 - Bestand danach: 0 Bestellungen, 0 Ereignisse, 0 Retouren, 0 E-Com-Kunden, 1 Audit-Eintrag (echte Änderung an Aufgabe 1).
+
+## Migration 20260926220000_sortiert24_produktfelder (26.09.2026)
+- `ecommerce_products` + `beschreibung text default ''`, `bilder text[] default '{}'` (max. 8), `bestand integer` (null = unbekannt, ≥ 0), `lieferzeit text`.
+- Live angewandt; die 6 bestehenden Produkte sind unverändert, die neuen Felder leer. RLS weiterhin auf allen Tabellen.

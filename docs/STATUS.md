@@ -330,3 +330,9 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Live-Stand: nur 5 erfüllt → **geschlossen**.
 - **Shopname** zentral in `lib/shop-marke.js`, Platzhalter „Online-Shop“.
 - **Tests:** 131/131, 9 neue. Weiterhin 12 Server-Funktionen (Vercel-Limit). Live: Bestellung 503, Webhook 503, Seiten 200, Browser 0 Fehler.
+
+## Update 26.09.2026 (14) — Sortiert24: TECHNISCH STARTKLAR – VERKAUFSSTART AUSSTEHEND
+- Name „Sortiert24“; Produktfelder (Beschreibung, Bilder, Bestand, Lieferzeit) per Migration `20260926220000`; Produkt-Bearbeitung mit Live-Marge; Shop mit Kategorien, Details, dauerhaftem Warenkorb, Versand, Bestandsprüfung/-abbuchung.
+- PATCH kann den Pipeline-Status nicht mehr überspringen (vorher: ungeprüftes Produkt direkt auf READY möglich).
+- Tests: 135/135. Browsertest 25/25 (geöffneter Zustand simuliert), App-Runde 90/90. Build ok, 12 Funktionen.
+- Anleitung und Start-Checkliste: `docs/SORTIERT24.md`.
