@@ -94,6 +94,8 @@ function Overview({ business }) {
           <Kpi label="Systemstatus" value={{ gruen: "🟢", gelb: "🟡", rot: "🔴", unbekannt: "⚪" }[status.data.systemStatus?.gesamtstatus] || "⚪"} note={`${status.data.systemStatus.counts.gruen}🟢 ${status.data.systemStatus.counts.gelb}🟡 ${status.data.systemStatus.counts.rot}🔴`} />
           <Kpi label="Offene Probleme" value={status.data.technischeProbleme.offeneIncidents} note="Systemwächter-Incidents" />
           <Kpi label="Offene Aufgaben" value={status.data.aufgaben.offen} note="in Werknetz24" />
+          {status.data.kunden && <Kpi label="Kunden" value={status.data.kunden.gesamt} note={Object.entries(status.data.kunden.nachStatus || {}).map(([k, n]) => n + " " + k).join(" · ") || "—"} />}
+          {status.data.leads && <Kpi label="Leads" value={status.data.leads.gesamt} note={Object.entries(status.data.leads.nachStatus || {}).map(([k, n]) => n + " " + k).join(" · ") || "—"} />}
           <Kpi label="Offene Rechnungen" value={status.data.finanzen.offeneRechnungenAnzahl} note={new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format((status.data.finanzen.offeneRechnungenSummeCent || 0) / 100)} />
         </div>}
     {incidents?.ok && incidents.incidents.length > 0 && <Panel title="Was ist rot? (Systemwächter-Incidents)">{incidents.incidents.map((i, idx) => <div className="taskMini" key={idx}><div><strong>{i.system || "unbekanntes System"}</strong><small>{i.erste_erkennung ? new Date(i.erste_erkennung).toLocaleString("de-DE") : "—"}</small></div><span>{i.prioritaet || "—"}</span></div>)}</Panel>}
