@@ -170,14 +170,66 @@ export function Fehlerzentrale({ systems, tasks, qualityGate, onReloadSystems, g
   </>;
 }
 
-const STATUS_LABEL = { aktiv: "🟢 aktiv", gestoert: "🔴 gestört", nicht_bestaetigt: "🟡 nicht bestätigt", nicht_protokolliert: "⚪ nicht protokolliert", geruest: "⚪ Gerüst" };
+const STATUS_LABEL = { aktiv: "🟢 aktiv", gestoert: "🔴 gestört", nicht_bestaetigt: "🟡 nicht bestätigt", nicht_protokolliert: "⚪ noch kein Lauf protokolliert", geruest: "⚪ Gerüst", aus: "⚪ ausgeschaltet" };
+const LIVE = { gruen: "🟢", gelb: "🟡", rot: "🔴", grau: "⚪" };
+
+// Entwicklungs-Werkzeuge: KEINE Betriebs-Agenten - sie laufen nur in Claude-Code-Sitzungen, nie im
+// Live-System. Statischer Stand aus docs/project/TOOL-INVENTORY.md (werknetz24-landing), bewusst mit
+// Quelle + Datum statt "live" (Reparaturphase "Agenten", 26.09.2026).
+const ENTWICKLUNGS_WERKZEUGE = [
+  { name: "werknetz24-fehler-beheben", art: "Projekt-Skill", zweck: "Verbindliches Vorgehen für gemeldete Fehler: Ursache → Fix → Test → Deploy → Live-Prüfung (der Reparaturweg aller Betriebs-Agenten)" },
+  { name: "werknetz24-landingpage-auditor", art: "Projekt-Skill", zweck: "Rein lesende Rechts-/Technik-Vorprüfung der Website" },
+  { name: "werknetz24-voice-studio", art: "Projekt-Skill", zweck: "Lokale, konsentbasierte Stimmerzeugung" },
+  { name: "markitdown", art: "Projekt-Skill", zweck: "Dokumentkonvertierung zu Markdown" },
+  { name: "Agency Agents (Reality Checker, Security, Legal, SEO u. a.)", art: "Claude-Code-Agenten", zweck: "Prüf- und Fachagenten für Entwicklung/Audits – nur in Claude-Sitzungen" },
+];
+
+function fmtOrDash(iso) { return iso ? fmt(iso) : null; }
+
+function Verbindungen({ liste }) {
+  if (!liste?.length) return <em>—</em>;
+  return <>{liste.map(v => <small key={v.name} title={(v.variablen || []).join(", ")}>{v.konfiguriert ? "✓" : "✗"} {v.name}{v.live_status ? " · Prüfung " + (LIVE[v.live_status] || v.live_status) : ""}{!v.konfiguriert ? " – KONFIGURATION OFFEN" : ""}</small>)}</>;
+}
+
+function Steuerung({ a, busy, onRetryW24, onRetryMaster }) {
+  const s = a.steuerung || {};
+  const link = ziel => { const hash = String(ziel).split("#")[1]; return <a className="ccBtn" href={`https://werknetz24.de/admin-zentrale#${hash}`} target="_blank" rel="noreferrer">in Werknetz24 ↗</a>; };
+  return <>
+    {["start", "stop", "pause", "neustart"].map(k => String(s[k] || "OPEN").startsWith("werknetz24-verwaltung") ? <span className="ccOpen" key={k}>{k}: {link(s[k])}</span> : <span className="ccOpen" key={k}>{k}: OPEN</span>)}
+    {s.retry === "master-zentrale-systemcheck" ? <button className="ccBtn dark" disabled={busy} onClick={onRetryW24}>{busy ? "Läuft…" : "Retry / Test"}</button>
+      : s.retry === "reload" ? <button className="ccBtn dark" onClick={onRetryMaster}>Retry / Test</button>
+      : <span className="ccOpen">retry: OPEN</span>}
+  </>;
+}
+
+function AgentTabelle({ titel, agenten, leerText = "Keine Agenten.", busy, onRetryW24, onRetryMaster }) {
+  return <section className="panel">
+    <h3>{titel}</h3>
+    {agenten.length === 0 ? <p>{leerText}</p> : <div className="ccTableWrap"><table className="ccTable">
+      <thead><tr><th>Agent</th><th>Status / Betrieb</th><th>Aktuelle Aufgabe</th><th>Letzte Aktivität</th><th>Letzter Fehler</th><th>Benötigte Verbindungen</th><th>Test / Reparatur</th><th>Steuerung</th><th>Logs</th></tr></thead>
+      <tbody>{agenten.map(a => <tr key={a.id}>
+        <td><strong>{a.name}</strong><small>{a.aufgabe}</small><small>Auslöser: {a.ausloeser}</small><small>Tools: {(a.tools || []).join(", ")} · Skills: {(a.skills || []).length ? a.skills.join(", ") : "keine"}</small>{a.zusatz && <small>{a.zusatz}</small>}</td>
+        <td>{STATUS_LABEL[a.status] || a.status}<small>{a.betrieb}</small></td>
+        <td><small>{a.aktuelle_aufgabe || "—"}</small></td>
+        <td>{fmtOrDash(a.letzter_lauf) || <em>nicht protokolliert</em>}<small>{a.letzter_erfolg ? "letzter Erfolg: " + fmt(a.letzter_erfolg) : "kein Erfolg protokolliert"}</small></td>
+        <td>{a.letzter_fehler || <em>keiner protokolliert</em>}</td>
+        <td><Verbindungen liste={a.verbindungen} /></td>
+        <td><small>{a.test?.moeglich ? "✓ Test möglich: " : "✗ kein eigener Test: "}{a.test?.beschreibung || "—"}</small><small>Reparatur: {a.reparatur || "—"}</small></td>
+        <td><Steuerung a={a} busy={busy} onRetryW24={onRetryW24} onRetryMaster={onRetryMaster} /></td>
+        <td>{a.logs ? <a className="ccBtn" href={a.logs.startsWith("http") ? a.logs : "https://werknetz24.de/" + a.logs} target="_blank" rel="noreferrer">Logs</a> : "—"}</td>
+      </tr>)}</tbody>
+    </table></div>}
+  </section>;
+}
 
 export function AgentenZentrale({ systems, onReloadSystems }) {
   const [w24, setW24] = useState({ loading: true, agenten: [], error: null, abgerufen: null });
   const [automation, setAutomation] = useState(null);
   const [orders, setOrders] = useState(null);
+  const [providers, setProviders] = useState(null);
   const [busy, setBusy] = useState(false);
   const [meldung, setMeldung] = useState("");
+  const [bereich, setBereich] = useState("alle");
 
   const ladeW24 = useCallback(async () => {
     setW24(s => ({ ...s, loading: true }));
@@ -195,6 +247,7 @@ export function AgentenZentrale({ systems, onReloadSystems }) {
     ladeW24();
     fetch("/api/automation").then(r => r.json()).then(setAutomation).catch(() => setAutomation(null));
     adminFetch("/api/orders").then(r => r.json()).then(setOrders).catch(() => setOrders(null));
+    fetch("/api/providers").then(r => r.json()).then(setProviders).catch(() => setProviders(null));
   }, [ladeW24]);
 
   async function retrySystemwaechter() {
@@ -207,57 +260,63 @@ export function AgentenZentrale({ systems, onReloadSystems }) {
     } finally { setBusy(false); }
   }
 
+  const autoSysteme = systems.filter(s => s.source === "auto");
   const masterMonitor = {
     id: "master-systemmonitor", name: "Master-Systemmonitor", business_id: "master",
-    aufgabe: "Prüft bei jedem Aufruf von /api/master/systems GitHub-Status, Vercel und die Konfiguration von Supabase/Stripe/Shopify/E-Mail/Slack.",
-    ausloeser: "Jeder Aufruf der Systeme-Ansicht", status: systems.some(s => s.source === "auto") ? "aktiv" : "nicht_protokolliert",
-    betrieb: `${systems.filter(s => s.source === "auto").length} automatische Prüfungen`,
-    letzter_lauf: systems.find(s => s.source === "auto")?.last_checked_at || null,
-    letzter_erfolg: systems.find(s => s.source === "auto")?.last_checked_at || null,
-    letzter_fehler: systems.filter(s => s.source === "auto" && s.status === "🔴").map(s => s.name + ": " + s.note).join(" · ") || null,
-    tools: ["GitHub API", "Vercel"], skills: [], logs: VERCEL_LOGS,
+    aufgabe: "Prüft bei jedem Aufruf der Systeme-Ansicht GitHub-Status, Vercel, Supabase (echte Leseprobe) und die Konfiguration von Stripe/Shopify/E-Mail/Slack.",
+    ausloeser: "Jeder Aufruf von /api/master/systems", aktuelle_aufgabe: "Kein laufender Auftrag – prüft bei jedem Aufruf neu",
+    status: autoSysteme.length ? (autoSysteme.some(s => s.status === "🔴") ? "gestoert" : "aktiv") : "nicht_protokolliert",
+    betrieb: `${autoSysteme.length} automatische Prüfungen`,
+    letzter_lauf: autoSysteme[0]?.last_checked_at || null, letzter_erfolg: autoSysteme[0]?.last_checked_at || null,
+    letzter_fehler: autoSysteme.filter(s => s.status === "🔴").map(s => s.name + ": " + s.note).join(" · ") || null,
+    verbindungen: autoSysteme.map(s => ({ name: s.name, variablen: [], konfiguriert: s.status !== "⚪" && s.status !== "🔵", live_status: { "🟢": "gruen", "🟡": "gelb", "🔴": "rot", "⚪": "grau", "🔵": "grau" }[s.status] })),
+    tools: ["GitHub API", "Vercel", "Supabase"], skills: [], logs: VERCEL_LOGS,
+    test: { moeglich: true, beschreibung: "Retry wiederholt alle automatischen Prüfungen sofort" }, reparatur: "Manuell: Ursache im jeweiligen System beheben (Anleitung in der Fehlerzentrale)",
     steuerung: { start: "OPEN", stop: "OPEN", pause: "OPEN", neustart: "OPEN", retry: "reload" },
   };
+  const st = orders?.stats;
   const ecomEngine = {
     id: "ecommerce-automation", name: "E-Commerce Automation Engine", business_id: "ecommerce",
-    aufgabe: "Bestell-Zustandsautomat (Zahlung → Prüfung → Lieferant → Tracking); stoppt ohne bestätigte Zahlung.",
-    ausloeser: "Zahlungs-/Shop-Webhooks (Stripe/Shopify, beide noch nicht verbunden)",
-    status: "geruest", betrieb: automation?.mode === "provider-independent-scaffold" ? "Gerüst ohne verbundene Anbieter – verarbeitet noch keine echten Bestellungen" : (automation?.mode || "unbekannt"),
-    letzter_lauf: null, letzter_erfolg: null, letzter_fehler: null,
-    zusatz: orders?.stats ? `${orders.stats.events} Ereignisse, ${orders.stats.orders} Bestellungen (Speicher: ${orders.stats.persistence})` : null,
-    tools: ["Stripe (nicht verbunden)", "Shopify (nicht verbunden)"], skills: [], logs: VERCEL_LOGS,
+    aufgabe: "Bestell-Zustandsautomat (Zahlung → Prüfung → Lieferant → Tracking); Schritte Richtung Lieferung nur mit veröffentlichtem Produkt, verifiziertem Lieferanten und positiver Marge.",
+    ausloeser: "Bestell-Ereignisse (manuell in /e-commerce; Shop-/Zahlungs-Webhooks noch nicht verbunden)",
+    aktuelle_aufgabe: "Kein laufender Auftrag – ereignisgesteuert",
+    status: st ? (st.events > 0 ? "aktiv" : "nicht_protokolliert") : "nicht_protokolliert",
+    betrieb: automation?.mode === "provider-independent-scaffold" ? "Zustandsautomat aktiv, externe Anbieter nicht verbunden" : (automation?.mode || "unbekannt"),
+    letzter_lauf: st?.letztes_ereignis?.created_at || null,
+    letzter_erfolg: st?.letztes_ereignis && st.letztes_ereignis.to_status !== "blocked" ? st.letztes_ereignis.created_at : null,
+    letzter_fehler: st?.letzte_blockade ? `Bestellung blockiert bei ${st.letzte_blockade.type} (${fmt(st.letzte_blockade.created_at)})` : null,
+    zusatz: st ? `${st.events} Ereignisse, ${st.orders} Bestellungen · Speicher: ${st.persistence}` : "Statistik nur mit Admin-Secret",
+    verbindungen: [
+      { name: "Datenbank (Supabase)", variablen: ["SUPABASE_URL", "SUPABASE_SECRET_KEY"], konfiguriert: Boolean(providers?.providers?.persistence?.configured) },
+      { name: "Zahlungen (Stripe-Webhook)", variablen: ["STRIPE_WEBHOOK_SECRET"], konfiguriert: Boolean(providers?.providers?.stripe?.configured) },
+      { name: "Shop (Shopify-Webhook)", variablen: ["SHOPIFY_WEBHOOK_SECRET"], konfiguriert: Boolean(providers?.providers?.shopify?.configured) },
+      { name: "Lieferanten-Anbindung", variablen: [], konfiguriert: Boolean(providers?.providers?.supplier?.configured) },
+    ],
+    tools: ["Supabase", "Stripe (nicht verbunden)", "Shopify (nicht verbunden)"], skills: [], logs: VERCEL_LOGS,
+    test: { moeglich: false, beschreibung: "Kein eigener Testlauf; Gate-Logik durch automatische Tests abgesichert" }, reparatur: "Manuell (Code/Konfiguration)",
     steuerung: { start: "OPEN", stop: "OPEN", pause: "OPEN", neustart: "OPEN", retry: "OPEN" },
   };
 
-  const alle = [...w24.agenten, ecomEngine, masterMonitor];
+  const gruppen = [
+    { id: "werknetz24", titel: "Werknetz24", agenten: w24.agenten.filter(a => a.business_id === "werknetz24"), leerText: w24.loading ? "Lädt…" : w24.error ? "Nicht geladen – siehe Hinweis oben (keine Aussage über die Agenten möglich)." : "Keine Agenten." },
+    { id: "ecommerce", titel: "E-Commerce", agenten: [ecomEngine] },
+    { id: "master", titel: "Master-Zentrale", agenten: [masterMonitor] },
+  ].filter(g => bereich === "alle" || g.id === bereich);
+
   return <>
-    <div className="pageTitle"><div><span>AGENT CONTROL</span><h2>Agenten-Zentrale</h2></div><div className="quick"><a className="ccBtn" href={W24_ADMIN + "#agenten"} target="_blank" rel="noreferrer">Werknetz24-Agentenseite ↗</a></div></div>
+    <div className="pageTitle"><div><span>AGENT CONTROL</span><h2>Agenten-Zentrale</h2></div>
+      <div className="quick"><select className="search" value={bereich} onChange={e => setBereich(e.target.value)}><option value="alle">Alle Bereiche</option><option value="werknetz24">Werknetz24</option><option value="ecommerce">E-Commerce</option><option value="master">Master-Zentrale</option></select><a className="ccBtn" href={W24_ADMIN + "#agenten"} target="_blank" rel="noreferrer">Werknetz24-Agentenseite ↗</a></div>
+    </div>
     {meldung && <div className="ccNotice">{meldung}</div>}
-    {w24.error && <div className="ccNotice warn">Werknetz24-Agenten nicht geladen: {w24.error}</div>}
-    <section className="panel">
-      {w24.loading && <p>Agenten werden geladen…</p>}
-      <div className="ccTableWrap"><table className="ccTable">
-        <thead><tr><th>Agent</th><th>Bereich</th><th>Status / Betrieb</th><th>Letzter Lauf</th><th>Letzter Erfolg</th><th>Letzter Fehler</th><th>Tools</th><th>Steuerung</th><th>Logs</th></tr></thead>
-        <tbody>{alle.map(a => <tr key={a.id}>
-          <td><strong>{a.name}</strong><small>{a.aufgabe}</small><small>Auslöser: {a.ausloeser}</small>{a.zusatz && <small>{a.zusatz}</small>}</td>
-          <td>{BEREICH[a.business_id] || a.business_id}</td>
-          <td>{STATUS_LABEL[a.status] || a.status}<small>{a.betrieb}</small></td>
-          <td>{a.letzter_lauf ? fmt(a.letzter_lauf) : <em>nicht protokolliert</em>}</td>
-          <td>{a.letzter_erfolg ? fmt(a.letzter_erfolg) : <em>—</em>}</td>
-          <td>{a.letzter_fehler || <em>keiner protokolliert</em>}</td>
-          <td><small>{(a.tools || []).join(", ")}</small><small>Skills: {(a.skills || []).length ? a.skills.join(", ") : "keine"}</small></td>
-          <td>
-            {["start", "stop", "pause", "neustart"].map(k => <span className="ccOpen" key={k}>{k}: OPEN</span>)}
-            {a.steuerung?.retry === "master-zentrale-systemcheck" ? <button className="ccBtn dark" disabled={busy} onClick={retrySystemwaechter}>{busy ? "Läuft…" : "Retry"}</button>
-              : a.steuerung?.retry === "reload" ? <button className="ccBtn dark" onClick={onReloadSystems}>Retry</button>
-              : <span className="ccOpen">retry: OPEN</span>}
-          </td>
-          <td>{a.logs ? <a className="ccBtn" href={a.logs.startsWith("http") ? a.logs : "https://werknetz24.de/" + a.logs} target="_blank" rel="noreferrer">Logs</a> : "—"}</td>
-        </tr>)}</tbody>
-      </table></div>
+    {w24.error && (bereich === "alle" || bereich === "werknetz24") && <div className="ccNotice warn">Werknetz24-Agenten nicht geladen: {w24.error}</div>}
+    {w24.loading && <p>Agenten werden geladen…</p>}
+    {gruppen.map(g => <AgentTabelle key={g.id} titel={g.titel} agenten={g.agenten} leerText={g.leerText} busy={busy} onRetryW24={retrySystemwaechter} onRetryMaster={onReloadSystems} />)}
+    <section className="panel"><h3>Entwicklungs-Werkzeuge (keine Betriebs-Agenten)</h3>
+      <p>Diese Skills und Agenten laufen nur in Claude-Code-Sitzungen, nie im Live-System. Stand: <code>docs/project/TOOL-INVENTORY.md</code> (20.09.2026), keine Live-Abfrage.</p>
+      <div className="ccGrid">{ENTWICKLUNGS_WERKZEUGE.map(w => <div className="ccSys" key={w.name}><b>{w.name}</b><small>{w.art}</small><small>{w.zweck}</small></div>)}</div>
     </section>
-    <section className="panel"><h3>Warum überall „OPEN“ bei Start/Stop/Pause?</h3><p>Keiner dieser Agenten ist ein dauerhaft laufender Prozess – sie werden von Anrufen, Webhooks oder dem täglichen Cron ausgelöst. Ein echtes Start/Stop/Pause gibt es technisch nicht; es wird deshalb nicht vorgetäuscht. Echt steuerbar ist „Retry“ beim Systemwächter (startet die Werknetz24-Prüfung) und beim Master-Systemmonitor (wiederholt die automatischen Checks).</p></section>
-    <CcStyles/>
+    <section className="panel"><h3>Was hier echt ist</h3><p>Keiner der Betriebs-Agenten ist ein dauerhaft laufender Prozess – sie werden durch Cron, Webhooks, Anrufe oder manuelle Aktionen ausgelöst. Start/Stop/Pause/Neustart gibt es deshalb nicht („OPEN“); wo eine echte Bedienung existiert, führt ein Link in die Werknetz24-Verwaltung. „Retry / Test“ ist echt beim Systemwächter und beim Master-Systemmonitor. Letzte Aktivität und Fehler stammen aus den Laufprotokollen der Agenten selbst; „noch kein Lauf protokolliert“ heißt: seit Beginn der Protokollierung (26.09.2026) noch nicht ausgelöst. Nicht als Agenten geführt: „Marketing-Agent“/„QA-Agent“ (existieren nicht als laufende Agenten).</p></section>
+    <CcStyles />
   </>;
 }
 

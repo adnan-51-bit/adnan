@@ -76,3 +76,14 @@ test("Bestell-Statistik meldet den echten Speicherort statt eines festen Werts",
   const r = await call("GET", "type=orders");
   assert.equal(r.json.stats.persistence, "memory");
 });
+
+test("Statistik liefert das letzte Ereignis und die letzte Blockade (fuer die Agenten-Zentrale), ohne Bestellinhalte", async () => {
+  const order = await store.createOrder({ kunde_id: kunde.id, positionen: [{ produkt_id: "prod_cable", menge: 1 }] });
+  await call("POST", "type=orders", { id: order.id, type: "payment.confirmed" });
+  await call("POST", "type=orders", { id: order.id, type: "order.created" });
+  const stats = await store.orderStats();
+  assert.equal(stats.events, 2);
+  assert.ok(["payment.confirmed", "order.created"].includes(stats.letztes_ereignis.type));
+  assert.equal(stats.letzte_blockade.type, "order.created");
+  assert.doesNotMatch(JSON.stringify(stats), /prod_cable|Test Kunde/);
+});
