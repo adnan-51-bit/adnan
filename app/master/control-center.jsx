@@ -362,7 +362,9 @@ export function IntegrationenZentrale({ systems }) {
     w24Zeile("Slack", "slack", null),
     masterZeile("Slack", "slack", "Master"),
     w24Zeile("Twilio (SMS)", "twilio", null),
-    w24Zeile("Telefonweg Easybell → Famulor → Lisa", "telefonweg", "Nur manuell bestätigter Stand (kein Live-Check möglich)"),
+    // Telefonweg hat keinen gespeicherten Pruefzustand (kein Live-Check moeglich) - statt "⚪ nicht
+    // konfiguriert" der echte Stand aus dem Lisa-Agenten: eingerichtet, aber nicht bestaetigt (🟡).
+    (() => { const lisa = agent("lisa-famulor"); return { name: "Telefonweg Easybell → Famulor → Lisa", bereich: "Werknetz24", ampel: !agenten ? "—" : lisa?.status === "aktiv" ? "🟢" : "🟡", detail: !agenten ? "nicht abrufbar (Anmeldung/Verbindung)" : `laut Werknetz24: ${lisa?.status === "nicht_bestaetigt" ? "nicht bestätigt" : lisa?.status || "unbekannt"} · letzter protokollierter Anruf: ${lisa?.letzter_lauf ? fmt(lisa.letzter_lauf) : "keiner"}`, hinweis: "Kein Live-Check möglich – Bestätigung nur per echtem Testanruf", link: W24_ADMIN + "#lisa-nutzung" }; })(),
     cfgZeile("Famulor-API (Lisa-Steuerung)", "lisa-famulor", ["FAMULOR_API_KEY"], "Schlüssel in app.famulor.de anlegen, in Vercel als FAMULOR_API_KEY eintragen"),
     masterZeile("Easybell", "easybell", "Werknetz24"),
     cfgZeile("WhatsApp (Meta)", "whatsapp-bot", ["WA_ACCESS_TOKEN", "WA_PHONE_NUMBER_ID", "WA_APP_SECRET"], "WA_APP_SECRET aus dem Meta-Dashboard in Vercel setzen"),
