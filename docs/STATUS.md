@@ -663,3 +663,26 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Friseur Haargenau – dasoertliche.de
 - **Tests:** 212/212.
 - **Live** (14 Prüfungen, nur lesend): Banner, Liste, Stufen, Links, Analyse-Dialog, Gate 13/13, 3 Analyse-Aufgaben, Tagesbericht, Desktop + Handy.
+
+## Update 27.09.2026 (30) — Verkaufsprozess Google-Profil-Service
+- **Lead Finder:**
+  - Betrieb mit Name, Ort, Branche, Website (optional; nur wenn sicher zum Betrieb gehörig) und Quelle (Link + Datum)
+  - Google-Profil-Suche per Link
+  - Analyse am echten Profil
+  - Priorität aus der eigenen Analyse (hoch < 50, mittel < 75, sonst niedrig; ohne Analyse „offen“)
+  - Migration `20260927340000_verkaufsprozess.sql` (`master_leads.website`, `.pilot_crm`)
+- **Berichte:** Profil-Check mit Verbesserungen **und** Leistungsumfang. Das Angebot enthält die Google-Regeln (Administrator statt Inhaber, Bewertungen nur mit Erlaubnis, Änderungen werden mitgeteilt, 7-Arbeitstage-Frist, Gebühren schriftlich offengelegt). Der Kundenbericht listet die protokollierten Änderungen.
+- **CRM:** Lead → geprüft → Kontakt freigegeben → Gespräch → Interesse → Angebot → Kunde → laufende Leistung → beendet, abgeleitet aus echten Daten.
+  - **Kontakt nur nach Adnans Freigabe:** Nach der Analyse entsteht eine ENTSCHEIDUNG „Kontakt zu X freigeben?“ unter „Wartet auf mich“. Freigabe → Aufgabe „Bericht persönlich zeigen“; Ablehnung → Status Verloren.
+- **Kundenverwaltung** nach den Google-Richtlinien für Drittanbieter (https://support.google.com/business/answer/7353941?hl=de, abgerufen 27.09.2026, auch als Quelle der Einnahmequelle gespeichert):
+  - Leistung starten nur mit dokumentierter **schriftlicher/digitaler** Zustimmung (Nachweisort, Gebühren offengelegt, Kunde bleibt Inhaber, Bewertungs-Erlaubnis ja/nein); nie Passwörter
+  - Google-Zugang nur als **Administrator** (bestätigen schließt die Aufgabe)
+  - Änderungen nur mit Zugang, werden protokolliert
+  - Monatsaufgabe „Bewertungen beantworten“ nur mit Erlaubnis
+  - Beenden → Aufgabe „Zugriff entfernen“ mit Frist 7 Arbeitstage
+- **Einnahmen:** Angebot → Kunde → Monatsleistung (offen) → **Rechnungsentwurf** (Platzhalter bis zur Gewerbe-/Steuerklärung, Gebühr separat ausgewiesen, Hinweis § 14 Abs. 4 UStG) → „Geld ist da“ → Umsatz/Kosten/Gewinn. Keine Zahlungsschnittstelle.
+- **Kostenregel:** 0-Euro-Modus bis zur ersten echten Einnahme. Danach „Kosten vorschlagen“ → Freigabe KOSTEN; eine Ausgabe wird nur mit freigegebener Freigabe erfasst (einmal je Freigabe).
+- **Quality Gate:** 18 technische Punkte (neu: Daten korrekt, keine erfundenen Angaben, keine unzulässige Automatisierung, Google-Regeln, Datenschutz) → **live 18/18**. Dazu 2 Benutzer-Punkte (Monatspreis, Gewerbe).
+- **3 Leads** (Monheim am Rhein, Quelle + Datum): Markus Lauck Elektroinstallation, Backprofi, Friseur Haargenau. Keine verifizierte Website gefunden (eine Kandidaten-Domain hatte ein ungültiges Zertifikat → nicht übernommen). Kein Kontakt versendet.
+- **Tests:** 213/213.
+- **Live:** 16 Prüfungen (nur lesend) Desktop + Handy.
