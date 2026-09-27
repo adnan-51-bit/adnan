@@ -15,7 +15,7 @@ test("Summen über alle Bereiche mit Rechenweg; ausstehende und stornierte Buchu
     tasks: [{ status: "Offen", title: "a" }, { status: "Erledigt", title: "b" }],
     systems: [{ name: "GitHub", status: "🟢" }],
     finance: [{ kind: "income", amount: 50, status: "confirmed" }, { kind: "expense", amount: 20.5, status: "confirmed" }, { kind: "income", amount: 999, status: "pending" }, { kind: "expense", amount: 999, status: "cancelled" }],
-    einnahmequellen: [{ name: "Affiliate", status: "AKTIV", einnahmen_cent: 700, kosten_cent: 100 }],
+    einnahmequellen: [{ name: "Affiliate", status: "EINNAHMEN", einnahmen_cent: 700, kosten_cent: 100 }],
     ecKunden: [{}], qualityGate: { productionReady: true },
   });
   assert.equal(g.einnahmen.cent, 10000 + 5000 + 700); assert.equal(g.einnahmen.vollstaendig, true);

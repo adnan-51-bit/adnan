@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { listBusinesses, updateBusiness, storageMode } from "../../../../lib/master-store";
 import { checkAdminSecret } from "../../../../lib/auth.js";
-import { listEinnahmequellen, createEinnahmequelle, updateEinnahmequelle, setzeEqStatus, uebersicht, kundeZuordnen, aufgabeErzeugen, starteEinnahmequelle, stoppeEinnahmequelle, aufgabenVon, verlaufVon, quelleHinzufuegen, planHinzufuegen } from "../../../../lib/einnahmequellen.js";
+import { listEinnahmequellen, createEinnahmequelle, updateEinnahmequelle, setzeEqStatus, uebersicht, kundeZuordnen, aufgabeErzeugen, starteEinnahmequelle, stoppeEinnahmequelle, aufgabenVon, verlaufVon, quelleHinzufuegen, planHinzufuegen, entwurfErzeugen, leadHinzufuegen, leadStatus, aufgabenAusSchritten } from "../../../../lib/einnahmequellen.js";
 import { fetchWerknetz24Kalender, createWerknetz24KalenderTermin, fetchWerknetz24Aufgaben, fetchWerknetz24Rechnungen, fetchWerknetz24Incidents, fetchWerknetz24Agenten, runWerknetz24Systemcheck, closeWerknetz24Incident } from "../../../../lib/werknetz24-connector.js";
 
 import { AKTIONEN } from "../../../../lib/aktionen.js";
 import { fuehreAktionAus, listeLaeufe, ladeTagesbericht } from "../../../../lib/aktion-ausfuehren.js";
+import { eqReport } from "../../../../lib/eq-automation.js";
+import { listTasks } from "../../../../lib/master-tasks.js";
 
 export const runtime = "nodejs";
 
@@ -23,6 +25,21 @@ export async function GET(request){
       return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
     }
     // Einnahmequellen (27.09.2026): eigener Bereich, nur mit Secret. Hier statt eigener Route (Vercel-Limit 12 Funktionen).
+    // Taeglicher Vercel-Cron (vercel.json, kostenlos): wiederkehrende Pruefungen. Nur lesende Pruefungen +
+    // Protokoll, keine Kosten, keine Daten nach aussen. Schutz: CRON_SECRET (falls gesetzt) und hoechstens
+    // ein Lauf pro Stunde; die Antwort enthaelt nur Zaehlwerte.
+    if (params.get("cron") === "wiederkehrend") {
+      if (process.env.CRON_SECRET && request.headers.get("authorization") !== "Bearer " + process.env.CRON_SECRET) return NextResponse.json({ ok: false, error: "nicht berechtigt" }, { status: 401 });
+      const letzter = (await listeLaeufe(200)).find(l => l.details?.aktion === "wiederkehrende-pruefungen");
+      if (letzter && Date.now() - Date.parse(letzter.created_at) < 3600000) return NextResponse.json({ ok: false, error: "Letzter Lauf ist weniger als eine Stunde her" }, { status: 429 });
+      const e = await fuehreAktionAus("wiederkehrende-pruefungen");
+      return NextResponse.json({ ok: Boolean(e.ok), gelaufen: true });
+    }
+    // Einnahmequellen-Report (Text) nur mit Secret.
+    if (params.get("eqreport")) {
+      if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
+      return NextResponse.json({ ok: true, report: eqReport(await listEinnahmequellen(), await listTasks()) });
+    }
     // Steuerung (27.09.2026): Aktionskatalog + Automatisierungs-Log, Tagesbericht - nur mit Secret.
     if (params.get("aktionen") || params.get("tagesbericht")) {
       if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
@@ -89,6 +106,16 @@ export async function POST(request){
     const body = await request.json();
     // Einnahmequellen (27.09.2026): anlegen / Inhalte aendern / Status (nur mit erfuellten Voraussetzungen).
     // Workflow (27.09.2026): Kunde zuordnen, Aufgabe erzeugen (zentrale Aufgabenliste), Start/Stop.
+    // Teil 3A: kostenlose Automatisierungen (Entwuerfe, Leads, Aufgaben aus Schritten).
+    if (["einnahmequelle-entwurf", "einnahmequelle-lead", "einnahmequelle-lead-status", "einnahmequelle-schritte"].includes(body?.action)) {
+      try {
+        const r = body.action === "einnahmequelle-entwurf" ? { entwurf: await entwurfErzeugen(body.id, body.art) }
+          : body.action === "einnahmequelle-lead" ? await leadHinzufuegen(body.id, body.lead)
+          : body.action === "einnahmequelle-lead-status" ? { einnahmequelle: await leadStatus(body.id, body.index, body.status) }
+          : await aufgabenAusSchritten(body.id);
+        return NextResponse.json({ ok: true, ...r }, { status: body.action === "einnahmequelle-lead-status" ? 200 : 201 });
+      } catch (error) { return NextResponse.json({ ok: false, error: error.message }, { status: /nicht gefunden/.test(error.message) && !/Lead nicht/.test(error.message) ? 404 : 400 }); }
+    }
     if (body?.action === "einnahmequelle-aufgabe") {
       try { return NextResponse.json({ ok: true, task: await aufgabeErzeugen(body.id, { title: body.title, priority: body.priority, beschreibung: body.beschreibung, naechste_aktion: body.naechste_aktion, quelle: body.quelle, due_at: body.due_at }) }, { status: 201 }); }
       catch (error) { return NextResponse.json({ ok: false, error: error.message }, { status: /nicht gefunden/.test(error.message) ? 404 : 400 }); }

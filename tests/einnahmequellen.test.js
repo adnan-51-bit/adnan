@@ -30,34 +30,34 @@ test("TEST erst nach allen Prüfschritten mit Quellen", async () => {
   assert.equal((await eq.setzeEqStatus(q.id, "TEST")).status, "TEST");
 });
 
-test("ERSTER_KUNDE nur mit echtem Kunden, AKTIV nur mit echten Einnahmen; PAUSE/PRUEFUNG jederzeit", async () => {
+// Einheitlicher Ablauf seit Teil 3A (27.09.2026): Leads/Kunden und Einnahmen brauchen echte Nachweise.
+test("LEADS_KUNDEN nur mit echtem Lead/Kunden, EINNAHMEN nur mit Kunde + Einnahmen; PAUSE/PRUEFUNG jederzeit", async () => {
   const q = await eq.createEinnahmequelle({ name: "Service", ...GEPRUEFT });
-  await assert.rejects(() => eq.setzeEqStatus(q.id, "ERSTER_KUNDE"), /echten Kunden/);
-  // Seit dem Workflow (27.09.2026) bauen die Stufen aufeinander auf: "Aktiv" braucht zuerst einen Kunden.
-  await assert.rejects(() => eq.setzeEqStatus(q.id, "AKTIV"), /echten Kunden/);
+  await assert.rejects(() => eq.setzeEqStatus(q.id, "LEADS_KUNDEN"), /echten Lead oder Kunden/);
+  await assert.rejects(() => eq.setzeEqStatus(q.id, "EINNAHMEN"), /echten Kunden/);
   await eq.updateEinnahmequelle(q.id, { erste_kunden: 1 });
-  await assert.rejects(() => eq.setzeEqStatus(q.id, "AKTIV"), /echten Einnahmen/);
+  await assert.rejects(() => eq.setzeEqStatus(q.id, "EINNAHMEN"), /echten, erfassten Einnahmen/);
   await eq.updateEinnahmequelle(q.id, { erste_kunden: 0 });
   assert.equal((await eq.setzeEqStatus(q.id, "PAUSE")).status, "PAUSE");
   assert.equal((await eq.setzeEqStatus(q.id, "PRUEFUNG")).status, "PRUEFUNG");
   await eq.updateEinnahmequelle(q.id, { erste_kunden: 1, einnahmen_cent: 4900 });
-  assert.equal((await eq.setzeEqStatus(q.id, "ERSTER_KUNDE")).status, "ERSTER_KUNDE");
-  assert.equal((await eq.setzeEqStatus(q.id, "AKTIV")).status, "AKTIV");
+  assert.equal((await eq.setzeEqStatus(q.id, "LEADS_KUNDEN")).status, "LEADS_KUNDEN");
+  assert.equal((await eq.setzeEqStatus(q.id, "EINNAHMEN")).status, "EINNAHMEN");
 });
 
 test("Bearbeiten ändert nie den Status; ungültige Zahlen abgelehnt", async () => {
   const q = await eq.createEinnahmequelle({ name: "X" });
-  const r = await eq.updateEinnahmequelle(q.id, { status: "AKTIV", angebot: "neu" });
+  const r = await eq.updateEinnahmequelle(q.id, { status: "EINNAHMEN", angebot: "neu" });
   assert.equal(r.status, "IDEE"); assert.equal(r.angebot, "neu");
   await assert.rejects(() => eq.updateEinnahmequelle(q.id, { kosten_cent: -5 }));
   await assert.rejects(() => eq.updateEinnahmequelle("gibt-es-nicht", { angebot: "x" }), /nicht gefunden/);
 });
 
 test("Übersicht: Gruppen und Summen (Gewinn = Einnahmen − Kosten)", async () => {
-  const a = await eq.createEinnahmequelle({ name: "A", einnahmen_cent: 10000, kosten_cent: 2500 });
+  const a = await eq.createEinnahmequelle({ name: "A", einnahmen_cent: 10000, kosten_cent: 2500, ...GEPRUEFT });
   await eq.createEinnahmequelle({ name: "B", kosten_cent: 1000 });
   const p = await eq.createEinnahmequelle({ name: "C" }); await eq.setzeEqStatus(p.id, "PAUSE");
-  await eq.updateEinnahmequelle(a.id, { erste_kunden: 2 }); await eq.setzeEqStatus(a.id, "AKTIV");
+  await eq.updateEinnahmequelle(a.id, { erste_kunden: 2 }); await eq.setzeEqStatus(a.id, "EINNAHMEN");
   const u = eq.uebersicht(await eq.listEinnahmequellen());
   assert.deepEqual(u, { aktiv: 1, test: 0, pruefung: 1, pause: 1, kosten_cent: 3500, einnahmen_cent: 10000, gewinn_cent: 6500 });
 });
@@ -75,25 +75,26 @@ test("API: Lesen/Schreiben nur mit Anmeldung; Statusregel greift auch über die 
   assert.equal(g.einnahmequellen.length, 1); assert.equal(g.uebersicht.pruefung, 1);
 });
 
-// ---------- Workflow Interesse -> Wiederholbar -> Automatisieren -> Skalieren (27.09.2026) ----------
+// ---------- Einheitlicher Ablauf Idee -> Pruefung -> Test -> Automatisieren -> Veroeffentlichung -> Leads/Kunden -> Einnahmen -> Skalieren ----------
 const tasks = await import("../lib/master-tasks.js");
 const { listAudit } = await import("../lib/audit.js");
 
 test("Workflow: jede Stufe braucht ihren echten Nachweis, keine Stufe lässt sich überspringen", async () => {
   const q = await eq.createEinnahmequelle({ name: "Workflow", ...GEPRUEFT });
-  await assert.rejects(() => eq.setzeEqStatus(q.id, "INTERESSE"), /Interesse-Nachweis/);
-  await eq.updateEinnahmequelle(q.id, { interesse_nachweis: "3 echte Anfragen per Kommentar am 27.09.2026" });
-  assert.equal((await eq.setzeEqStatus(q.id, "INTERESSE")).status, "INTERESSE");
-  await assert.rejects(() => eq.setzeEqStatus(q.id, "SKALIEREN"), /echten Kunden/, "Skalieren prüft alle Stufen davor");
+  await assert.rejects(() => eq.setzeEqStatus(q.id, "AUTOMATISIERT"), /wirklich automatisch läuft/);
+  await eq.updateEinnahmequelle(q.id, { automatisierung: "Content-Ideen und E-Mail-Entwürfe entstehen automatisch aus Vorlagen", automatisierungsgrad: 20 });
+  assert.equal((await eq.setzeEqStatus(q.id, "AUTOMATISIERT")).status, "AUTOMATISIERT");
+  await assert.rejects(() => eq.setzeEqStatus(q.id, "VEROEFFENTLICHT"), /wo\/wann veröffentlicht/);
+  await eq.updateEinnahmequelle(q.id, { veroeffentlichung: "TikTok-Video 1 am 28.09.2026" });
+  assert.equal((await eq.setzeEqStatus(q.id, "VEROEFFENTLICHT")).status, "VEROEFFENTLICHT");
+  await assert.rejects(() => eq.setzeEqStatus(q.id, "SKALIEREN"), /echten Kunden/, "Skalieren prüft die Stufen davor");
+  await eq.leadHinzufuegen(q.id, { name: "Interessent", einwilligung: true });
+  assert.equal((await eq.setzeEqStatus(q.id, "LEADS_KUNDEN")).status, "LEADS_KUNDEN");
   await eq.kundeZuordnen(q.id, { name: "Kunde A" });
   await eq.updateEinnahmequelle(q.id, { einnahmen_cent: 5000 });
-  assert.equal((await eq.setzeEqStatus(q.id, "AKTIV")).status, "AKTIV");
-  await assert.rejects(() => eq.setzeEqStatus(q.id, "WIEDERHOLBAR"), /mindestens 2 echten Kunden/);
+  assert.equal((await eq.setzeEqStatus(q.id, "EINNAHMEN")).status, "EINNAHMEN");
+  await assert.rejects(() => eq.setzeEqStatus(q.id, "SKALIEREN"), /mindestens 2 echte Kunden/);
   await eq.kundeZuordnen(q.id, { name: "Kunde B" });
-  assert.equal((await eq.setzeEqStatus(q.id, "WIEDERHOLBAR")).status, "WIEDERHOLBAR");
-  await assert.rejects(() => eq.setzeEqStatus(q.id, "AUTOMATISIERT"), /was automatisch läuft/);
-  await eq.updateEinnahmequelle(q.id, { automatisierung: "Rechnungen werden automatisch erstellt", automatisierungsgrad: 40 });
-  assert.equal((await eq.setzeEqStatus(q.id, "AUTOMATISIERT")).status, "AUTOMATISIERT");
   await eq.updateEinnahmequelle(q.id, { kosten_cent: 6000 });
   await assert.rejects(() => eq.setzeEqStatus(q.id, "SKALIEREN"), /echtem Gewinn/);
   await eq.updateEinnahmequelle(q.id, { kosten_cent: 1000 });
@@ -107,7 +108,9 @@ test("Kunde zuordnen: nur mit Namen, eigene Liste, Anzahl steigt; getrennt von W
   await assert.rejects(() => eq.kundeZuordnen(q.id, { name: "  " }), /Name des Kunden fehlt/);
   const r = await eq.kundeZuordnen(q.id, { name: "Firma X", kontakt: "x@example.test", seit: "2026-09-27" });
   assert.equal(r.kunden.length, 1); assert.equal(r.erste_kunden, 1); assert.deepEqual(Object.keys(r.kunden[0]).sort(), ["kontakt", "name", "notiz", "seit"]);
-  assert.equal((await eq.setzeEqStatus(q.id, "ERSTER_KUNDE")).status, "ERSTER_KUNDE");
+  await assert.rejects(() => eq.setzeEqStatus(q.id, "LEADS_KUNDEN"), /Vor dem Test fehlt/, "auch mit Kunde erst nach bestandenem Prüfstand");
+  await eq.updateEinnahmequelle(q.id, GEPRUEFT);
+  assert.equal((await eq.setzeEqStatus(q.id, "LEADS_KUNDEN")).status, "LEADS_KUNDEN");
 });
 
 test("Aufgabe erzeugen: landet in der zentralen Aufgabenliste mit Bezug; ohne Titel abgelehnt", async () => {

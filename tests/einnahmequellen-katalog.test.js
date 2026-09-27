@@ -82,13 +82,13 @@ test("Aufgabe erzeugen: echte Aufgabe mit Beschreibung, nächster Aktion, Quelle
 test("Tageszentrale: wichtigste Aufgabe, wartende Aufgaben, aktive Einnahmequellen, nächste Benutzeraktion, letzte Aktivitäten", () => {
   const b = erstelleTagesbericht({
     tasks: [{ title: "Niedrig", status: "Offen", priority: "Niedrig" }, { title: "Wichtig", status: "In Arbeit", priority: "Hoch", naechste_aktion: "anrufen" }, { title: "Warte", status: "Wartet auf Benutzer", priority: "Hoch" }, { title: "Stop", status: "Gestoppt", priority: "Hoch" }],
-    einnahmequellen: [{ name: "Aktiv", status: "AKTIV" }, { name: "Idee", status: "IDEE" }, { name: "Pause", status: "PAUSE" }],
+    einnahmequellen: [{ name: "Aktiv", status: "EINNAHMEN" }, { name: "Idee", status: "IDEE" }, { name: "Pause", status: "PAUSE" }],
     audit: [{ action: "einnahmequelle.quelle", created_at: "2026-09-27T08:00:00Z", details: { quelle: "UWG" } }],
   });
   assert.equal(b.wichtigsteAufgabe.text, "Wichtig · Hoch – nächste Aktion: anrufen");
   assert.deepEqual(b.wartendeAufgaben.map(x => x.text), ["Warte"]);
   assert.deepEqual(b.jetztZuTun.map(x => x.text), ["Wichtig · Hoch", "Niedrig · Niedrig"], "Gestoppt ist nicht offen");
-  assert.deepEqual(b.aktiveEinnahmequellen.map(x => x.text), ["Aktiv · Einnahme (aktiv)"]);
+  assert.deepEqual(b.aktiveEinnahmequellen.map(x => x.text), ["Aktiv · Einnahmen"]);
   assert.deepEqual(b.laufendeEinnahmequellen.map(x => x.text), ["Idee · Idee"]);
   assert.equal(b.naechsteBenutzeraktion.text, "Wartet auf dich: Warte");
   assert.match(b.letzteAktivitaeten[0].text, /Einnahmequelle quelle: UWG/);

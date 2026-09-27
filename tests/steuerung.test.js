@@ -104,7 +104,7 @@ test("Geschäfts-Control-Center: 🟢 AKTIV / 🟡 TEST / ⚪ PAUSE / 🔴 FEHLE
     einnahmequellen: [{ name: "Affiliate", status: "PRUEFUNG" }, { name: "Sortiert24", status: "PAUSE", verweis: "/e-commerce" }] });
   assert.deepEqual(st.map(x => [x.id, x.ampel, x.label]), [["werknetz24", "🔴", "FEHLER"], ["ecommerce", "⚪", "PAUSE"], ["einnahmequellen", "🟡", "TEST"]]);
   assert.equal(st[0].grund, "3 System(e) rot"); assert.equal(st[2].tab, "einnahmequellen");
-  assert.equal(bereichsStatus({ businesses: [], einnahmequellen: [{ status: "AKTIV" }] })[0].ampel, "🟢");
+  assert.equal(bereichsStatus({ businesses: [], einnahmequellen: [{ status: "EINNAHMEN" }] })[0].ampel, "🟢");
 });
 
 test("privates Repository (GitHub 404 ohne Token) wird ehrlich als 'nicht prüfbar' gemeldet, nicht als bestanden", async () => {

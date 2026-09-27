@@ -6,13 +6,15 @@
 // (Regeln in lib/einnahmequellen-regeln.js, serverseitig erzwungen). Nichts wird geschaetzt.
 import { useEffect, useState } from "react";
 import { adminFetch, anmeldeUrl } from "../../lib/admin-fetch.js";
-import { EQ_STATUS, EQ_LABEL, EQ_ABLAUF, EQ_GRUPPE, KATEGORIEN, kategorieName, NACHFRAGE, POTENZIAL, AUTO_STUFEN, PLAN_FELDER, pruefstand, gewinnCent, kundenAnzahl, naechsteStufe, arbeitsPrioritaet } from "../../lib/einnahmequellen-regeln.js";
+import { EQ_STATUS, EQ_LABEL, EQ_ABLAUF, EQ_GRUPPE, KATEGORIEN, kategorieName, NACHFRAGE, POTENZIAL, AUTO_STUFEN, PLAN_FELDER, pruefstand, gewinnCent, kundenAnzahl, leadsAnzahl, naechsteStufe, arbeitsPrioritaet } from "../../lib/einnahmequellen-regeln.js";
+import { ENTWURF_ARTEN } from "../../lib/eq-automation.js";
+const LEAD_STATUS = ["neu", "kontaktiert", "interessiert", "kunde", "verloren"];
 
 const eur = c => ((c || 0) / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 const eurOder = c => c === null || c === undefined ? "noch zu prüfen" : eur(c);
 const zeit = t => t ? new Date(t).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }) : "—";
 const janein = v => v === true ? "ja" : v === false ? "nein" : "noch nicht bewertet";
-const GRUPPEN = [["Aktive Einnahmequellen", EQ_GRUPPE.aktiv], ["Im kostenlosen Test", EQ_GRUPPE.test], ["Ideen zur Prüfung", EQ_GRUPPE.pruefung], ["Pause", EQ_GRUPPE.pause]];
+const GRUPPEN = [["Aktive Einnahmequellen (echte Einnahmen)", EQ_GRUPPE.aktiv], ["Im Test / Aufbau", EQ_GRUPPE.test], ["Ideen zur Prüfung", EQ_GRUPPE.pruefung], ["Pause", EQ_GRUPPE.pause]];
 const heute = () => new Date().toISOString().slice(0, 10);
 // Feldtypen: Zahl > 1 = Textfeld mit Zeilen, "euro", "zahl", "kategorie", "enum:<Liste>", "bool", "boolnull"
 const FELDER = [
@@ -20,9 +22,9 @@ const FELDER = [
   ["Kosten & Aufwand (nur echte Werte, sonst leer = noch zu prüfen)", [["startkosten_cent", "Startkosten (€)", "euro"], ["laufende_kosten_cent", "Laufende Kosten pro Monat (€)", "euro"], ["werkzeuge", "Benötigte Werkzeuge", 2], ["faehigkeiten", "Benötigte Fähigkeiten", 2], ["aufwand", "Startaufwand", 2]]],
   ["Nachfrage & Prüfung", [["nachfrage_status", "Nachfrage", "enum:NACHFRAGE"], ["markt", "1. Markt", 3], ["nachfrage", "2. Nachfrage (Beleg)", 3], ["konkurrenz", "3. Konkurrenz", 3], ["kosten_pruefung", "4. Kosten", 3], ["rechtliches", "5. Rechtliche Voraussetzungen", 3], ["rechtspruefung", "Rechtliche Prüfung erforderlich?", "boolnull"], ["gewerbepruefung", "Gewerbe/steuerliche Prüfung erforderlich?", "boolnull"], ["kostenloser_test", "6. Kostenloser Test (wie?)", 3], ["quellen", "Weitere Quellen (Freitext; besser: Knopf „Quelle hinzufügen“)", 2]]],
   ["Arbeitspriorität (intern, keine Erfolgsaussage)", [["schnell_testbar", "Schnell testbar?", "bool"], ["direkte_kunden", "Direkte potenzielle Kunden ansprechbar?", "bool"], ["wiederholbar", "Wiederholbar (gleiche Leistung mehrfach verkaufbar)?", "bool"], ["komplex", "Rechtlich oder technisch komplex?", "bool"]]],
-  ["Steuerung", [["naechste_aufgabe", "Nächste konkrete Aufgabe", 2], ["schritte", "Benötigte Schritte", 4], ["verantwortlich", "Verantwortlich / Agent", 1], ["benutzeraktion", "Benötigte Benutzeraktion (nur was Adnan selbst tun muss)", 2], ["risiken", "Risiken", 3]]],
-  ["Test & Interesse", [["test_status", "Teststatus", 2], ["interesse_nachweis", "Interesse-Nachweis (wer/was/wann – nur echte Belege)", 3]]],
-  ["Geld (nur echte Werte)", [["preis", "Möglicher Preis (nur mit Quelle)", 2], ["moegliche_einnahmen", "Mögliche Einnahmen (nur mit Quelle, sonst „noch zu prüfen“)", 2], ["einnahmen_cent", "Einnahmen bisher (€)", "euro"], ["kosten_cent", "Kosten bisher (€)", "euro"], ["erste_kunden", "Kunden (Anzahl, falls nicht über „Kunde zuordnen“)", "zahl"]]],
+  ["Steuerung", [["naechste_aufgabe", "Nächste konkrete Aufgabe", 2], ["schritte", "Benötigte Schritte", 4], ["verantwortlich", "Verantwortlich / Agent", 1], ["benoetigte_konten", "Benötigte Konten (z. B. TikTok, Google – nur Namen, nie Passwörter)", 2], ["benutzeraktion", "Benötigte Benutzeraktion (nur was Adnan selbst tun muss)", 2], ["risiken", "Risiken", 3]]],
+  ["Test, Veröffentlichung & Ergebnisse", [["test_status", "Teststatus", 2], ["interesse_nachweis", "Interesse-Nachweis (wer/was/wann – nur echte Belege)", 3], ["veroeffentlichung", "Veröffentlichung: wo und wann? (Nachweis für die Stufe „Veröffentlichung“)", 2], ["ergebnisse", "Ergebnisse (nur Tatsachen, z. B. Aufrufe laut App, Rückmeldungen)", 3]]],
+  ["Geld (nur echte Werte)", [["preis", "Möglicher Preis (nur mit Quelle)", 2], ["moegliche_einnahmen", "Mögliche Einnahmen (nur mit Quelle, sonst „noch zu prüfen“)", 2], ["einnahmen_cent", "Einnahmen bisher (€)", "euro"], ["kosten_cent", "Ausgaben bisher (€)", "euro"], ["erste_kunden", "Kunden (Anzahl, falls nicht über „Kunde zuordnen“)", "zahl"]]],
   ["Automatisierung", [["automatisierungsstufe", "Aktueller Stand", "enum:AUTO_STUFEN"], ["automatisierungspotenzial", "Automatisierungspotenzial", "enum:POTENZIAL"], ["skalierungspotenzial", "Skalierungspotenzial", "enum:POTENZIAL"], ["automatisierungsgrad", "Automatisierungsgrad (0–100 %)", "zahl"], ["automatisierung", "Was läuft schon automatisch?", 3]]],
   ["Notizen", [["notiz", "Notizen", 3]]],
 ];
@@ -46,7 +48,7 @@ export function Einnahmequellen() {
     const r = await adminFetch("/api/master/businesses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) { setMeldung("❌ " + (j.error || "Fehler " + r.status)); return false; }
-    setMeldung("✅ " + erfolg); laden(); if (body.id && offen[body.id]) ladeDetails(body.id); return true;
+    setMeldung("✅ " + erfolg + (j.neu ? ` (${j.neu.length} neu, ${j.uebersprungen} schon vorhanden)` : "")); laden(); if (body.id && offen[body.id]) ladeDetails(body.id); return j;
   }
   async function ladeDetails(id) {
     const r = await adminFetch("/api/master/businesses?einnahmequellen=1&id=" + encodeURIComponent(id));
@@ -57,10 +59,10 @@ export function Einnahmequellen() {
 
   const liste = [...(daten?.einnahmequellen || [])].sort((a, b) => arbeitsPrioritaet(a).stufe - arbeitsPrioritaet(b).stufe);
   const u = daten?.uebersicht || { aktiv: 0, test: 0, pruefung: 0, pause: 0, kosten_cent: 0, einnahmen_cent: 0, gewinn_cent: 0 };
-  const karte = q => <Karte key={q.id} q={q} details={offen[q.id]} onDetails={() => umschalten(q.id)} onEdit={() => setEdit(q)} onDialog={art => setDialog({ art, q })} senden={senden} />;
+  const karte = q => <Karte key={q.id} q={q} details={offen[q.id]} onDetails={() => umschalten(q.id)} onEdit={() => setEdit(q)} onDialog={(art, extra) => setDialog({ art, q, extra })} senden={senden} />;
   const kunden = liste.flatMap(q => (Array.isArray(q.kunden) ? q.kunden : []).map(k => ({ ...k, eq: q.name })));
   return <div className="eq">
-    <div className="pageTitle"><div><span>GESCHÄFTSBEREICHE</span><h2>Einnahmequellen</h2></div><div className="quick"><button className="primaryLink" onClick={() => setEdit({})} disabled={gesperrt}>+ Einnahmequelle</button></div></div>
+    <div className="pageTitle"><div><span>GESCHÄFTSBEREICHE</span><h2>Einnahmequellen</h2></div><div className="quick"><button className="editMini" disabled={gesperrt} onClick={async () => { const r = await adminFetch("/api/master/businesses?eqreport=1"); const j = r.ok ? await r.json() : null; if (j?.report) setDialog({ art: "report", extra: j.report }); }}>Report</button><button className="editMini" disabled={gesperrt} onClick={async () => { setMeldung("⏳ Wiederkehrende Prüfungen laufen …"); const r = await adminFetch("/api/master/businesses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "aktion-ausfuehren", id: "wiederkehrende-pruefungen" }) }); const j = await r.json().catch(() => ({})); setMeldung((r.ok ? "✅ " : "❌ ") + (j.zusammenfassung || j.fehler || j.error || "HTTP " + r.status) + " – Details unter Automatisierungen."); laden(); }}>Prüfungen jetzt ausführen</button><button className="primaryLink" onClick={() => setEdit({})} disabled={gesperrt}>+ Einnahmequelle</button></div></div>
     <nav className="eqNav" aria-label="Zentrale Steuerung">{NAV.map(([h, l]) => <a key={h} href={h}>{l}</a>)}</nav>
     <p className="note">Zuerst Einnahmequellen ohne neue Kosten. Markt, Nachfrage und mögliche Einnahmen gelten als <b>„noch zu prüfen“</b>, solange keine Quelle mit Datum vorliegt. Die Arbeitspriorität (P1–P4) ist nur unsere interne Reihenfolge – keine Aussage über Erfolgschancen.</p>
     {gesperrt && <div className="panel">Einnahmequellen sind nur mit Anmeldung sichtbar. <a href={anmeldeUrl()}>⎆ Anmelden</a></div>}
@@ -86,6 +88,9 @@ export function Einnahmequellen() {
     {edit && <EqFormular q={edit} onClose={() => setEdit(null)} onSave={async werte => { if (await senden(edit.id ? { action: "einnahmequelle-aendern", id: edit.id, ...werte } : { action: "einnahmequelle-anlegen", ...werte }, edit.id ? "Gespeichert" : "Angelegt")) setEdit(null); }} />}
     {dialog?.art === "aufgabe" && <AufgabeDialog q={dialog.q} onClose={() => setDialog(null)} onSave={async a => { if (await senden({ action: "einnahmequelle-aufgabe", id: dialog.q.id, ...a }, "Aufgabe erzeugt – steht auch in der zentralen Aufgabenliste")) setDialog(null); }} />}
     {dialog?.art === "kunde" && <KundeDialog q={dialog.q} onClose={() => setDialog(null)} onSave={async k => { if (await senden({ action: "einnahmequelle-kunde", id: dialog.q.id, kunde: k }, "Kunde zugeordnet")) setDialog(null); }} />}
+    {dialog?.art === "lead" && <LeadDialog q={dialog.q} onClose={() => setDialog(null)} onSave={async l => { if (await senden({ action: "einnahmequelle-lead", id: dialog.q.id, lead: l }, "Lead erfasst – Nachfass-Aufgabe in 3 Tagen angelegt")) setDialog(null); }} />}
+    {dialog?.art === "entwurf" && <TextDialog titel={dialog.extra.titel} hinweis={dialog.extra.hinweis} text={dialog.extra.text} onClose={() => setDialog(null)} />}
+    {dialog?.art === "report" && <TextDialog titel={dialog.extra.titel} hinweis="Aus den gespeicherten Daten erzeugt – keine geschätzten Zahlen." text={dialog.extra.text} onClose={() => setDialog(null)} />}
     {dialog?.art === "quelle" && <QuelleDialog q={dialog.q} onClose={() => setDialog(null)} onSave={async x => { if (await senden({ action: "einnahmequelle-quelle", id: dialog.q.id, quelle: x }, "Quelle gespeichert")) setDialog(null); }} />}
     {dialog?.art === "plan" && <PlanDialog q={dialog.q} onClose={() => setDialog(null)} onSave={async x => { if (await senden({ action: "einnahmequelle-plan", id: dialog.q.id, vorschlag: x }, "Vorschlag gespeichert – nichts wurde aktiviert")) setDialog(null); }} />}
     <style dangerouslySetInnerHTML={{ __html: EQ_CSS }} />
@@ -114,7 +119,9 @@ function Karte({ q, details, onDetails, onEdit, onDialog, senden }) {
       <dt>Werkzeuge</dt><dd>{q.werkzeuge || "—"}</dd><dt>Fähigkeiten</dt><dd>{q.faehigkeiten || "—"}</dd><dt>Startaufwand</dt><dd>{q.aufwand || "—"}</dd>
       <dt>Rechtliche Prüfung nötig</dt><dd>{janein(q.rechtspruefung)}</dd><dt>Gewerbe/Steuer prüfen</dt><dd>{janein(q.gewerbepruefung)}</dd>
       <dt>Nächste Aufgabe</dt><dd><b>{q.naechste_aufgabe || "—"}</b></dd><dt>Verantwortlich</dt><dd>{q.verantwortlich || "—"}</dd>
-      <dt>Ergebnis bisher</dt><dd>Kunden {kundenAnzahl(q)} · Einnahmen {eur(q.einnahmen_cent)} · Kosten {eur(q.kosten_cent)} · Gewinn <b>{eur(gewinnCent(q))}</b></dd>
+      <dt>Benötigte Konten</dt><dd>{q.benoetigte_konten || "—"}</dd><dt>Veröffentlichung</dt><dd>{q.veroeffentlichung || "—"}</dd><dt>Ergebnisse</dt><dd>{q.ergebnisse || "—"}</dd>
+      <dt>Quelle/Link</dt><dd>{(q.quellen_liste || []).length ? <a href={q.quellen_liste[0].url} target="_blank" rel="noreferrer">{q.quellen_liste[0].quelle}</a> : "—"}{(q.quellen_liste || []).length > 1 ? ` (+${q.quellen_liste.length - 1})` : ""}</dd>
+      <dt>Zahlen (echt)</dt><dd>Leads {leadsAnzahl(q)} · Kunden {kundenAnzahl(q)} · Einnahmen {eur(q.einnahmen_cent)} · Ausgaben {eur(q.kosten_cent)} · Gewinn <b>{eur(gewinnCent(q))}</b></dd>
     </dl>
     <div className="eqAuto"><span>Automatisierung:</span><ol>{autoStufen.map((s, i) => <li key={s} className={i < autoIdx ? "fertig" : i === autoIdx ? "jetzt" : ""}>{AUTO_STUFEN[s]}</li>)}</ol><small>Potenzial: Automatisierung {POTENZIAL[q.automatisierungspotenzial || "UNBEKANNT"]} · Skalierung {POTENZIAL[q.skalierungspotenzial || "UNBEKANNT"]}</small></div>
     <div className="eqPruef">Prüfstand {ok}/{ps.length}: {ps.map(x => <i key={x.id} className={x.ok ? "ja" : "nein"} title={x.text}>{x.ok ? "✓" : "✗"} {x.text}</i>)}</div>
@@ -124,7 +131,10 @@ function Karte({ q, details, onDetails, onEdit, onDialog, senden }) {
     <div className="eqAktionen">
       <button className="editMini" onClick={onEdit}>Bearbeiten</button>
       <button className="editMini" onClick={() => onDialog("aufgabe")}>Aufgabe erzeugen</button>
+      <button className="editMini" onClick={() => onDialog("lead")}>Lead erfassen</button>
       <button className="editMini" onClick={() => onDialog("kunde")}>Kunde zuordnen</button>
+      <select defaultValue="" aria-label="Automatik" className="eqAuto2" onChange={async e => { const a = e.target.value; e.target.value = ""; if (!a) return; if (a === "schritte") { await senden({ action: "einnahmequelle-schritte", id: q.id }, "Aufgaben aus „Benötigte Schritte“ erzeugt"); return; } const r = await senden({ action: "einnahmequelle-entwurf", id: q.id, art: a }, ENTWURF_ARTEN[a] + " erzeugt"); if (r?.entwurf) onDialog("entwurf", r.entwurf); }}>
+        <option value="">⚙ Automatik …</option>{Object.entries(ENTWURF_ARTEN).map(([k, l]) => <option key={k} value={k}>{l} erzeugen</option>)}<option value="schritte">Aufgaben aus „Benötigte Schritte“</option></select>
       <button className="editMini" onClick={() => onDialog("quelle")}>Quelle hinzufügen</button>
       <button className="editMini" onClick={() => onDialog("plan")}>Automatisierung vorschlagen</button>
       <button className="editMini" onClick={() => senden({ action: "einnahmequelle-status", id: q.id, status: "AUTOMATISIERT" }, "Status „Automatisiert“")} disabled={pausiert}>Automatisieren</button>
@@ -141,6 +151,9 @@ function Karte({ q, details, onDetails, onEdit, onDialog, senden }) {
       <div><h4>Quellen ({quellen.length})</h4>{!quellen.length ? <p className="muted">Noch keine Quelle mit Datum – Aussagen gelten als „noch zu prüfen“.</p> : quellen.map((x, i) => <p key={i}>• <a href={x.url} target="_blank" rel="noreferrer">{x.quelle}</a> <small>({x.datum})</small> – belegt: {x.aussage}</p>)}</div>
       <div><h4>Automatisierungsplan ({plan.length})</h4>{!plan.length ? <p className="muted">Noch kein Vorschlag. Vorschläge werden nie automatisch aktiviert.</p> : plan.map((x, i) => <div key={i} className="eqPlan"><b>{x.was}</b><small>Daten: {x.daten} · Tool: {x.tool} · Kosten: {x.kosten} · Risiko: {x.risiko} · Freigabe nötig: {x.freigabe ? "ja" : "nein"} · Status: {x.status}</small></div>)}</div>
       <div><h4>Aufgaben ({details.aufgaben?.length || 0}) <a href="/master?tab=tasks">zentrale Liste →</a></h4>{!details.aufgaben?.length ? <p className="muted">Noch keine Aufgabe erzeugt.</p> : details.aufgaben.map(t => <p key={t.id}>• {t.title} <small>({t.status} · {t.priority}{t.naechste_aktion ? " · nächste Aktion: " + t.naechste_aktion : ""})</small></p>)}</div>
+      <div><h4>Leads ({leadsAnzahl(q)})</h4>{!leadsAnzahl(q) ? <p className="muted">Noch keine Leads. „Lead erfassen“ legt automatisch eine Nachfass-Aufgabe an.</p> : q.leads.map((l, i) => <p key={i} className="eqLead">• <b>{l.name}</b> <small>{l.kontakt || "—"} · Quelle: {l.quelle || "—"} · Einwilligung: {l.einwilligung ? "ja" : "nein"}</small>
+        <select value={l.status} aria-label={"Status " + l.name} onChange={e => senden({ action: "einnahmequelle-lead-status", id: q.id, index: i, status: e.target.value }, "Lead-Status gespeichert")}>{LEAD_STATUS.map(x => <option key={x}>{x}</option>)}</select></p>)}</div>
+      <div><h4>Entwürfe ({(q.entwuerfe || []).length})</h4>{!(q.entwuerfe || []).length ? <p className="muted">Noch keine. Über „⚙ Automatik“ erzeugen (kostenlos, Vorlagen).</p> : q.entwuerfe.map((x, i) => <details key={i} className="eqEntwurf"><summary>{x.titel} <small>{zeit(x.erstellt_am)}</small></summary><pre>{x.text}</pre><button className="editMini" onClick={() => navigator.clipboard?.writeText(x.text)}>Kopieren</button></details>)}</div>
       {Array.isArray(q.kunden) && q.kunden.length > 0 && <div><h4>Kunden ({q.kunden.length})</h4>{q.kunden.map((k, i) => <p key={i}>• {k.name} <small>seit {k.seit}{k.notiz ? " · " + k.notiz : ""}</small></p>)}</div>}
       {q.schritte && <div><h4>Benötigte Schritte</h4><p className="eqPre">{q.schritte}</p></div>}
       <div><h4>Aktivitätsverlauf</h4>{!details.verlauf?.length ? <p className="muted">Noch keine Einträge.</p> : details.verlauf.map(v => <p key={v.id}><small>{zeit(v.created_at)}</small> {verlaufText(v)}</p>)}</div>
@@ -157,6 +170,10 @@ function verlaufText(v) {
     case "einnahmequelle.kunde": return `Kunde zugeordnet: ${d.kunde} (jetzt ${d.anzahl})`;
     case "einnahmequelle.aufgabe": return `Aufgabe erzeugt: ${d.aufgabe}`;
     case "einnahmequelle.quelle": return `Quelle hinzugefügt: ${d.quelle}`;
+    case "einnahmequelle.lead": return `Lead erfasst: ${d.lead} (Nachfass-Aufgabe angelegt)`;
+    case "einnahmequelle.lead_status": return `Lead ${d.lead}: ${d.von} → ${d.nach}`;
+    case "einnahmequelle.entwurf": return `Entwurf erzeugt: ${d.titel}`;
+    case "einnahmequelle.aufgaben_aus_schritten": return `Aufgaben aus Schritten: ${d.neu} neu`;
     case "einnahmequelle.plan": return `Automatisierung vorgeschlagen: ${d.was} (Kosten: ${d.kosten})`;
     default: return v.action;
   }
@@ -188,6 +205,23 @@ function KundeDialog({ q, onClose, onSave }) {
   return <Modal titel={"Kunde zuordnen – " + q.name} hinweis="Nur echte Kunden eintragen. Diese Liste gehört nur zu dieser Einnahmequelle – getrennt von Werknetz24- und E-Commerce-Kunden." onClose={onClose} bereit={f.name.trim()} knopf="Zuordnen" onSave={() => onSave(f)}>
     <Feld l="Name / Firma" v={f.name} on={s("name")} /><Feld l="Kontakt (optional)" v={f.kontakt} on={s("kontakt")} /><Feld l="Kunde seit" v={f.seit} on={s("seit")} typ="date" /><Feld l="Notiz (optional)" v={f.notiz} on={s("notiz")} rows={2} />
   </Modal>;
+}
+
+function LeadDialog({ q, onClose, onSave }) {
+  const [f, setF] = useState({ name: "", kontakt: "", quelle: "", einwilligung: "", notiz: "" });
+  const s = k => v => setF({ ...f, [k]: v });
+  return <Modal titel={"Lead erfassen – " + q.name} hinweis="Nur echte Kontakte (z. B. jemand hat selbst angefragt oder kommentiert). Werbung darf nur mit Einwilligung geschickt werden (UWG § 7)." onClose={onClose} bereit={f.name.trim() && f.einwilligung !== ""} knopf="Erfassen" onSave={() => onSave({ ...f, einwilligung: f.einwilligung === "ja" })}>
+    <Feld l="Name / Firma" v={f.name} on={s("name")} /><Feld l="Kontakt (optional)" v={f.kontakt} on={s("kontakt")} /><Feld l="Woher kommt der Lead? (z. B. Kommentar unter Video 3)" v={f.quelle} on={s("quelle")} />
+    <label>Einwilligung zur Kontaktaufnahme?<select value={f.einwilligung} onChange={e => s("einwilligung")(e.target.value)}><option value="">— bitte wählen —</option><option value="ja">ja</option><option value="nein">nein</option></select></label>
+    <Feld l="Notiz (optional)" v={f.notiz} on={s("notiz")} rows={2} />
+  </Modal>;
+}
+
+function TextDialog({ titel, hinweis, text, onClose }) {
+  return <div className="modalBack"><div className="modal eqModal"><div className="modalHead"><h3>{titel}</h3><button onClick={onClose}>×</button></div>
+    {hinweis && <p className="note">{hinweis}</p>}<pre className="eqText">{text}</pre>
+    <div className="modalActions"><button onClick={() => navigator.clipboard?.writeText(text)}>Kopieren</button><button className="primary" onClick={onClose}>Schließen</button></div>
+  </div></div>;
 }
 
 function QuelleDialog({ q, onClose, onSave }) {
@@ -241,7 +275,9 @@ const EQ_CSS = `.eqKpis{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))
 .eqF{display:block;padding:12px;border:1px dashed #d0d5dd;border-radius:12px;color:inherit;text-decoration:none;margin-top:8px}.eqF small{display:block;color:#667085;font-size:12px;margin-top:2px}.eqF:hover{background:#f9fafb}
 .eqKarte p{margin:0}.eqKopf{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.eqKopf small{display:block;color:#667085;font-size:12px}.eqBadges{display:flex;gap:6px;align-items:flex-start}
 .eqSt,.eqPrio{font-size:12px;padding:3px 8px;border-radius:999px;background:#f2f4f7;height:fit-content}.eqPrio{font-weight:800;cursor:help}.eqPrio.p1{background:#101828;color:#fff}.eqPrio.p2{background:#475467;color:#fff}.eqPrio.p3{background:#d0d5dd}.eqPrioGrund{color:#667085;font-size:11px}
-.eqAKTIV,.eqERSTER_KUNDE,.eqWIEDERHOLBAR,.eqAUTOMATISIERT,.eqSKALIEREN{background:#ecfdf3;color:#067647}.eqTEST,.eqINTERESSE{background:#eff8ff;color:#175cd3}.eqIDEE,.eqPRUEFUNG{background:#fffaeb;color:#b54708}.eqPAUSE{background:#f2f4f7;color:#475467}
+.eqEINNAHMEN,.eqSKALIEREN{background:#ecfdf3;color:#067647}.eqTEST,.eqAUTOMATISIERT,.eqVEROEFFENTLICHT,.eqLEADS_KUNDEN{background:#eff8ff;color:#175cd3}
+.eqEntwurf{border-top:1px solid #f2f4f7;padding:4px 0}.eqEntwurf summary{cursor:pointer;font-size:13px}.eqEntwurf pre,.eqText{white-space:pre-wrap;font:inherit;font-size:13px;background:#f9fafb;border-radius:8px;padding:10px;margin:6px 0;overflow-wrap:anywhere}
+.eqLead{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.eqLead select{padding:4px;border:1px solid #d0d5dd;border-radius:6px;font-size:12px}.eqAuto2{font-weight:700}.eqIDEE,.eqPRUEFUNG{background:#fffaeb;color:#b54708}.eqPAUSE{background:#f2f4f7;color:#475467}
 .eqAblauf,.eqAuto ol{display:flex;flex-wrap:wrap;gap:4px;list-style:none;padding:0;margin:0}.eqAblauf li,.eqAuto li{font-size:11px;padding:2px 7px;border-radius:999px;background:#f2f4f7;color:#98a2b3}.eqAblauf li.fertig,.eqAuto li.fertig{background:#ecfdf3;color:#067647}.eqAblauf li.jetzt,.eqAuto li.jetzt{background:#101828;color:#fff;font-weight:700}
 .eqAuto{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px}.eqAuto>span{font-weight:700;color:#344054}.eqAuto small{color:#667085}
 .eqDaten{display:grid;grid-template-columns:max-content 1fr;gap:3px 12px;margin:0;font-size:13px}.eqDaten dt{color:#667085}.eqDaten dd{margin:0;overflow-wrap:anywhere}.eqDaten dd.offen{color:#b54708}.eqDaten dd.ja{color:#067647}

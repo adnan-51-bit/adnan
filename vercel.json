@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/master/businesses?cron=wiederkehrend", "schedule": "0 5 * * *" }
+  ]
+}
