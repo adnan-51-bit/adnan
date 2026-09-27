@@ -10,6 +10,9 @@ import { eqReport } from "../../../../lib/eq-automation.js";
 import { listContent, createContent, updateContent, setzeContentStatus, contentVorbereiten, ideenVorschlaege, contentQuelle, contentBild, contentVeroeffentlichung, contentKennzahl, contentVerlauf, contentUebersicht } from "../../../../lib/content.js";
 import { listFreigaben, freigabeEntscheiden, werkzeugStatus, werkzeugAnfragen, syncPlanFreigaben } from "../../../../lib/freigaben.js";
 import { istWartend, istOffen } from "../../../../lib/aufgaben-status.js";
+import { listLeads, leadAnlegen, leadAendern, leadStatusSetzen, emailEntwurfErstellen, alsGesendet, antwortErfassen, antwortErledigt, angebotErstellen, angebotEntscheidung, zahlungEingegangen, kostenErfassen, leadVerlauf, leadUebersicht } from "../../../../lib/leads.js";
+import { strukturiere, ablaufStand, AUTOMATISIERUNGSGRAD, kontaktErlaubt } from "../../../../lib/leads-regeln.js";
+import { listFinance, eqFinanzen } from "../../../../lib/master-finance.js";
 import { listTasks } from "../../../../lib/master-tasks.js";
 
 export const runtime = "nodejs";
@@ -37,6 +40,21 @@ export async function GET(request){
       if (letzter && Date.now() - Date.parse(letzter.created_at) < 3600000) return NextResponse.json({ ok: false, error: "Letzter Lauf ist weniger als eine Stunde her" }, { status: 429 });
       const e = await fuehreAktionAus("wiederkehrende-pruefungen");
       return NextResponse.json({ ok: Boolean(e.ok), gelaufen: true });
+    }
+    // E-Mail & Leads + Einnahmen je Einnahmequelle + Einnahme-Ablauf (Teil 4B, 27.09.2026) - nur mit Secret.
+    if (params.get("leads")) {
+      if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
+      const lid = params.get("id");
+      if (lid) return NextResponse.json({ ok: true, verlauf: await leadVerlauf(lid) });
+      const [leads, eqs, finance, content, laeufe] = await Promise.all([listLeads(), listEinnahmequellen(), listFinance(), listContent(), listeLaeufe(200)]);
+      const reportLaeufe = laeufe.filter(l => ["eq-report", "tagesbericht", "wiederkehrende-pruefungen"].includes(l.details?.aktion) && l.details?.ergebnis === "ok");
+      const einnahmequellen = eqs.map(q => {
+        const finanzen = eqFinanzen(finance, q.id);
+        const ersteEinnahme = finanzen.buchungen.filter(b => b.art === "Einnahme" && b.status === "bezahlt").map(b => b.datum).sort()[0];
+        const reportNachEinnahme = Boolean(ersteEinnahme && reportLaeufe.some(l => l.created_at > ersteEinnahme));
+        return { id: q.id, name: q.name, status: q.status, finanzen, ablauf: ablaufStand(q, { content, leads, finanzen, reportNachEinnahme }) };
+      });
+      return NextResponse.json({ ok: true, leads: leads.map(l => ({ ...l, kontakt: kontaktErlaubt(l) })), uebersicht: leadUebersicht(leads), einnahmequellen, automatisierungsgrad: AUTOMATISIERUNGSGRAD });
     }
     // Content & Werbung + "Wartet auf Freigabe" (Teil 4A, 27.09.2026) - nur mit Secret.
     if (params.get("content") || params.get("freigaben")) {
@@ -121,6 +139,28 @@ export async function POST(request){
     const body = await request.json();
     // Einnahmequellen (27.09.2026): anlegen / Inhalte aendern / Status (nur mit erfuellten Voraussetzungen).
     // Workflow (27.09.2026): Kunde zuordnen, Aufgabe erzeugen (zentrale Aufgabenliste), Start/Stop.
+    // Teil 4B: E-Mail & Leads, Angebote, Einnahmen/Kosten je Einnahmequelle.
+    if (String(body?.action || "").startsWith("lead-") || ["zahlung-eingegangen", "eq-kosten"].includes(body?.action)) {
+      try {
+        const a = body.action, id = body.id;
+        const e =
+          a === "lead-strukturieren" ? { erkannt: strukturiere(body.text) }
+          : a === "lead-anlegen" ? await leadAnlegen(body.lead || {})
+          : a === "lead-aendern" ? { lead: await leadAendern(id, body.daten) }
+          : a === "lead-status" ? { lead: await leadStatusSetzen(id, body.status) }
+          : a === "lead-entwurf" ? { lead: await emailEntwurfErstellen(id, body.art) }
+          : a === "lead-gesendet" ? { lead: await alsGesendet(id, body.index) }
+          : a === "lead-antwort" ? await antwortErfassen(id, body.text)
+          : a === "lead-antwort-erledigt" ? { lead: await antwortErledigt(id, body.index) }
+          : a === "lead-angebot" ? { lead: await angebotErstellen(id, { text: body.text, betrag_cent: body.betrag_cent ?? null }) }
+          : a === "lead-angebot-entscheidung" ? await angebotEntscheidung(id, body.angenommen)
+          : a === "zahlung-eingegangen" ? { buchung: await zahlungEingegangen(id, body.datum) }
+          : a === "eq-kosten" ? { buchung: await kostenErfassen(id, body.kosten || {}) }
+          : null;
+        if (!e) return NextResponse.json({ ok: false, error: "Unbekannte Aktion" }, { status: 400 });
+        return NextResponse.json({ ok: true, ...e }, { status: ["lead-anlegen", "eq-kosten"].includes(a) ? 201 : 200 });
+      } catch (error) { return NextResponse.json({ ok: false, error: error.message }, { status: /nicht gefunden/.test(error.message) ? 404 : 400 }); }
+    }
     // Teil 4A: Content & Werbung, Freigaben, Werkzeug-Anfragen.
     if (String(body?.action || "").startsWith("content-") || body?.action === "freigabe-entscheiden" || body?.action === "werkzeug-anfragen") {
       try {

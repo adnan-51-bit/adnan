@@ -14,7 +14,8 @@ test("Summen über alle Bereiche mit Rechenweg; ausstehende und stornierte Buchu
     businesses: [w24(), ec, future],
     tasks: [{ status: "Offen", title: "a" }, { status: "Erledigt", title: "b" }],
     systems: [{ name: "GitHub", status: "🟢" }],
-    finance: [{ kind: "income", amount: 50, status: "confirmed" }, { kind: "expense", amount: 20.5, status: "confirmed" }, { kind: "income", amount: 999, status: "pending" }, { kind: "expense", amount: 999, status: "cancelled" }],
+    finance: [{ kind: "income", amount: 7, status: "confirmed", einnahmequelle_id: "eq1" }, { kind: "expense", amount: 1, status: "confirmed", einnahmequelle_id: "eq1" }, { kind: "income", amount: 5000, status: "confirmed", ist_test: true }, { kind: "income", amount: 50, status: "confirmed" }, { kind: "expense", amount: 20.5, status: "confirmed" }, { kind: "income", amount: 999, status: "pending" }, { kind: "expense", amount: 999, status: "cancelled" }],
+    // Seit Teil 4B: Einnahmequellen-Geld steht als Buchung mit einnahmequelle_id in den Master-Buchungen (nicht doppelt).
     einnahmequellen: [{ name: "Affiliate", status: "EINNAHMEN", einnahmen_cent: 700, kosten_cent: 100 }],
     ecKunden: [{}], qualityGate: { productionReady: true },
   });
