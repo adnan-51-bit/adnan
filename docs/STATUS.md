@@ -686,3 +686,20 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - **3 Leads** (Monheim am Rhein, Quelle + Datum): Markus Lauck Elektroinstallation, Backprofi, Friseur Haargenau. Keine verifizierte Website gefunden (eine Kandidaten-Domain hatte ein ungültiges Zertifikat → nicht übernommen). Kein Kontakt versendet.
 - **Tests:** 213/213.
 - **Live:** 16 Prüfungen (nur lesend) Desktop + Handy.
+
+## Update 27.09.2026 (31) — Master-Modus: tägliche Optimierung, Zahlungsnachweis, Gesamtübersicht, 3 Profil-Analysen
+- **Täglicher Optimierungslauf** (`lib/optimierung.js`, Aktion `optimierung`, Teil der täglichen Prüfungen 07:00):
+  - Je Einnahmequelle: funktioniert (echte Einnahmen) / in Arbeit / stockt (≥ 14 Tage ohne Aktivität), dazu Befunde (unanalysierte Leads, überfällige Aufgaben, viele Leads ohne Kunden, Test ohne Leads).
+  - Pausieren wird ab 30 Tagen Stillstand **nur vorgeschlagen** (ENTSCHEIDUNG unter „Wartet auf mich“; Freigabe pausiert wirklich).
+  - **Fokus-Regel:** bis zur ersten echten Einnahme eine Einnahmequelle vorantreiben; eine neue erst testen, wenn nichts in Bewegung ist (dann niedrigste Arbeitspriorität zuerst).
+  - Ergebnis im Tagesbericht („Welche Einnahmequelle funktioniert?“, „Empfehlung“).
+- **„Bezahlt“ nur mit Zahlungsnachweis** (z. B. Kontoauszug + Verwendungszweck), wird an der Buchung gespeichert; PIN/TAN/Passwörter werden abgelehnt.
+- **Startseite:** zusätzliche Kacheln „Wartet auf mich“, „Aktive Kunden (Einnahmequellen)“, „Offene Leads (Einnahmequellen)“.
+- **Profil-Analysen der 3 Leads** (öffentliche Google-Maps-Profile, 27.09.2026, nur sicher Sichtbares, Rest „nicht prüfbar“):
+  - Markus Lauck Elektroinstallation 0/100 – **kein Google-Profil gefunden** (2 Suchen)
+  - Friseur Haargenau 33/100 – keine Beschreibung, kein Leistungsbereich, keine eigenen Fotos, keine Inhaber-Antworten
+  - Backprofi 60/100 – keine Beschreibung, Website-Link nur Marktplatz, selten Inhaber-Antworten
+  - Die Kontakt-Freigaben liegen unter „Wartet auf mich“. Der Bericht zeigt einen „Hinweis zur Prüfung“.
+- **Befund in eigener Sache:** Ein Commit baute nicht (Zeilenumbruch in einem Template). Vercel hat ihn nicht ausgeliefert; direkt danach behoben. Commits jetzt nur noch nach erfolgreichem Build.
+- **Tests:** 217/217.
+- **Live:** Optimierung, Zahlungsnachweis-Sperre, Login-Schutz; Übersicht, Pilot, Wartet auf mich, Heute am Desktop und Handy ohne Überlauf und ohne JS-Fehler. Quality Gate technisch 18/18.
