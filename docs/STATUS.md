@@ -644,3 +644,22 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Wartet auf mich
   - Desktop + Handy (8 Seiten)
 - **Kosten:** 0 €, kein kostenpflichtiges Werkzeug aktiv.
+
+## Update 27.09.2026 (29) — Erster-Kunde-Modus (Pilot Google-Profil)
+- **Liste „Potenzielle Kunden“** auf der Pilot-Seite. Je Betrieb:
+  - Name, Ort, Branche
+  - Quelle (Link + Abrufdatum)
+  - Link „Google-Profil suchen“ (Maps-Suche, keine erfundenen Profilangaben)
+  - analysiertes Profil, Punktzahl, erkennbare Verbesserungen (aus der Analyse)
+  - Profil-Check-Bericht, Stufe, nächste Aufgabe
+- Neue Pilot-Aktion `pilot-potenziell` (Name/Ort/Branche/Quelle/Datum Pflicht, keine Doppelten) legt die Aufgabe „Profil-Analyse … (Hoch, 3 Tage)“ an, keine Werbe-Nachfass-Aufgabe. Migration `20260927320000_potenzielle_kunden.sql` (`master_leads.ort`, `.branche`).
+- **Stufen** (aus echten Daten): Potenziell → Gespräch → Interesse → Kunde → Laufende Leistung. Knöpfe „Gespräch geführt“ (erst nach der Analyse), „Hat Interesse“, „Kein Interesse“. Nichts ist verbindlich, keine Zahlung, kein Vertrag.
+- **Genau eine nächste Aktion** (`naechstePilotAktion`, Reihenfolge Analyse → Bericht zeigen → nachfragen → unverbindliches Angebot) als Banner auf der Pilot-Seite und als Benutzeraktion im Tagesbericht.
+- Der Bericht nennt jetzt Branche und Ort.
+- Das Quality Gate hat einen neuen Punkt „≥ 3 potenzielle Kunden mit Quelle“ → **technisch 13/13**.
+- **3 echte potenzielle Kunden** in Monheim am Rhein (Ort aus dem Werknetz24-Impressum), Angaben nur aus der Quelle, abgerufen am 27.09.2026:
+  - Markus Lauck Elektroinstallation – elektriker.org
+  - Backprofi (Bäckerei/Café) – monheimer-lokalhelden.de
+  - Friseur Haargenau – dasoertliche.de
+- **Tests:** 212/212.
+- **Live** (14 Prüfungen, nur lesend): Banner, Liste, Stufen, Links, Analyse-Dialog, Gate 13/13, 3 Analyse-Aufgaben, Tagesbericht, Desktop + Handy.
