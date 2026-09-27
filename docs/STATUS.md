@@ -448,3 +448,29 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - 6 echte Aktionen laufen und stehen im Log
   - alle 14 Seiten am Desktop und Handy: kein Überlauf, keine JS-Fehler, Klick-Navigation ok
 - Später (nicht gebaut): Einnahmequellen-Ablauf Interesse → Wiederholbar → Automatisieren → Skalieren als eigene Stufen; zeitgesteuerte Läufe (Cron) für Tagesbericht.
+
+## Update 27.09.2026 (23) — Einnahmequellen: vollständiger Workflow
+- **Ablauf:** Idee → Prüfung → kostenloser Test → **Interesse** → erster Kunde → Einnahme (aktiv) → **Wiederholbar** → **Automatisiert** → **Skalieren**, dazu Pause.
+- **Regeln** (serverseitig, `lib/einnahmequellen-regeln.js`, jede Stufe setzt die vorherigen voraus):
+  - Interesse = alle Prüfschritte + Interesse-Nachweis
+  - Erster Kunde = ≥ 1 zugeordneter Kunde
+  - Aktiv = zusätzlich Einnahmen > 0
+  - Wiederholbar = zusätzlich ≥ 2 Kunden
+  - Automatisiert = zusätzlich Beschreibung, was automatisch läuft, und Grad > 0 %
+  - Skalieren = zusätzlich Gewinn > 0
+- **Neue Felder** (Migration `20260927200000_einnahmequellen_workflow.sql`, angewendet): Beschreibung, benötigte Schritte, nächste Aufgabe, Verantwortlich/Agent, Automatisierungsgrad (0–100), Automatisierung, mögliche Einnahmen, Risiken, benötigte Benutzeraktion, Interesse-Nachweis, Kundenliste (eigene, getrennt von Werknetz24/E-Commerce), Stufe vor Pause. `master_tasks_v2.einnahmequelle_id` als Bezug.
+- **Knöpfe je Einnahmequelle:** Bearbeiten, Aufgabe erzeugen, Kunde zuordnen, Automatisieren, Skalieren, Start/Stop, „Weiter: nächste Stufe“, Status ändern, Aufgaben & Verlauf.
+- **Aufgaben:** landen in der zentralen Aufgabenliste (`area` „Einnahmequelle: …“, `business_id` master).
+- **Aktivitätsverlauf:** jede Aktion im Audit-Log (`einnahmequelle.*`), pro Eintrag abrufbar.
+- **Benutzeraktion:** das Feld „benötigte Benutzeraktion“ erscheint automatisch unter „Benutzeraktion erforderlich“ auf der Startseite bzw. im Tagesbericht (außer bei Pause).
+- **API** (keine neue Function):
+  - `POST` actions `einnahmequelle-aufgabe|kunde|start|stop`
+  - `GET ?einnahmequellen=1&id=…` → Aufgaben + Verlauf
+  - alles nur mit Anmeldung
+- **Tests:** 170/170 (neu: 5 Workflow-Tests + 1 Tagesbericht-Test).
+- **Live geprüft** mit markiertem Testeintrag (danach restlos gelöscht: Eintrag, Aufgabe, 6 Verlaufseinträge):
+  - alle Aktionen per API
+  - Regeln lehnen Automatisieren/Skalieren ohne Nachweis ab
+  - 401 ohne Anmeldung
+  - Browser Desktop + Handy ohne Überlauf und ohne JS-Fehler
+- Echte Einträge unverändert.
