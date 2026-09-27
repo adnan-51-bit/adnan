@@ -777,3 +777,13 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Kostenlose amtliche AVV-Formulierungshilfe (BayLDA).
 - **Live-Test:** Alle 3 Unterlagen öffnen korrekt (0/60/33 Punkte, kein €); ohne Anmeldung sind keine Daten sichtbar. Desktop, Handy und Druckansicht ohne Überlauf und ohne JS-Fehler.
 - **Tests:** 242/242, Build ok.
+
+## Update 27.09.2026 (36) — Kundengewinnungs-Pilot gestartet
+
+- **4 neue Leads** aus dem öffentlichen Verzeichnis monheimer-lokalhelden.de (nur Firmenangaben + Quelle): Atlas Friseur, Autolackiererei Schneider, Blumenzauber, Astrid Becker Cosmetics. Leads gesamt 7, analysiert 3.
+- **Profil-Analysen** der 4 neuen Leads: als Aufgabe für Claude angelegt. Die Browser-Erweiterung war nicht verbunden, und Google Maps wird nicht automatisch ohne Browser ausgelesen (Nutzungsbedingungen). Das Verbinden ist eine Benutzer-Aufgabe unter „Wartet auf mich“.
+- **Neu: datierte Nachfass-Aufgaben** nach freigegebenem Kontakt:
+  - „Gespräch geführt“ → „Nachfassen nach Gespräch“ (+7 Tage).
+  - „Hat Interesse“ → „Angebot übergeben“ (+3 Tage, Preis erst nach Entscheidung).
+  - Nichts wird gesendet.
+- **Tests:** 243/243, Build ok, live Desktop + Handy ohne Fehler.
