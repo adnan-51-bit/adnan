@@ -12,6 +12,9 @@ import { KRITERIEN, ANTWORTEN, MONATS_AUFGABEN } from "../../../lib/google-profi
 const INTERN = /(Bedarf|Besuchsrunde|Vor einem Kontakt|vermutlich|Zusammenhang nicht geprüft|Friseur Haargenau|Verzeichnis)/i;
 const beobachtungen = notiz => String(notiz || "").replace(/WICHTIG: /g, "").split(/(?<=[.!?])\s+(?=[A-ZÄÖÜ„])/).filter(s => s.trim() && !INTERN.test(s)).join(" ");
 
+// Link im Brief: werknetz24.de/r/<Code> leitet auf die Antwortseite hier weiter (vercel.json im werknetz24-landing-Repo).
+const LINK_BASIS = "https://werknetz24.de";
+
 const ZEICHEN ={ ja: "✓", teilweise: "◐", nein: "✗", unbekannt: "–" };
 
 // Empfaengeradresse nur aus der gespeicherten Verzeichnis-Angabe ("Adresse laut Verzeichnis: ...").
@@ -35,7 +38,7 @@ export default function ProfilCheck() {
       for (const l of leads) {
         const b = await adminFetch("/api/master/businesses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "pilot-brief", id: l.id }) }).then(x => x.json()).catch(() => ({ ok: false, error: "Keine Verbindung" }));
         if (!b.ok) { fehler.push((l.firma || l.name) + ": " + b.error); continue; }
-        const link = window.location.origin + "/r/" + b.token;
+        const link = LINK_BASIS + "/r/" + b.token;
         briefe.push({ l, link, qr: await QR.toString(link, { type: "svg", margin: 0, errorCorrectionLevel: "M" }) });
       }
       setD({ leads: briefe.map(b => b.l), briefe, fehler });
