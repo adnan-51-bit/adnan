@@ -518,3 +518,39 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Aufgabe mit allen Feldern, Filter, Statuswechsel
   - Tageszentrale und Tagesbericht
   - Desktop + Handy ohne Überlauf und ohne JS-Fehler
+
+## Update 27.09.2026 (25) — Teil 3A: Einheitlicher Ablauf + kostenlose Automatisierungen
+- **Ablauf** (Migration `20260927240000_einnahmequellen_automatisierung.sql`, alte Stufen umgemappt): Idee → Prüfung → Test → Automatisieren → Veröffentlichung → Leads/Kunden → Einnahmen → Skalieren (+ Pause).
+- **Nachweise je Stufe:**
+  - ab Test: Prüfstand
+  - Automatisieren: Beschreibung, was läuft, und Grad > 0
+  - Veröffentlichung: wo und wann
+  - Leads/Kunden: ≥ 1 echter Lead oder Kunde
+  - Einnahmen: Kunde + echte Einnahmen
+  - Skalieren: zusätzlich Automatisierung, ≥ 2 Kunden, Gewinn > 0
+- **Neue Felder:** benötigte Konten (nur Namen, nie Passwörter), Ergebnisse, Veröffentlichung, Leads, Entwürfe. In der Karte zusätzlich Quelle/Link und die echten Zahlen (Leads, Kunden, Einnahmen, Ausgaben, Gewinn).
+- **Kostenlose Automatisierungen** (`lib/eq-automation.js`, vorlagenbasiert, ohne KI/kostenpflichtige Dienste, alles als Entwurf, nichts wird gesendet):
+  - Recherche-Checkliste (offene Prüfpunkte + kostenlose Such-Links)
+  - Content-Ideen
+  - Texte (Angebot/Kurzprofil; Preis ohne Quelle bleibt „[noch zu prüfen]“)
+  - E-Mail-Entwürfe (nur für bestehende Kontakte, UWG-§-7-Hinweis)
+  - Statusmeldung
+  - Einnahmequellen-Report
+- **Lead-Erfassung:**
+  - Einwilligung ja/nein ist Pflicht.
+  - Beim Erfassen entsteht automatisch eine Nachfass-Aufgabe (fällig in 3 Tagen). Ohne Einwilligung steht dort der Hinweis „keine Werbung senden“.
+  - Lead-Status neu/kontaktiert/interessiert/kunde/verloren; „kunde“ übernimmt den Lead als Kunden.
+- **Aufgaben aus „Benötigte Schritte“:** eine Zeile = eine Aufgabe, ohne Doppelte.
+- **Wiederkehrende Prüfungen:**
+  - neue Aktionen: Quellen-Links prüfen, überfällige Aufgaben, Einnahmequellen-Report und der Sammellauf „Wiederkehrende Prüfungen“ (Systemprüfung, Quellen, Fälligkeit, Report, Tagesbericht)
+  - **täglich per Vercel Cron** (`vercel.json`, 05:00 UTC, Hobby-kostenlos; im Dashboard als aktiv bestätigt)
+  - Cron-Weg `GET ?cron=wiederkehrend`: höchstens 1× pro Stunde, Antwort nur `{ok, gelaufen}`; ist ein optionales `CRON_SECRET` gesetzt, wird es verlangt
+- **Quellen-Prüfung:** Nur 404/410 oder eine nicht existierende Domain gelten als toter Link. Gesperrte oder langsame Seiten (live: gesetze-im-internet.de, lokalbesucher.de) erscheinen als „nicht automatisch prüfbar“, nicht als Fehler.
+- **API** (keine neue Function): POST `einnahmequelle-entwurf|lead|lead-status|schritte`, GET `?eqreport=1`, `?cron=wiederkehrend`.
+- **Tests:** 186/186.
+- **Live geprüft:**
+  - Cron-Weg (200, zweiter Aufruf 429)
+  - Quellen-Prüfung gegen echte URLs
+  - Browser (12 Prüfungen): Ablauf, Lead + Nachfass-Aufgabe, E-Mail-Entwurf, Aufgaben aus Schritten, Lead → Kunde, Report, Automatisierungen-Seite, Desktop + Handy
+  - Testeintrag restlos gelöscht
+- Echte Einträge ergänzt: benötigte Konten, erste Recherche-Checklisten und Content-Ideen als Entwürfe.
