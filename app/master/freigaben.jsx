@@ -6,8 +6,8 @@
 import { useEffect, useState } from "react";
 import { adminFetch, anmeldeUrl } from "../../lib/admin-fetch.js";
 
-const ARTEN = { VEROEFFENTLICHUNG: "📣 Veröffentlichung", KOSTEN: "💶 Kosten", WERKZEUG: "🧰 Werkzeug aktivieren", AUTOMATISIERUNG: "⚙ Automatisierung", RECHT: "⚖️ Rechtliches" };
-const ZIEL = { content: "/master?tab=content", werkzeug: "/master?tab=content", "eq-plan": "/master?tab=einnahmequellen" };
+const ARTEN = { ENTSCHEIDUNG: "👤 Entscheidung", VEROEFFENTLICHUNG: "📣 Veröffentlichung", KOSTEN: "💶 Kosten", WERKZEUG: "🧰 Werkzeug aktivieren", AUTOMATISIERUNG: "⚙ Automatisierung", RECHT: "⚖️ Rechtliches" };
+const ZIEL = { pilot: "/master?tab=pilot", content: "/master?tab=content", werkzeug: "/master?tab=content", "eq-plan": "/master?tab=einnahmequellen" };
 const zeit = t => t ? new Date(t).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }) : "—";
 
 export function Freigaben() {
@@ -24,7 +24,7 @@ export function Freigaben() {
   const offen = (d?.freigaben || []).filter(f => f.status === "OFFEN");
   const erledigt = (d?.freigaben || []).filter(f => f.status !== "OFFEN").slice(0, 20);
   return <div className="fg">
-    <div className="pageTitle"><div><span>ÜBERBLICK</span><h2>Wartet auf Freigabe</h2></div></div>
+    <div className="pageTitle"><div><span>ÜBERBLICK</span><h2>Wartet auf mich</h2></div></div>
     <p className="note">Hier landet nur, was <b>deine persönliche Entscheidung</b> braucht: Veröffentlichungen, Kosten, kostenpflichtige Werkzeuge, Automatisierungen mit Risiko. Eine Freigabe löst nichts automatisch aus – kein Geld, kein Posting. Sie wird protokolliert und gibt den nächsten Schritt frei.</p>
     {d?.gesperrt && <div className="panel">Nur mit Anmeldung sichtbar. <a href={anmeldeUrl()}>⎆ Anmelden</a></div>}
     {meldung && <div className="panel">{meldung}</div>}

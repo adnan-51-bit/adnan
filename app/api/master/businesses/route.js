@@ -13,6 +13,7 @@ import { istWartend, istOffen } from "../../../../lib/aufgaben-status.js";
 import { listLeads, leadAnlegen, leadAendern, leadStatusSetzen, emailEntwurfErstellen, alsGesendet, antwortErfassen, antwortErledigt, angebotErstellen, angebotEntscheidung, zahlungEingegangen, kostenErfassen, leadVerlauf, leadUebersicht } from "../../../../lib/leads.js";
 import { strukturiere, ablaufStand, AUTOMATISIERUNGSGRAD, kontaktErlaubt } from "../../../../lib/leads-regeln.js";
 import { listFinance, eqFinanzen } from "../../../../lib/master-finance.js";
+import { pilotDaten, analyseSpeichern, preisFestlegen, vertragStarten, vertragBeenden, berichtText, angebotText } from "../../../../lib/pilot.js";
 import { listTasks } from "../../../../lib/master-tasks.js";
 
 export const runtime = "nodejs";
@@ -40,6 +41,12 @@ export async function GET(request){
       if (letzter && Date.now() - Date.parse(letzter.created_at) < 3600000) return NextResponse.json({ ok: false, error: "Letzter Lauf ist weniger als eine Stunde her" }, { status: 429 });
       const e = await fuehreAktionAus("wiederkehrende-pruefungen");
       return NextResponse.json({ ok: Boolean(e.ok), gelaufen: true });
+    }
+    // Pilot Google-Profil (Teil 5, 27.09.2026) - nur mit Secret.
+    if (params.get("pilot")) {
+      if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
+      let d; try { d = await pilotDaten(); } catch (error) { return NextResponse.json({ ok: false, error: error.message }, { status: /fehlt/.test(error.message) ? 404 : 500 }); }
+      return NextResponse.json({ ok: true, ...d, leads: d.leads.map(l => ({ ...l, bericht: l.profil_analyse ? berichtText(l, l.profil_analyse) : null, angebotVorlage: angebotText(l, d.eq.pilot?.monatspreis_cent) })) });
     }
     // E-Mail & Leads + Einnahmen je Einnahmequelle + Einnahme-Ablauf (Teil 4B, 27.09.2026) - nur mit Secret.
     if (params.get("leads")) {
@@ -139,6 +146,19 @@ export async function POST(request){
     const body = await request.json();
     // Einnahmequellen (27.09.2026): anlegen / Inhalte aendern / Status (nur mit erfuellten Voraussetzungen).
     // Workflow (27.09.2026): Kunde zuordnen, Aufgabe erzeugen (zentrale Aufgabenliste), Start/Stop.
+    // Teil 5: Pilot Google-Profil.
+    if (String(body?.action || "").startsWith("pilot-")) {
+      try {
+        const a = body.action;
+        const e = a === "pilot-analyse" ? await analyseSpeichern(body.id, body.analyse)
+          : a === "pilot-preis" ? { einnahmequelle: await preisFestlegen(body.monatspreis_cent) }
+          : a === "pilot-vertrag" ? await vertragStarten(body.id, body.vertrag || {})
+          : a === "pilot-vertrag-ende" ? { lead: await vertragBeenden(body.id) }
+          : null;
+        if (!e) return NextResponse.json({ ok: false, error: "Unbekannte Aktion" }, { status: 400 });
+        return NextResponse.json({ ok: true, ...e });
+      } catch (error) { return NextResponse.json({ ok: false, error: error.message }, { status: /nicht gefunden|fehlt$/.test(error.message) ? 404 : 400 }); }
+    }
     // Teil 4B: E-Mail & Leads, Angebote, Einnahmen/Kosten je Einnahmequelle.
     if (String(body?.action || "").startsWith("lead-") || ["zahlung-eingegangen", "eq-kosten"].includes(body?.action)) {
       try {
