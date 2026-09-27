@@ -29,6 +29,7 @@ test("Recherche: Detailseite parsen, nur passende Branchen in Monheim, keine Ver
   assert.deepEqual(R.parseDetail(SEITEN.a), { firma: "Salon A", branche: "Friseur", ort: "Monheim am Rhein", website: "https://salona.test" });
   assert.equal(R.parseDetail(SEITEN.f), null, "nicht Monheim");
   assert.equal(R.passt(R.parseDetail(SEITEN.b)), false); assert.equal(R.passt(R.parseDetail(SEITEN.c)), true);
+  assert.equal(R.parseDetail("<title>Blumen X - Blumen &amp; Floristik in Monheim am Rhein</title>").branche, "Blumen & Floristik");
   assert.equal(R.parseSitemap(`<loc>${R.VERZEICHNIS}/vendors/x</loc><loc>${R.VERZEICHNIS}/other</loc>`).length, 1);
 });
 
