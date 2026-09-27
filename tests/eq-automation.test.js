@@ -77,9 +77,14 @@ test("Wiederkehrende Prüfungen: Quellen-Links werden wirklich geprüft; kaputte
   const q = await eq.createEinnahmequelle({ name: "Quellen-EQ" });
   await eq.quelleHinzufuegen(q.id, { quelle: "gut", url: "https://gut.test/a", datum: "2026-09-27", aussage: "x" });
   await eq.quelleHinzufuegen(q.id, { quelle: "weg", url: "https://weg.test/b", datum: "2026-09-27", aussage: "y" });
-  const f = async url => url.includes("weg") ? { status: 404 } : { status: 200 };
+  await eq.quelleHinzufuegen(q.id, { quelle: "gesperrt", url: "https://gesperrt.test/c", datum: "2026-09-27", aussage: "z" });
+  await eq.quelleHinzufuegen(q.id, { quelle: "langsam", url: "https://langsam.test/d", datum: "2026-09-27", aussage: "z" });
+  const f = async url => { if (url.includes("langsam")) { const e = new Error("timeout"); e.name = "TimeoutError"; throw e; } return { status: url.includes("weg") ? 404 : url.includes("gesperrt") ? 403 : 200 }; };
   const r = await fuehreAktionAus("quellen-pruefung", undefined, { fetchImpl: f });
-  assert.equal(r.ok, false); assert.match(r.fehler, /1 von 2 Quellen nicht erreichbar: Quellen-EQ: https:\/\/weg\.test\/b \(HTTP 404\)/);
+  assert.equal(r.ok, false); assert.match(r.fehler, /1 von 4 Quellen tot: Quellen-EQ: https:\/\/weg\.test\/b \(HTTP 404\)/);
+  assert.match(r.fehler, /2 nicht automatisch prüfbar .*gesperrt\.test\/c \(HTTP 403\).*langsam\.test\/d \(Zeitüberschreitung\)/, "403/Timeout sind kein Befund, aber sichtbar");
+  const nurGesperrt = await fuehreAktionAus("quellen-pruefung", undefined, { fetchImpl: async url => ({ status: url.includes("gesperrt") ? 403 : 200 }) });
+  assert.equal(nurGesperrt.ok, true, "gesperrte Seite allein ist kein Fehler"); assert.match(nurGesperrt.zusammenfassung, /3 von 4 Quellen erreichbar, keine toten Links/);
   const ok = await fuehreAktionAus("faelligkeit"); assert.equal(ok.ok, true); assert.match(ok.zusammenfassung, /Keine überfällige|überfällig/);
   const rep = await fuehreAktionAus("eq-report"); assert.equal(rep.ok, true); assert.match(rep.bericht, /EINNAHMEQUELLEN-REPORT/);
 });
