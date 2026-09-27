@@ -117,3 +117,9 @@ test("privates Repository (GitHub 404 ohne Token) wird ehrlich als 'nicht prüfb
   const g = await fuehreAktionAus("git-status", undefined, { fetchImpl: privat });
   assert.match(g.zusammenfassung, /adnan: abcdef1 feat: x · werknetz24-landing: nicht prüfbar/);
 });
+
+test("Tagesbericht: Benutzeraktion einer Einnahmequelle erscheint (nicht bei Pause)", () => {
+  const b = erstelleTagesbericht({ einnahmequellen: [{ name: "Affiliate", status: "PRUEFUNG", benutzeraktion: "Arbeitgeber fragen, ob Filmen im LKW erlaubt ist" }, { name: "Shop", status: "PAUSE", benutzeraktion: "Gewerbe" }] });
+  assert.deepEqual(b.benutzeraktionen.map(x => x.text), ["Affiliate: Arbeitgeber fragen, ob Filmen im LKW erlaubt ist"]);
+  assert.equal(b.benutzeraktionen[0].ziel, "einnahmequellen");
+});

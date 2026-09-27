@@ -33,7 +33,11 @@ test("TEST erst nach allen Prüfschritten mit Quellen", async () => {
 test("ERSTER_KUNDE nur mit echtem Kunden, AKTIV nur mit echten Einnahmen; PAUSE/PRUEFUNG jederzeit", async () => {
   const q = await eq.createEinnahmequelle({ name: "Service", ...GEPRUEFT });
   await assert.rejects(() => eq.setzeEqStatus(q.id, "ERSTER_KUNDE"), /echten Kunden/);
+  // Seit dem Workflow (27.09.2026) bauen die Stufen aufeinander auf: "Aktiv" braucht zuerst einen Kunden.
+  await assert.rejects(() => eq.setzeEqStatus(q.id, "AKTIV"), /echten Kunden/);
+  await eq.updateEinnahmequelle(q.id, { erste_kunden: 1 });
   await assert.rejects(() => eq.setzeEqStatus(q.id, "AKTIV"), /echten Einnahmen/);
+  await eq.updateEinnahmequelle(q.id, { erste_kunden: 0 });
   assert.equal((await eq.setzeEqStatus(q.id, "PAUSE")).status, "PAUSE");
   assert.equal((await eq.setzeEqStatus(q.id, "PRUEFUNG")).status, "PRUEFUNG");
   await eq.updateEinnahmequelle(q.id, { erste_kunden: 1, einnahmen_cent: 4900 });
@@ -69,4 +73,76 @@ test("API: Lesen/Schreiben nur mit Anmeldung; Statusregel greift auch über die 
   assert.equal(s.status, 400); assert.match((await s.json()).error, /Vor dem Test fehlt/);
   const g = await (await route.GET(req("GET", "?einnahmequellen=1", null, "test-secret"))).json();
   assert.equal(g.einnahmequellen.length, 1); assert.equal(g.uebersicht.pruefung, 1);
+});
+
+// ---------- Workflow Interesse -> Wiederholbar -> Automatisieren -> Skalieren (27.09.2026) ----------
+const tasks = await import("../lib/master-tasks.js");
+const { listAudit } = await import("../lib/audit.js");
+
+test("Workflow: jede Stufe braucht ihren echten Nachweis, keine Stufe lässt sich überspringen", async () => {
+  const q = await eq.createEinnahmequelle({ name: "Workflow", ...GEPRUEFT });
+  await assert.rejects(() => eq.setzeEqStatus(q.id, "INTERESSE"), /Interesse-Nachweis/);
+  await eq.updateEinnahmequelle(q.id, { interesse_nachweis: "3 echte Anfragen per Kommentar am 27.09.2026" });
+  assert.equal((await eq.setzeEqStatus(q.id, "INTERESSE")).status, "INTERESSE");
+  await assert.rejects(() => eq.setzeEqStatus(q.id, "SKALIEREN"), /echten Kunden/, "Skalieren prüft alle Stufen davor");
+  await eq.kundeZuordnen(q.id, { name: "Kunde A" });
+  await eq.updateEinnahmequelle(q.id, { einnahmen_cent: 5000 });
+  assert.equal((await eq.setzeEqStatus(q.id, "AKTIV")).status, "AKTIV");
+  await assert.rejects(() => eq.setzeEqStatus(q.id, "WIEDERHOLBAR"), /mindestens 2 echten Kunden/);
+  await eq.kundeZuordnen(q.id, { name: "Kunde B" });
+  assert.equal((await eq.setzeEqStatus(q.id, "WIEDERHOLBAR")).status, "WIEDERHOLBAR");
+  await assert.rejects(() => eq.setzeEqStatus(q.id, "AUTOMATISIERT"), /was automatisch läuft/);
+  await eq.updateEinnahmequelle(q.id, { automatisierung: "Rechnungen werden automatisch erstellt", automatisierungsgrad: 40 });
+  assert.equal((await eq.setzeEqStatus(q.id, "AUTOMATISIERT")).status, "AUTOMATISIERT");
+  await eq.updateEinnahmequelle(q.id, { kosten_cent: 6000 });
+  await assert.rejects(() => eq.setzeEqStatus(q.id, "SKALIEREN"), /echtem Gewinn/);
+  await eq.updateEinnahmequelle(q.id, { kosten_cent: 1000 });
+  assert.equal((await eq.setzeEqStatus(q.id, "SKALIEREN")).status, "SKALIEREN");
+  assert.equal(eq.uebersicht(await eq.listEinnahmequellen()).aktiv, 1, "Skalieren zählt als aktiv");
+  await assert.rejects(() => eq.updateEinnahmequelle(q.id, { automatisierungsgrad: 150 }), /0 und 100/);
+});
+
+test("Kunde zuordnen: nur mit Namen, eigene Liste, Anzahl steigt; getrennt von Werknetz24/E-Commerce", async () => {
+  const q = await eq.createEinnahmequelle({ name: "K" });
+  await assert.rejects(() => eq.kundeZuordnen(q.id, { name: "  " }), /Name des Kunden fehlt/);
+  const r = await eq.kundeZuordnen(q.id, { name: "Firma X", kontakt: "x@example.test", seit: "2026-09-27" });
+  assert.equal(r.kunden.length, 1); assert.equal(r.erste_kunden, 1); assert.deepEqual(Object.keys(r.kunden[0]).sort(), ["kontakt", "name", "notiz", "seit"]);
+  assert.equal((await eq.setzeEqStatus(q.id, "ERSTER_KUNDE")).status, "ERSTER_KUNDE");
+});
+
+test("Aufgabe erzeugen: landet in der zentralen Aufgabenliste mit Bezug; ohne Titel abgelehnt", async () => {
+  const q = await eq.createEinnahmequelle({ name: "Aufgaben-EQ" });
+  await assert.rejects(() => eq.aufgabeErzeugen(q.id, {}), /Titel der Aufgabe fehlt/);
+  await eq.updateEinnahmequelle(q.id, { naechste_aufgabe: "Erste 3 Videos drehen", verantwortlich: "Adnan" });
+  const t = await eq.aufgabeErzeugen(q.id, { priority: "Hoch" });
+  assert.equal(t.title, "Erste 3 Videos drehen"); assert.equal(t.einnahmequelle_id, q.id); assert.equal(t.area, "Einnahmequelle: Aufgaben-EQ"); assert.equal(t.business_id, "master");
+  assert.ok((await tasks.listTasks()).some(x => x.id === t.id), "zentral sichtbar");
+  assert.deepEqual((await eq.aufgabenVon(q.id)).map(x => x.id), [t.id]);
+  await assert.rejects(() => eq.aufgabeErzeugen(q.id, { title: "x", priority: "Sofort" }), /Priorität/);
+});
+
+test("Start/Stop merkt sich die Stufe; Verlauf protokolliert jede Aktivität", async () => {
+  const q = await eq.createEinnahmequelle({ name: "StartStop" });
+  await eq.setzeEqStatus(q.id, "PRUEFUNG");
+  const p = await eq.stoppeEinnahmequelle(q.id); assert.equal(p.status, "PAUSE"); assert.equal(p.status_vor_pause, "PRUEFUNG");
+  assert.equal((await eq.starteEinnahmequelle(q.id)).status, "PRUEFUNG");
+  await assert.rejects(() => eq.starteEinnahmequelle(q.id), /Läuft bereits/);
+  await eq.kundeZuordnen(q.id, { name: "Z" });
+  const v = (await eq.verlaufVon(q.id)).map(e => e.action);
+  assert.deepEqual(v, ["einnahmequelle.kunde", "einnahmequelle.status", "einnahmequelle.status", "einnahmequelle.status", "einnahmequelle.created"]);
+  assert.ok((await listAudit(200)).every(e => e.entity_type !== "einnahmequelle" || e.entity_id), "jeder Eintrag hat Bezug");
+});
+
+test("API: Workflow-Aktionen nur mit Anmeldung; Details liefern Aufgaben + Verlauf", async () => {
+  auth.resetLoginSperreFuerTests();
+  for (const action of ["einnahmequelle-aufgabe", "einnahmequelle-kunde", "einnahmequelle-start", "einnahmequelle-stop"]) assert.equal((await route.POST(req("POST", "", { action, id: "x" }))).status, 401, action);
+  const id = (await (await route.POST(req("POST", "", { action: "einnahmequelle-anlegen", name: "API-WF" }, "test-secret"))).json()).einnahmequelle.id;
+  assert.equal((await route.POST(req("POST", "", { action: "einnahmequelle-aufgabe", id, title: "Test-Aufgabe" }, "test-secret"))).status, 201);
+  assert.equal((await route.POST(req("POST", "", { action: "einnahmequelle-kunde", id, kunde: { name: "" } }, "test-secret"))).status, 400);
+  assert.equal((await route.POST(req("POST", "", { action: "einnahmequelle-status", id, status: "SKALIEREN" }, "test-secret"))).status, 400);
+  assert.equal((await route.POST(req("POST", "", { action: "einnahmequelle-stop", id }, "test-secret"))).status, 200);
+  assert.equal((await route.POST(req("POST", "", { action: "einnahmequelle-aufgabe", id: "gibt-es-nicht", title: "x" }, "test-secret"))).status, 404);
+  const d = await (await route.GET(req("GET", "?einnahmequellen=1&id=" + id, null, "test-secret"))).json();
+  assert.equal(d.aufgaben.length, 1); assert.ok(d.verlauf.some(v => v.action === "einnahmequelle.aufgabe"));
+  assert.equal((await route.GET(req("GET", "?einnahmequellen=1&id=" + id))).status, 401);
 });
