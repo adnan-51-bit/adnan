@@ -912,3 +912,17 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - **Technik:** Leads lassen sich über „lead-anlegen“ mit `ohneAufgabe` ohne Nachfass-Aufgabe anlegen.
 - **Verkaufsablauf Lead → Kunde (Adnans Vorgabe):** noch nicht umgesetzt, solange Werknetz24 pausiert ist. Vorhanden: Status, Notizen, Nachfass-Aufgaben, „kein Interesse“ stoppt Aufgaben. Es fehlen für Werknetz24-Leads: Kontakt-Freigabe und eine Kontaktvorlage für Besuch/Telefon.
 - **Tests:** 251/251, Build ok. Kosten 0 €.
+
+## Update 27.09.2026 (47) — Lisa-Diagnose: Testanruf aktuell nicht möglich (nur mit Kosten behebbar)
+
+- **Geprüft (lesend, ohne Änderungen):**
+  - Famulor-Konto: Kontoguthaben 4,79 €.
+  - Dashboard: „No active plan“, Minutes left 5/0, Chat credits 0.
+  - Assistent 20225 „Lisa Werknetz24“: Eingang, Pipeline, Prompt/Stimme/end_call/Termin-Werkzeuge gesetzt, keine Compliance-Sperre.
+  - Nummer +49 2173 9998706 als SIP-Trunk (Easybell, IP-Freigabe) an Lisa gebunden.
+  - Webhook erreichbar.
+- **Ursache der fehlgeschlagenen Anrufe:** Famulor nimmt ohne Tarif bzw. Anrufminuten keine Gespräche an („Not enough credits“, live bewiesen am 11.09., letzter Fehlanruf am 12.09.). SIP, Easybell, Konfiguration und unser Code sind nicht die Ursache.
+- **Zweiter Befund:** Google Calendar und Gmail sind im Werknetz24-Systemstatus rot (Token seit 22.09. ungültig) → Lisas Terminbuchung würde scheitern.
+- **Nicht kostenlos behebbar.** Laut famulor.io/de/pricing: Prepaid 0,18 €/Min ohne Vertragsbindung, oder Plus 27 €/Monat (100 Minuten). Entscheidung liegt bei Adnan (zwei Aufgaben unter „Wartet auf mich“).
+- **Nicht geändert (nicht ursächlich):** max_duration 240 s und AEC-Warmup (Famulor empfiehlt ≥600 s bzw. 3 s) – als Empfehlung notiert.
+- **Sicherer Test (vorbereitet, startet erst nach Freigabe):** Adnan ruft von seinem Handy die Lisa-Nummer an, Testgespräch mit Name, Rückrufnummer, Anliegen und Terminwunsch, ca. 2 Minuten. Prüfen: Status „completed“ bei Famulor, Transkript und Variablen, Webhook-Eingang in Werknetz24, Kalendereintrag (danach löschen).
