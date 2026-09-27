@@ -111,3 +111,14 @@ test("Top-5: nachvollziehbar bewertet – Lücken, unbeanspruchtes Profil vorn, 
   assert.equal(t[1].quelle, "https://q.test/1"); assert.match(t[0].gruende.join(" "), /nicht vom Inhaber beansprucht/); assert.match(t[2].gruende.join(" "), /kein Google-Profil/);
   assert.equal(leadBewertung(L[5]), null);
 });
+
+test("Recherche merkt sich geprüfte Seiten 30 Tage – kein doppeltes Prüfen am selben Tag", async () => {
+  const anlegen = async () => ({ id: "x" });
+  const r1 = await R.rechercheLauf({ bekannt: new Set(), wartend: 4, anlegen, fetchImpl: mockFetch, heute: "2026-09-28" });
+  assert.equal(r1.neu.length, 1); assert.ok(Object.keys(r1.gemerkt).length >= 1);
+  const r2 = await R.rechercheLauf({ bekannt: new Set(), wartend: 0, anlegen, fetchImpl: mockFetch, heute: "2026-09-28", schonGeprueft: r1.gemerkt });
+  assert.ok(!Object.keys(r1.gemerkt).some(u => r2.neu.some(n => u.endsWith(n.firma))), "gemerkte Seiten nicht erneut");
+  assert.equal(r2.geprueft + Object.keys(r1.gemerkt).length, 6);
+  const r3 = await R.rechercheLauf({ bekannt: new Set(), wartend: 0, anlegen, fetchImpl: mockFetch, heute: "2026-11-15", schonGeprueft: r1.gemerkt });
+  assert.equal(r3.geprueft, 6, "nach 30 Tagen wieder prüfbar");
+});
