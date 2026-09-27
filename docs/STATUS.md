@@ -421,3 +421,30 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - E-Commerce-Betrieb in der Datenbank auf Status PAUSIERT gesetzt.
 - Tests: 157/157 (adnan), 171/171 `api/customers.test.js` (werknetz24-landing); live Desktop + Handy geprüft.
 - Reihenfolge der nächsten Schritte: 2 Aufgaben-Filter (Kosten, Benutzeraktion, automatisch erledigbar) → 3 Einnahmequellen-Ausbau (SKALIEREN, Aufgabe erzeugen, Kunde zuordnen) → 4 Automatisierungen mit echten Läufen → 5 Agenten → 6 Finanzen je Bereich → 7 einheitliche Bereichsseiten.
+
+## Update 27.09.2026 (22) — Steuerung: Aktionen, Kostenschutz, Automatisierungs-Log, Tagesbericht; Zentrale auf mehrere Seiten verteilt
+- **Seitenaufbau** (Adnan: „nicht alles auf eine Seite“): Seitenleiste in Gruppen Überblick / Geschäftsbereiche / Steuerung / System. Jede Seite hat eine eigene Adresse `/master?tab=…`.
+  - **Überblick** (Start): Statusleiste mit 11 Werten (System, Geschäftsbereiche, Einnahmen, Kosten, Gewinn, Kunden, Leads, Aufgaben, Automatisierungen, Agenten, Fehler; Rechenwege aufklappbar), Geschäfts-Control-Center (🟢 AKTIV / 🟡 TEST / ⚪ PAUSE / 🔴 FEHLER je Bereich, mit Grund und Direktlinks), „Jetzt zu tun“, „Benutzeraktion erforderlich“, „Nächste Schritte“.
+  - **Heute & Bericht** (`?tab=heute`): Heute erledigt, Automatisch gelöst, Fehler, Tagesbericht (9 Fragen).
+  - **Automatisierungen** (`?tab=automation`): alle Aktionen nach 🟢/🟡/🔴 + Automatisierungs-Log. Die frühere feste Textliste ist ersetzt.
+  - Die frühere volle Startseite (Betriebsübersicht, System-Lage, Aktivitäten, Kachelreihen) ist entfernt; ihre Inhalte stehen auf Betriebe, Systemmonitoring/Fehlerzentrale und Audit-Log.
+- **Aktionslogik** `lib/aktionen.js`: 18 Aktionen. Kategorien: AUTOMATISCH (Server-Knopf oder „macht Claude“), FREIGABE (Geld/Veröffentlichung – zeigt Was/Warum/Kosten/Rhythmus/Bereich/Leistung), NICHT_MOEGLICH (mit Grund + Link zur richtigen Stelle).
+- **Kostenschutz** `pruefeAusfuehrung`:
+  - ohne Freigabe → 409
+  - Freigabe gilt nur für genau diese Aktion und nur mit `bestaetigt: true`
+  - auch mit Freigabe führt die Zentrale **keine** Geld-Aktion aus → 501, „beim Anbieter selbst ausführen“
+  - gesperrt (E-Commerce pausiert, Zahlungen) → 423
+  - verboten → 403
+- **Ausführung + Log** `lib/aktion-ausfuehren.js`:
+  - Echte Aktionen: Systemprüfung, Werknetz24-Systemwächter, Tests & Build (GitHub Actions), Git-Status (GitHub Commits), Quality Gate, Tagesbericht.
+  - Jeder Versuch, auch ein abgelehnter, landet im Audit-Log (`automation.lauf`) mit Zeit, Agent, Bereich, Aktion, Ergebnis, Fehler, Kosten (immer 0) und Quelle.
+  - `werknetz24-landing` ist privat → ohne optionalen `GITHUB_TOKEN` ehrlich „nicht prüfbar (privat)“.
+- **API** (keine neue Function): `GET /api/master/businesses?aktionen=1`, `?tagesbericht=1`, `POST {action:"aktion-ausfuehren", id, freigabe?}` – alles nur mit Anmeldung.
+- **Werknetz24-Status**: zusätzlich `leads.heute` / `kunden.heute` (neu angelegt heute, Berlin), nur Zählwerte.
+- **Tests**: `tests/steuerung.test.js` (8). Gesamt 164/164 (adnan), 171/171 `api/customers.test.js`.
+- **Live geprüft**:
+  - ohne Code 401
+  - Geld-Aktionen 409, Verbot 403
+  - 6 echte Aktionen laufen und stehen im Log
+  - alle 14 Seiten am Desktop und Handy: kein Überlauf, keine JS-Fehler, Klick-Navigation ok
+- Später (nicht gebaut): Einnahmequellen-Ablauf Interesse → Wiederholbar → Automatisieren → Skalieren als eigene Stufen; zeitgesteuerte Läufe (Cron) für Tagesbericht.
