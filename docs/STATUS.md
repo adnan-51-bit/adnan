@@ -837,3 +837,20 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - emma's 75/100
 - **Aktueller Lead:** Friseur Haargenau (33/100). Nächste Aktion: Kontakt-Freigabe durch Adnan.
 - **Tests:** 248/248, Build ok, live Desktop + Handy ohne Fehler. Kosten 0 €, Einnahmen 0 €.
+
+## Update 27.09.2026 (42) — Automatische Kundensuche
+
+- **Tägliche Recherche** (07:00): bis zu 5 neue Betriebe aus dem öffentlichen Verzeichnis monheimer-lokalhelden.de.
+  - Nur passende kleine Betriebe; Ketten, Versicherungen, Heilberufe und Vereine werden ausgeschlossen.
+  - Geprüfte Seiten werden 30 Tage gemerkt, damit nichts doppelt geprüft wird.
+  - Gestoppt wird, sobald 5 Betriebe auf eine Analyse warten; Fehler landen im Automatisierungs-Log.
+- **Dashboard wie vorgegeben:** Neue Leads → Analysiert → Kontakt vorbereitet → Wartet auf Freigabe → Interesse → Angebot → Auftrag → Bezahlt. Dazu täglich die **Top-5**:
+  - Bewertung = 100 − Punkte, +20 bei nicht beanspruchtem Profil, −40 ohne Google-Profil.
+  - Nur noch nicht kontaktierte Betriebe mit sinnvollem Bedarf.
+- **Heute:** 5 neue Leads gefunden und analysiert (jetzt 15, alle analysiert):
+  - Eichholz 50
+  - Mari Nails 70
+  - Nail Lounge 0 (kein Profil)
+  - Ryf 83 (Kette)
+  - Mobile Friseurmeisterin Holtmann 14 (Profil unbeansprucht, „eventuell geschlossen“)
+- **Tests:** 250/250, Build ok, live Desktop + Handy ohne Fehler. Kosten 0 €, Einnahmen 0 €.
