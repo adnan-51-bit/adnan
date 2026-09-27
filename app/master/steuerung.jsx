@@ -81,19 +81,30 @@ export function Startseite({ businesses, tasks, tasksLocked, systems, finance, q
 export function HeuteSeite({ goTo }) {
   const [d, laden] = useDaten("/api/master/businesses?tagesbericht=1");
   const [busy, setBusy] = useState(false);
+  const [erstellt, setErstellt] = useState(null);
   const b = d?.bericht;
-  async function neu() { setBusy(true); await adminFetch("/api/master/businesses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "aktion-ausfuehren", id: "tagesbericht" }) }); await laden(); setBusy(false); }
+  // "Tagesbericht erstellen": echte Aktion (steht im Automatisierungs-Log), danach frisch aus den gespeicherten Daten laden.
+  async function erstellen() { setBusy(true); await adminFetch("/api/master/businesses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "aktion-ausfuehren", id: "tagesbericht" }) }); await laden(); setErstellt(new Date()); setBusy(false); }
+  const L = (titel, eintraege, leer, extra = {}) => <Liste titel={titel} eintraege={b ? eintraege : (d === null ? [] : undefined)} leer={leer} goTo={goTo} max={6} {...extra} />;
   return <>
-    <div className="pageTitle"><div><span>HEUTE {b?.datum ? "· " + new Date(b.datum).toLocaleDateString("de-DE") : ""}</span><h2>Heute & Tagesbericht</h2></div><div className="quick"><button className="primaryLink" disabled={busy} onClick={neu}>{busy ? "…" : "Bericht neu erstellen"}</button></div></div>
+    <div className="pageTitle"><div><span>TAGESZENTRALE {b?.datum ? "· " + new Date(b.datum).toLocaleDateString("de-DE") : ""}</span><h2>Heute</h2></div><div className="quick"><button className="primaryLink" disabled={busy || d === null} onClick={erstellen}>{busy ? "wird erstellt…" : "Tagesbericht erstellen"}</button></div></div>
     {d === null && <div className="panel">Nur mit Anmeldung sichtbar.</div>}
+    <section className="stWichtigste" aria-label="Wichtigste Aufgabe"><span>Wichtigste Aufgabe</span>
+      {b?.wichtigsteAufgabe ? <button type="button" onClick={() => goTo?.("tasks")}>{b.wichtigsteAufgabe.text}</button> : <p className="stLeer">{d === undefined ? "wird geladen…" : "Keine offene Aufgabe."}</p>}
+      <span>Nächste Benutzeraktion</span>
+      {b?.naechsteBenutzeraktion ? <button type="button" className="stBenutzer" onClick={() => { const z = b.naechsteBenutzeraktion.ziel; z?.startsWith("/") ? window.location.assign(z) : goTo?.(z); }}>👤 {b.naechsteBenutzeraktion.text}</button> : <p className="stLeer">{d === undefined ? "…" : "Keine – nichts wartet auf dich."}</p>}
+    </section>
     <div className="stSpalten">
-      <Liste titel="Heute erledigt" eintraege={b?.heuteErledigt} leer="Heute noch nichts erledigt." goTo={goTo} max={8} />
-      <Liste titel="Automatisch gelöst" eintraege={b?.automatischGeloest} leer="Heute noch keine automatische Aktion." goTo={goTo} max={8} />
-      <Liste titel="Fehler" klasse="stFehler" eintraege={b?.fehler} leer="Keine Fehler." goTo={goTo} max={8} />
+      {L("Offene Aufgaben", b?.jetztZuTun, "Keine offenen Aufgaben.")}
+      {L("Wartende Aufgaben (auf dich)", b?.wartendeAufgaben, "Keine Aufgabe wartet auf dich.", { klasse: "stWichtig" })}
+      {L("Aktive Einnahmequellen", b?.aktiveEinnahmequellen, `Noch keine aktive Einnahmequelle (echte Kunden + Einnahmen nötig).${b?.laufendeEinnahmequellen?.length ? " In Arbeit: " + b.laufendeEinnahmequellen.map(x => x.text).join(", ") : ""}`)}
+      {L("Erkannte Probleme", b?.fehler, "Keine Probleme erkannt.", { klasse: "stFehler" })}
+      {L("Heute erledigt", b?.heuteErledigt, "Heute noch nichts erledigt.")}
+      {L("Letzte Aktivitäten", b?.letzteAktivitaeten, "Noch keine Aktivitäten.")}
     </div>
-    <section className="panel"><h3>Tagesbericht</h3>{!b ? <p className="stLeer">{d === undefined ? "wird geladen…" : "—"}</p> :
+    <section className="panel"><h3>Tagesbericht {erstellt ? <small className="stLeer">erstellt {erstellt.toLocaleTimeString("de-DE")}</small> : null}</h3>{!b ? <p className="stLeer">{d === undefined ? "wird geladen…" : "—"}</p> :
       <dl className="stBericht">{b.bericht.map(([f, a]) => <div key={f}><dt>{f}</dt><dd>{a}</dd></div>)}</dl>}
-      <p className="stLeer">Nur echte Daten: Tageswerte, die eine Quelle nicht liefert, stehen als „nicht verfügbar“ da.</p></section>
+      <p className="stLeer">Aus den tatsächlich gespeicherten Daten erzeugt. Tageswerte, die eine Quelle nicht liefert, stehen als „nicht verfügbar“ da – nichts wird geschätzt.</p></section>
     <style dangerouslySetInnerHTML={{ __html: ST_CSS }} />
   </>;
 }
@@ -159,4 +170,5 @@ const ST_CSS = `.stLeiste{display:grid;grid-template-columns:repeat(auto-fit,min
 .stAktion{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 0;border-top:1px solid #f2f4f7}.stAktion small{display:block;color:#667085;font-size:12px}.stHinweis{color:#b54708!important}
 .stKnoepfe{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.stKnoepfe button{padding:7px 12px;border-radius:8px;border:1px solid #d0d5dd;background:#fff;cursor:pointer;font:inherit;font-size:13px}.stKnoepfe a{font-size:13px}
 .stTabelle{overflow-x:auto}.stTabelle table{border-collapse:collapse;width:100%;font-size:12px}.stTabelle th,.stTabelle td{padding:6px;border-top:1px solid #f2f4f7;text-align:left;vertical-align:top}
+.stWichtigste{background:#fff;border:1px solid #eaecf0;border-radius:12px;padding:12px;display:grid;gap:4px;margin-bottom:4px}.stWichtigste>span{font-size:11px;font-weight:800;color:#667085;text-transform:uppercase;letter-spacing:.05em;margin-top:4px}.stWichtigste button{text-align:left;border:0;background:#f9fafb;border-radius:8px;padding:9px 10px;font:inherit;font-weight:700;cursor:pointer;overflow-wrap:anywhere}.stWichtigste .stBenutzer{background:#fffcf5;border:1px solid #fedf89}
 @media(max-width:560px){.stBericht div{grid-template-columns:1fr;gap:2px}}`;

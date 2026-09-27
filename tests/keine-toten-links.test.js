@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 
 const read = p => readFileSync(new URL("../" + p, import.meta.url), "utf8");
-const seiten = ["app/master/page.jsx", "app/master/control-center.jsx", "app/master/steuerung.jsx", "app/werknetz24/page.jsx", "app/e-commerce/page.jsx"];
+const seiten = ["app/master/page.jsx", "app/master/control-center.jsx", "app/master/steuerung.jsx", "app/master/einnahmequellen.jsx", "app/master/aufgaben.jsx", "app/werknetz24/page.jsx", "app/e-commerce/page.jsx"];
 const tabsVon = src => {
   const ids = new Set();
   for (const m of src.matchAll(/\[\s*"([a-z0-9-]+)",\s*"[^"]*",\s*"[^"]*"\s*\]/g)) ids.add(m[1]);

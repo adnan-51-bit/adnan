@@ -132,8 +132,8 @@ export function Fehlerzentrale({ systems, tasks, qualityGate, onReloadSystems, g
     fehler.push({ key: "qg-" + c.id, severity: c.status === "warning" ? "🟡" : "🔴", business_id: "ecommerce", bereich: "Quality Gate", titel: c.id, fehler: c.message, open: "/e-commerce?tab=quality-gate", logs: null, repair: { kind: "manual", label: "Manuelle Aktion nötig", text: c.id === "persistence" ? "Supabase-Konto anlegen und SUPABASE_URL/SUPABASE_SECRET_KEY setzen (Adnans Entscheidung)" : c.id === "payments" ? "Zahlungen bleiben bis zur sicheren Stripe-Integration bewusst gesperrt" : "Siehe Quality Gate" } });
   }
   // Aufgaben: blockiert
-  for (const t of tasks.filter(t => t.status === "Blockiert")) {
-    fehler.push({ key: "task-" + t.id, severity: "🔴", business_id: t.business_id || "master", bereich: "Aufgabe", titel: t.title, fehler: "Aufgabe blockiert · " + (t.area || ""), open: null, openTab: "tasks", logs: null, repair: { kind: "manual", label: "In Aufgaben bearbeiten", text: "Blockade in der Aufgabe auflösen" } });
+  for (const t of tasks.filter(t => t.status === "Blockiert" || t.status === "Wartet auf Benutzer")) {
+    fehler.push({ key: "task-" + t.id, severity: "🔴", business_id: t.business_id || "master", bereich: "Aufgabe", titel: t.title, fehler: "Wartet auf Benutzer · " + (t.area || ""), open: null, openTab: "tasks", logs: null, repair: { kind: "manual", label: "In Aufgaben bearbeiten", text: "Blockade in der Aufgabe auflösen" } });
   }
 
   const reihenfolge = { "🔴": 0, "🟡": 1, "🟢": 2 };

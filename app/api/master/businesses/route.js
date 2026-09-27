@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { listBusinesses, updateBusiness, storageMode } from "../../../../lib/master-store";
 import { checkAdminSecret } from "../../../../lib/auth.js";
-import { listEinnahmequellen, createEinnahmequelle, updateEinnahmequelle, setzeEqStatus, uebersicht, kundeZuordnen, aufgabeErzeugen, starteEinnahmequelle, stoppeEinnahmequelle, aufgabenVon, verlaufVon } from "../../../../lib/einnahmequellen.js";
+import { listEinnahmequellen, createEinnahmequelle, updateEinnahmequelle, setzeEqStatus, uebersicht, kundeZuordnen, aufgabeErzeugen, starteEinnahmequelle, stoppeEinnahmequelle, aufgabenVon, verlaufVon, quelleHinzufuegen, planHinzufuegen } from "../../../../lib/einnahmequellen.js";
 import { fetchWerknetz24Kalender, createWerknetz24KalenderTermin, fetchWerknetz24Aufgaben, fetchWerknetz24Rechnungen, fetchWerknetz24Incidents, fetchWerknetz24Agenten, runWerknetz24Systemcheck, closeWerknetz24Incident } from "../../../../lib/werknetz24-connector.js";
 
 import { AKTIONEN } from "../../../../lib/aktionen.js";
@@ -90,17 +90,19 @@ export async function POST(request){
     // Einnahmequellen (27.09.2026): anlegen / Inhalte aendern / Status (nur mit erfuellten Voraussetzungen).
     // Workflow (27.09.2026): Kunde zuordnen, Aufgabe erzeugen (zentrale Aufgabenliste), Start/Stop.
     if (body?.action === "einnahmequelle-aufgabe") {
-      try { return NextResponse.json({ ok: true, task: await aufgabeErzeugen(body.id, { title: body.title, priority: body.priority }) }, { status: 201 }); }
+      try { return NextResponse.json({ ok: true, task: await aufgabeErzeugen(body.id, { title: body.title, priority: body.priority, beschreibung: body.beschreibung, naechste_aktion: body.naechste_aktion, quelle: body.quelle, due_at: body.due_at }) }, { status: 201 }); }
       catch (error) { return NextResponse.json({ ok: false, error: error.message }, { status: /nicht gefunden/.test(error.message) ? 404 : 400 }); }
     }
-    if (["einnahmequelle-anlegen", "einnahmequelle-aendern", "einnahmequelle-status", "einnahmequelle-kunde", "einnahmequelle-start", "einnahmequelle-stop"].includes(body?.action)) {
+    if (["einnahmequelle-anlegen", "einnahmequelle-aendern", "einnahmequelle-status", "einnahmequelle-kunde", "einnahmequelle-start", "einnahmequelle-stop", "einnahmequelle-quelle", "einnahmequelle-plan"].includes(body?.action)) {
       try {
-        const { action, id, status, kunde, ...daten } = body;
+        const { action, id, status, kunde, quelle, vorschlag, ...daten } = body;
         const q = action === "einnahmequelle-anlegen" ? await createEinnahmequelle(daten)
           : action === "einnahmequelle-aendern" ? await updateEinnahmequelle(id, daten)
           : action === "einnahmequelle-kunde" ? await kundeZuordnen(id, kunde)
           : action === "einnahmequelle-start" ? await starteEinnahmequelle(id)
           : action === "einnahmequelle-stop" ? await stoppeEinnahmequelle(id)
+          : action === "einnahmequelle-quelle" ? await quelleHinzufuegen(id, quelle)
+          : action === "einnahmequelle-plan" ? await planHinzufuegen(id, vorschlag)
           : await setzeEqStatus(id, status);
         return NextResponse.json({ ok: true, einnahmequelle: q }, { status: action === "einnahmequelle-anlegen" ? 201 : 200 });
       } catch (error) {

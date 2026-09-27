@@ -42,6 +42,8 @@ test("Aufgaben: GET nur mit Secret; PATCH meldet Nutzerfehler als 404/400 statt 
   assert.equal((await tasks.GET(req("/api/master/tasks"))).status, 401);
   assert.equal((await tasks.GET(req("/api/master/tasks", SECRET))).status, 200);
   const patch = body => tasks.PATCH(new Request("https://example.test/api/master/tasks", { method: "PATCH", headers: { authorization: "Bearer " + SECRET, "content-type": "application/json" }, body: JSON.stringify(body) }));
-  assert.equal((await patch({ id: "gibt-es-nicht", status: "done" })).status, 404);
+  assert.equal((await patch({ id: "gibt-es-nicht", status: "Erledigt" })).status, 404);
+  // Seit 27.09.2026 gibt es eine feste Statusliste - ein unbekannter Status ist ein Nutzerfehler (400).
+  assert.equal((await patch({ id: "gibt-es-nicht", status: "done" })).status, 400);
   assert.equal((await patch({ id: "gibt-es-nicht", business_id: "erfunden" })).status, 400);
 });

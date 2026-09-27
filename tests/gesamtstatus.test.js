@@ -44,6 +44,6 @@ test("Warnungen: rote Systeme, blockierte Aufgaben, gesperrte Zahlungen, fehlend
   const g = berechneGesamtstatus({ businesses: [w24({ bezahlteAusgabenSummeCent: undefined })], einnahmequellen: [],
     systems: [{ name: "Stripe", status: "🔴", note: "gesperrt" }], tasks: [{ status: "Blockiert", title: "Stripe" }], qualityGate: { productionReady: false }, ecKunden: [] });
   const t = g.warnungen.map(w => w.text).join("|");
-  assert.match(t, /Stripe: gesperrt/); assert.match(t, /Aufgabe blockiert: Stripe/); assert.match(t, /Zahlungen gesperrt/); assert.match(t, /keine bezahlten Ausgaben/);
+  assert.match(t, /Stripe: gesperrt/); assert.match(t, /Wartet auf dich: Stripe/); assert.match(t, /Zahlungen gesperrt/); assert.match(t, /keine bezahlten Ausgaben/);
   assert.equal(g.kosten.vollstaendig, false); assert.equal(g.system.ampel, "🔴");
 });

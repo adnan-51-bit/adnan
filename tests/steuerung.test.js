@@ -91,7 +91,7 @@ test("Tagesbericht: nur heutige, echte Werte; fehlende Tageswerte = nicht verfü
   assert.match(text["Welche Einnahmen wurden tatsächlich erfasst?"], /^10,00\s€/);
   assert.match(text["Welche Kosten sind tatsächlich entstanden?"], /^0,00\s€/);
   assert.match(text["Welche Leads wurden gefunden?"], /Tageswert nicht verfügbar \(gesamt 9\)/);
-  assert.deepEqual(b.benutzeraktionen.map(x => x.text), ["Stripe: STRIPE_WEBHOOK_SECRET in Vercel setzen", "Aufgabe blockiert: Stripe"]);
+  assert.deepEqual(b.benutzeraktionen.map(x => x.text), ["Stripe: STRIPE_WEBHOOK_SECRET in Vercel setzen", "Wartet auf dich: Stripe"]);
   assert.deepEqual(b.jetztZuTun.map(x => x.text), ["Doku · Mittel"]);
   assert.ok(b.heuteErledigt.some(x => x.text === "Fertig"));
   assert.equal(text["Was ist der nächste sinnvolle Schritt?"], "Stripe: STRIPE_WEBHOOK_SECRET in Vercel setzen");
