@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 
 const read = p => readFileSync(new URL("../" + p, import.meta.url), "utf8");
-const seiten = ["app/master/page.jsx", "app/master/control-center.jsx", "app/master/steuerung.jsx", "app/master/einnahmequellen.jsx", "app/master/aufgaben.jsx", "app/werknetz24/page.jsx", "app/e-commerce/page.jsx"];
+const seiten = ["app/master/page.jsx", "app/master/control-center.jsx", "app/master/steuerung.jsx", "app/master/einnahmequellen.jsx", "app/master/aufgaben.jsx", "app/master/content.jsx", "app/master/freigaben.jsx", "app/werknetz24/page.jsx", "app/e-commerce/page.jsx"];
 const tabsVon = src => {
   const ids = new Set();
   for (const m of src.matchAll(/\[\s*"([a-z0-9-]+)",\s*"[^"]*",\s*"[^"]*"\s*\]/g)) ids.add(m[1]);
@@ -59,7 +59,7 @@ test("'Alle Bereiche' enthaelt jeden geforderten Bereich mit Lesen/Schreiben/Ste
   for (const spalte of ["Lesen", "Schreiben", "Steuern", "Status", "Letzter Check", "Letzter Fehler", "Aktion"]) assert.ok(cc.includes(`<th>${spalte}</th>`), spalte);
   const m = read("app/master/page.jsx");
   assert.match(m, /\["bereiche","▦","Alle Bereiche"\]/);
-  assert.match(m, /\["Geschäftsbereiche",\["einnahmequellen","bereiche"/);
+  assert.match(m, /\["Geschäftsbereiche",\["einnahmequellen","content","bereiche"/);
 });
 
 test("Sprungziele in 'Alle Bereiche' zeigen nur auf existierende Tabs", () => {

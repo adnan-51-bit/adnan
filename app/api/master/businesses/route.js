@@ -7,6 +7,9 @@ import { fetchWerknetz24Kalender, createWerknetz24KalenderTermin, fetchWerknetz2
 import { AKTIONEN } from "../../../../lib/aktionen.js";
 import { fuehreAktionAus, listeLaeufe, ladeTagesbericht } from "../../../../lib/aktion-ausfuehren.js";
 import { eqReport } from "../../../../lib/eq-automation.js";
+import { listContent, createContent, updateContent, setzeContentStatus, contentVorbereiten, ideenVorschlaege, contentQuelle, contentBild, contentVeroeffentlichung, contentKennzahl, contentVerlauf, contentUebersicht } from "../../../../lib/content.js";
+import { listFreigaben, freigabeEntscheiden, werkzeugStatus, werkzeugAnfragen, syncPlanFreigaben } from "../../../../lib/freigaben.js";
+import { istWartend, istOffen } from "../../../../lib/aufgaben-status.js";
 import { listTasks } from "../../../../lib/master-tasks.js";
 
 export const runtime = "nodejs";
@@ -34,6 +37,18 @@ export async function GET(request){
       if (letzter && Date.now() - Date.parse(letzter.created_at) < 3600000) return NextResponse.json({ ok: false, error: "Letzter Lauf ist weniger als eine Stunde her" }, { status: 429 });
       const e = await fuehreAktionAus("wiederkehrende-pruefungen");
       return NextResponse.json({ ok: Boolean(e.ok), gelaufen: true });
+    }
+    // Content & Werbung + "Wartet auf Freigabe" (Teil 4A, 27.09.2026) - nur mit Secret.
+    if (params.get("content") || params.get("freigaben")) {
+      if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
+      if (params.get("freigaben")) {
+        await syncPlanFreigaben(await listEinnahmequellen());
+        const wartend = (await listTasks()).filter(t => istOffen(t.status) && istWartend(t.status));
+        return NextResponse.json({ ok: true, freigaben: await listFreigaben(), werkzeuge: await werkzeugStatus(), wartendeAufgaben: wartend });
+      }
+      const cid = params.get("id");
+      if (cid) return NextResponse.json({ ok: true, verlauf: await contentVerlauf(cid) });
+      return NextResponse.json({ ok: true, content: await listContent(), ...(await contentUebersicht()), werkzeuge: await werkzeugStatus() });
     }
     // Einnahmequellen-Report (Text) nur mit Secret.
     if (params.get("eqreport")) {
@@ -106,6 +121,27 @@ export async function POST(request){
     const body = await request.json();
     // Einnahmequellen (27.09.2026): anlegen / Inhalte aendern / Status (nur mit erfuellten Voraussetzungen).
     // Workflow (27.09.2026): Kunde zuordnen, Aufgabe erzeugen (zentrale Aufgabenliste), Start/Stop.
+    // Teil 4A: Content & Werbung, Freigaben, Werkzeug-Anfragen.
+    if (String(body?.action || "").startsWith("content-") || body?.action === "freigabe-entscheiden" || body?.action === "werkzeug-anfragen") {
+      try {
+        const a = body.action, id = body.id;
+        const ergebnis =
+          a === "content-anlegen" ? { content: await createContent(body.daten || {}) }
+          : a === "content-aendern" ? { content: await updateContent(id, body.daten || {}) }
+          : a === "content-status" ? { content: await setzeContentStatus(id, body.status) }
+          : a === "content-vorbereiten" ? await contentVorbereiten(id)
+          : a === "content-ideen" ? { ideen: ideenVorschlaege(body) }
+          : a === "content-quelle" ? { content: await contentQuelle(id, body.quelle) }
+          : a === "content-bild" ? { content: await contentBild(id, body.bild) }
+          : a === "content-veroeffentlichung" ? { content: await contentVeroeffentlichung(id, body.veroeffentlichung) }
+          : a === "content-kennzahl" ? { content: await contentKennzahl(id, body.kennzahl) }
+          : a === "freigabe-entscheiden" ? { freigabe: await freigabeEntscheiden(id, body.entscheidung, body.notiz) }
+          : a === "werkzeug-anfragen" ? { freigabe: await werkzeugAnfragen(id) }
+          : null;
+        if (!ergebnis) return NextResponse.json({ ok: false, error: "Unbekannte Aktion" }, { status: 400 });
+        return NextResponse.json({ ok: true, ...ergebnis }, { status: a === "content-anlegen" ? 201 : 200 });
+      } catch (error) { return NextResponse.json({ ok: false, error: error.message }, { status: /nicht gefunden/.test(error.message) ? 404 : 400 }); }
+    }
     // Teil 3A: kostenlose Automatisierungen (Entwuerfe, Leads, Aufgaben aus Schritten).
     if (["einnahmequelle-entwurf", "einnahmequelle-lead", "einnahmequelle-lead-status", "einnahmequelle-schritte"].includes(body?.action)) {
       try {
