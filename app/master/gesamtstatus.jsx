@@ -47,7 +47,7 @@ export function Gesamtstatus({ businesses, tasks, tasksLocked, systems, finance,
   </section>;
 }
 
-const GS_CSS = `.gs{margin:0 0 18px}.gsGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+const GS_CSS = `.gs{margin:0 0 18px}.gsGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .gsKachel{text-align:left;background:#fff;border:1px solid #eaecf0;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:4px;cursor:pointer;font:inherit;color:inherit;min-width:0}
 .gsKachel:hover:not(:disabled){border-color:#98a2b3}.gsKachel:disabled{cursor:default}.gsKachel span{font-size:12px;color:#667085;font-weight:700}
 .gsKachel strong{font-size:22px}.gsKachel em{font-style:normal;font-size:11px;color:#b54708;font-weight:700}.gsKachel small{font-size:11px;color:#667085;overflow-wrap:anywhere}
