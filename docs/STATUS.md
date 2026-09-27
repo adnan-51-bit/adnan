@@ -926,3 +926,9 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - **Nicht kostenlos behebbar.** Laut famulor.io/de/pricing: Prepaid 0,18 €/Min ohne Vertragsbindung, oder Plus 27 €/Monat (100 Minuten). Entscheidung liegt bei Adnan (zwei Aufgaben unter „Wartet auf mich“).
 - **Nicht geändert (nicht ursächlich):** max_duration 240 s und AEC-Warmup (Famulor empfiehlt ≥600 s bzw. 3 s) – als Empfehlung notiert.
 - **Sicherer Test (vorbereitet, startet erst nach Freigabe):** Adnan ruft von seinem Handy die Lisa-Nummer an, Testgespräch mit Name, Rückrufnummer, Anliegen und Terminwunsch, ca. 2 Minuten. Prüfen: Status „completed“ bei Famulor, Transkript und Variablen, Webhook-Eingang in Werknetz24, Kalendereintrag (danach löschen).
+
+## Update 27.09.2026 (48) — Planwechsel: kostenloser Verkaufsprozess statt Lisa-Reparatur
+
+- **Adnans Entscheidung:** Werknetz24, Lisa und Famulor bleiben pausiert; keine Famulor-Minuten, kein Testanruf, keine Zahlungen. Die Lisa-Aufgaben 87 und 88 sind gestoppt (mit Begründung, nicht gelöscht).
+- **Ziel:** ein kostenloser Verkaufsprozess (finden → Bedarf → Lead → Kontakt vorbereiten → Freigabe → Kontakt → Interesse → Angebot → Verkauf nach Freigabe). Er läuft bereits als Google-Profil-Pilot.
+- **Regionen:** Die tägliche automatische Suche bleibt bei Monheim (monheimer-lokalhelden.de). atalanda.com erlaubt den Abruf zwar, führt aber keine Betriebe aus Düsseldorf, Leverkusen oder Langenfeld (0 von 811 Einträgen, geprüft 27.09.2026). Diese Städte werden im Browser recherchiert (öffentliche Google-Profile, kostenlos).
