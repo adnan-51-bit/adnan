@@ -703,3 +703,20 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - **Befund in eigener Sache:** Ein Commit baute nicht (Zeilenumbruch in einem Template). Vercel hat ihn nicht ausgeliefert; direkt danach behoben. Commits jetzt nur noch nach erfolgreichem Build.
 - **Tests:** 217/217.
 - **Live:** Optimierung, Zahlungsnachweis-Sperre, Login-Schutz; Übersicht, Pilot, Wartet auf mich, Heute am Desktop und Handy ohne Überlauf und ohne JS-Fehler. Quality Gate technisch 18/18.
+
+## Update 27.09.2026 (32) — Master-Zentrale fertiggestellt: Erste-Einnahme-Modus, Dashboard, Ampel, Geld-Schutz
+
+- **Erste-Einnahme-Modus** (`lib/erste-einnahme.js`): „Was fehlt bis zur ersten echten Einnahme?“ als 13-Schritte-Liste aus echten Daten. Sichtbar auf Überblick, Heute, Pilot und Einnahmequellen sowie im Tagesbericht. Der nächste offene Schritt ist die „Wichtigste nächste Aktion“.
+- **Einnahmequellen-Dashboard** je Quelle:
+  - Kennzahlen: Status, Aufwand, geplante Kosten, Leads, Interessenten, Kunden, Einnahmen, Kosten, Gewinn, letzte Aktivität, nächste Aufgabe.
+  - **Automation Engine:** Intervall (täglich 07:00, bei Pause ausgesetzt), Prüfung, Fehlerstatus, Ergebnis, Optimierungsvorschlag.
+- **Ampel GRÜN/GELB/ROT** im Aktionskatalog:
+  - 🟢 läuft automatisch.
+  - 🟡 deine Entscheidung (Wartet auf mich): Kontakt freigeben, Preis, Pausieren, Kostenvorschlag, Veröffentlichung.
+  - 🔴 blockiert: Geld ausgeben, Dienste/Abos buchen, Werbung bezahlen, Zahlungen/Bankdaten, Verträge, Famulor-Testanruf, Shop-Veröffentlichung. Automatische Web-Recherche durch den Server ist OFFEN (ohne kostenpflichtige Such-Schnittstelle nicht möglich).
+- **Geld-Schutz:** ROT-Aktionen werden auch mit „Freigabe“ nie ausgeführt (403). Abgelehnte Versuche stehen im Tagesbericht als „blockiert“, nicht als Fehler.
+- **Tagesbericht:** neue Zeilen „Was wurde erledigt?“, „Neue Möglichkeiten“, „Welche Tests laufen?“, „Was braucht meine Freigabe?“, „Was fehlt bis zur ersten echten Einnahme?“, „Wichtigste nächste Aktion“.
+- **Werknetz24 → PAUSIERT** (nur der Status; Daten, Repository, Obsidian und Funktionen bleiben unverändert). E-Commerce war schon pausiert. Systeme pausierter Bereiche (Famulor, Easybell, Stripe, PayPal, Shopify) erzeugen keine Warnungen und keine Benutzeraktionen mehr.
+- **Neue Idee:** Amazon KDP (Kategorie D, Status IDEE, 0 € Start), mit 3 Quellen (KDP-Hilfe: Tantiemen 35 %/70 %, Steuerprofil vor Veröffentlichung Pflicht, Nutzung kostenlos). Gewerbe-/Rechtsprüfung = ja, Nachfrage „zu prüfen“.
+- **Tests:** 222/222. Build ok.
+- **Live:** Überblick, Heute, Pilot, Einnahmequellen und Automatisierungen am Desktop und am Handy, ohne Überlauf und ohne JS-Fehler. Die 503 von `/api/master/quality-gate` ist gewollt (Zahlungen gesperrt, solange E-Commerce pausiert ist).
