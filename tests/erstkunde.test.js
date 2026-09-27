@@ -37,3 +37,14 @@ test("Gesprächsunterlage: Beobachtungen ohne interne Arbeitshinweise (Bedarf, B
   const s = n.replace(/WICHTIG: /g, "").split(/(?<=[.!?])\s+(?=[A-ZÄÖÜ„])/).filter(x => x.trim() && !INTERN.test(x)).join(" ");
   assert.match(s, /Als Inhaber eintragen/); assert.doesNotMatch(s, /Haargenau|Besuchsrunde|Bedarf|WICHTIG/);
 });
+
+test("Einmal-Paket: Bausteine nur aus festgestellten Lücken, Preis 'noch festzulegen', kein Zugang/Passwort", () => {
+  const a = { datum: "2026-09-27", punkte: 30, notiz: "Google zeigt „Als Inhaber eintragen“ – das Profil ist NICHT vom Inhaber beansprucht.", werte: { kategorie: "ja", kontakt: "teilweise", beschreibung: "nein", fotos: "nein", bewertungen_antworten: "nein", leistungen: "ja" } };
+  const b = G.einmalBausteine(a);
+  assert.equal(b[0], G.EINMAL_PAKET.bausteine.unbeansprucht);
+  assert.ok(b.includes(G.EINMAL_PAKET.bausteine.kontakt) && !b.includes(G.EINMAL_PAKET.bausteine.leistungen), "nur echte Lücken");
+  assert.deepEqual(G.einmalBausteine({ werte: { kategorie: "nein", kontakt: "nein" } })[0], G.EINMAL_PAKET.bausteine.keinProfil);
+  const t = G.einmalAngebotText({ firma: "Test" }, a);
+  assert.match(t, /Preis: noch festzulegen/); assert.match(t, /kein Passwort und keinen Zugang/); assert.doesNotMatch(t, /d+s?(€|Euro)/, "kein erfundener Preis");
+  assert.deepEqual(G.einmalBausteine(null), []);
+});

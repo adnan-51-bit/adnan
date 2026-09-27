@@ -9,7 +9,7 @@ import { fuehreAktionAus, listeLaeufe, ladeTagesbericht, ladeOptimierung } from 
 import { ersteEinnahmeCheckliste, eqDashboard } from "../../../../lib/erste-einnahme.js";
 import { emailZentrale, leadZeile, contentZentrale } from "../../../../lib/zentralen.js";
 import { umsatzPipeline } from "../../../../lib/umsatz-pipeline.js";
-import { naechstePilotAktion } from "../../../../lib/google-profil.js";
+import { naechstePilotAktion, einmalAngebotText } from "../../../../lib/google-profil.js";
 import { anfragenDaten, anfrageErfassen, anfrageAbschliessen, anfrageArchivieren, angebotsentwurfSpeichern } from "../../../../lib/anfragen.js";
 import { eqReport } from "../../../../lib/eq-automation.js";
 import { listContent, createContent, updateContent, setzeContentStatus, contentVorbereiten, ideenVorschlaege, contentQuelle, contentBild, contentVeroeffentlichung, contentKennzahl, contentVerlauf, contentUebersicht } from "../../../../lib/content.js";
@@ -56,7 +56,7 @@ export async function GET(request){
     if (params.get("pilot")) {
       if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
       let d; try { d = await pilotDaten(); } catch (error) { return NextResponse.json({ ok: false, error: error.message }, { status: /fehlt/.test(error.message) ? 404 : 500 }); }
-      return NextResponse.json({ ok: true, ...d, leads: d.leads.map(l => ({ ...l, bericht: l.profil_analyse ? berichtText(l, l.profil_analyse) : null, angebotVorlage: angebotText(l, d.eq.pilot?.monatspreis_cent) })) });
+      return NextResponse.json({ ok: true, ...d, leads: d.leads.map(l => ({ ...l, bericht: l.profil_analyse ? berichtText(l, l.profil_analyse) : null, einmalAngebot: l.profil_analyse ? einmalAngebotText(l, l.profil_analyse) : null, angebotVorlage: angebotText(l, d.eq.pilot?.monatspreis_cent) })) });
     }
     // E-Mail & Leads + Einnahmen je Einnahmequelle + Einnahme-Ablauf (Teil 4B, 27.09.2026) - nur mit Secret.
     if (params.get("leads")) {
