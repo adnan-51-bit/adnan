@@ -617,3 +617,30 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Desktop + Handy (7 Seiten)
 - **Befunde behoben:** Meldung kam vor dem Neuladen (alter Stand sichtbar); Filter-Auswahl auf dem Handy 9 px zu breit.
 - **Stand echte Daten:** 0 Leads, 0 Buchungen, alle Einnahmequellen 0 € (nichts erfunden).
+
+## Update 27.09.2026 (28) — Teil 5: Pilot „Pflege Google-Unternehmensprofil“ startbereit
+- **Seite `?tab=pilot`** („Pilot: Google-Profil“, erste Seite unter Geschäftsbereiche): Quality Gate, Wartet auf mich, So kommst du zum ersten Kunden, Betriebe, Einnahmen, Aufgaben, Dokumentation & Quellen.
+- **Aufgebaut auf Bestehendem:** Einnahmequelle C, zentrale Lead-Liste, Aufgaben, Angebote, Finanzen, Freigaben, Tagesbericht, täglicher Cron. Migration `20260927300000_pilot_google_profil.sql` (`master_leads.profil_analyse`, `master_leads.vertrag`, `master_einnahmequellen.pilot`, Freigabe-Art ENTSCHEIDUNG).
+- **Profil-Analyse** (`lib/google-profil.js`): 10 Punkte, von Hand am öffentlichen Profil (keine kostenpflichtige API).
+  - Link und Datum sind Pflicht, mindestens 5 Punkte müssen geprüft sein.
+  - Ergebnis: Punkte 0–100 (eigene Checkliste, keine Google-Bewertung), Verbesserungsliste und Profil-Check-Bericht ohne Platzierungsversprechen.
+  - Automatische Aufgaben: Interessent → „Bericht persönlich zeigen“ (keine Werbe-Mail); Kunde → eine Aufgabe je Verbesserung.
+- **Angebot-Vorlage** mit Monatspreis. Der Monatspreis ist Adnans Entscheidung (Wartet auf mich); nach dem Festlegen schließt sich die Entscheidung automatisch.
+- **Monatliche Leistung** (nur für Kunden):
+  - Der Vertrag erzeugt beim Start und dann im **täglichen Monatslauf** (Aktion `pilot-monatslauf`, Teil der wiederkehrenden Prüfungen) einmal pro Monat 5 Monatsaufgaben und eine **offene** Monatsrechnung. Idempotent; zählt erst nach „Geld ist da“ als Einnahme.
+  - Kundenzugang (Verwalter-Einladung über Google, kein Passwort) → Aufgabe „Wartet auf Benutzer“.
+- **Quality Gate** (`pilotQualityGate`), 12 technische Punkte:
+  - Einnahmequelle, ≥ 3 Quellen, Analyse, Leads/UWG, Angebot, Monatsleistung, Einnahmen-Tracking
+  - 0 € Kosten und kein kostenpflichtiges Werkzeug aktiv
+  - Aufgaben, Cron < 26 h, Tagesbericht < 26 h, Erreichbarkeit
+  - Dazu 2 Benutzer-Punkte: Monatspreis und Gewerbe/Steuer (Freigabe setzt `pilot.gewerbe_geklaert`).
+- Seite „Wartet auf Freigabe“ heißt jetzt **„Wartet auf mich“**. Der Tagesbericht enthält eine Pilot-Zeile.
+- **Tests:** 209/209.
+- **Live** (15 Prüfungen, Test-Betrieb im echten Piloten, danach Pilot exakt auf den vorherigen Stand zurückgesetzt):
+  - Quality Gate technisch 12/12
+  - Betrieb erfassen, Analyse, Bericht, Aufgabe
+  - Kunde, monatliche Leistung, offene Monatsrechnung, 5 Monatsaufgaben, Kundenzugang wartet
+  - Monatslauf idempotent
+  - Wartet auf mich
+  - Desktop + Handy (8 Seiten)
+- **Kosten:** 0 €, kein kostenpflichtiges Werkzeug aktiv.
