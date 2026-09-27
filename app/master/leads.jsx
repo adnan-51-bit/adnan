@@ -26,7 +26,9 @@ export function EmailLeads() {
     const r = await adminFetch("/api/master/businesses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) { setMeldung("❌ " + (j.error || "Fehler " + r.status)); return null; }
-    setMeldung("✅ " + erfolg + (j.kategorie ? ` – erkannt: ${ANTWORT_LABEL[j.kategorie]}` : "")); laden();
+    // Erst neu laden, dann melden - sonst zeigt die Seite kurz den alten Stand.
+    await laden();
+    setMeldung("✅ " + erfolg + (j.kategorie ? ` – erkannt: ${ANTWORT_LABEL[j.kategorie]}` : ""));
     if (body.id && offen[body.id]) ladeVerlauf(body.id);
     return j;
   }
@@ -154,7 +156,7 @@ const LD_CSS = `.ldKpis{display:grid;grid-template-columns:repeat(auto-fit,minma
 .ldEq{border-top:1px solid #f2f4f7;padding:10px 0;display:flex;flex-direction:column;gap:6px}.ldEqKopf{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.ldEqKopf small{color:#667085}
 .ldAblauf{display:flex;flex-wrap:wrap;gap:4px;list-style:none;padding:0;margin:0}.ldAblauf li{font-size:11px;padding:2px 7px;border-radius:999px;background:#f2f4f7;color:#98a2b3}.ldAblauf li.fertig{background:#ecfdf3;color:#067647}.ldAblauf li.jetzt{background:#101828;color:#fff;font-weight:700}
 .ldFin{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;align-items:center}.ldTab{width:100%;border-collapse:collapse;font-size:12px;display:block;overflow-x:auto}.ldTab th,.ldTab td{padding:5px 6px;border-top:1px solid #f2f4f7;text-align:left;vertical-align:top}
-.ldFilter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}.ldFilter select{padding:7px;border:1px solid #d0d5dd;border-radius:8px}
+.ldFilter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}.ldFilter select{padding:7px;border:1px solid #d0d5dd;border-radius:8px;flex:1 1 150px;min-width:0;max-width:100%}.ldAktionen select{max-width:100%}
 .ldKarte{border:1px solid #eaecf0;border-radius:12px;padding:12px;margin-top:10px;display:flex;flex-direction:column;gap:6px;min-width:0}.ldKarte.antwort{border-color:#fedf89;background:#fffcf5}
 .ldKopf{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.ldKopf small{display:block;color:#667085;font-size:12px;overflow-wrap:anywhere}.ldSt{font-size:12px;padding:3px 8px;border-radius:999px;background:#f2f4f7;height:fit-content}.ldSt.sKUNDE{background:#ecfdf3;color:#067647}.ldSt.sGESPERRT,.ldSt.sVERLOREN{color:#98a2b3}.ldSt.sANGEBOT,.ldSt.sINTERESSENT{background:#eff8ff;color:#175cd3}
 .ldKontakt{margin:0;font-size:12px}.ldKontakt.ja{color:#067647}.ldKontakt.nein{color:#b42318}.ldNaechst,.ldZeile{margin:0;font-size:13px}
