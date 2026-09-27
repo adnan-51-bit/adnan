@@ -7,7 +7,12 @@ import { useEffect, useState } from "react";
 import { adminFetch, anmeldeUrl } from "../../../lib/admin-fetch.js";
 import { KRITERIEN, ANTWORTEN, MONATS_AUFGABEN } from "../../../lib/google-profil.js";
 
-const ZEICHEN = { ja: "✓", teilweise: "◐", nein: "✗", unbekannt: "–" };
+// Fuer das Blatt beim Betrieb: nur Beobachtungen am Profil - interne Arbeitshinweise (Bedarf, Besuchsrunde,
+// andere Betriebe, Vermutungen) bleiben in der Zentrale und werden nicht gedruckt.
+const INTERN = /(Bedarf|Besuchsrunde|Vor einem Kontakt|vermutlich|Zusammenhang nicht geprüft|Friseur Haargenau|Verzeichnis)/i;
+const beobachtungen = notiz => String(notiz || "").replace(/WICHTIG: /g, "").split(/(?<=[.!?])\s+(?=[A-ZÄÖÜ„])/).filter(s => s.trim() && !INTERN.test(s)).join(" ");
+
+const ZEICHEN ={ ja: "✓", teilweise: "◐", nein: "✗", unbekannt: "–" };
 
 export default function ProfilCheck() {
   const [d, setD] = useState(null);
@@ -30,7 +35,7 @@ export default function ProfilCheck() {
     <article className="pcBlatt">
       <header><small>KOSTENLOSER PROFIL-CHECK · unverbindlich</small><h1>{l.firma || l.name}</h1><p>{[l.branche, l.ort].filter(Boolean).join(" · ")}</p></header>
       <section className="pcPunkte"><b>{a.punkte}</b><span>von 100 Punkten<br /><small>eigene Checkliste, keine Bewertung durch Google · Stand {new Date(a.datum).toLocaleDateString("de-DE")}</small></span></section>
-      {a.notiz && <><h2>Beobachtungen am öffentlichen Profil</h2><p className="pcKlein pcNotiz">{a.notiz.replace(/^WICHTIG: /, "").replace(/ WICHTIG: /g, " ")}</p></>}
+      {beobachtungen(a.notiz) && <><h2>Beobachtungen am öffentlichen Profil</h2><p className="pcKlein pcNotiz">{beobachtungen(a.notiz)}</p></>}
       <h2>Das Wichtigste zuerst</h2>
       {wichtig.length ? <ol>{wichtig.map(v => <li key={v.id}>{v.text}</li>)}</ol> : <p>Keine dringenden Punkte gefunden.</p>}
       <h2>Alle geprüften Punkte</h2>

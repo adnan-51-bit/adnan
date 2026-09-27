@@ -28,3 +28,12 @@ test("Gesprächsunterlage: nur mit Anmeldung, nur aus gespeicherter Analyse, kei
   assert.doesNotMatch(src, /monatspreis|€/i, "kein Preis auf der Unterlage");
   assert.match(src, /pcLinie/); assert.match(src, /kein Passwort/);
 });
+
+test("Gesprächsunterlage: Beobachtungen ohne interne Arbeitshinweise (Bedarf, Besuchsrunde, andere Betriebe)", () => {
+  const src = readFileSync(new URL("../app/master/profil-check/page.jsx", import.meta.url), "utf8");
+  const m = src.match(/const INTERN = (\/.*\/i);/); assert.ok(m);
+  const INTERN = eval(m[1]);
+  const n = "Profil „X“ (Tierfriseur), 4,9 Sterne. WICHTIG: Google zeigt „Als Inhaber eintragen“. Liegt ca. 60 m von Friseur Haargenau entfernt (gleiche Besuchsrunde). Profil gut gepflegt – geringer Bedarf.";
+  const s = n.replace(/WICHTIG: /g, "").split(/(?<=[.!?])\s+(?=[A-ZÄÖÜ„])/).filter(x => x.trim() && !INTERN.test(x)).join(" ");
+  assert.match(s, /Als Inhaber eintragen/); assert.doesNotMatch(s, /Haargenau|Besuchsrunde|Bedarf|WICHTIG/);
+});
