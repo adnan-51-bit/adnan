@@ -883,3 +883,18 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Adresse widersprüchlich: Jörg Schneider (Google Langenfeld, Verzeichnis Monheim)
   - Branche im Verzeichnis falsch: Elektro Mobile ist laut Google ein Handyshop (korrigiert)
 - **Kontakt:** keiner aufgenommen, nichts verändert, nichts beansprucht. Kosten 0 €.
+
+## Update 27.09.2026 (45) — Prioritäten + 5 Kontakte vorbereitet
+
+- **Alle 30 Leads bleiben erhalten**; nichts wurde abgelehnt oder gelöscht.
+  - Hohe Priorität (7): konkrete Lücken
+  - Mittlere Priorität (16): mögliche Verbesserungen, inkl. „kein Google-Profil“
+  - Niedrige Priorität (7): wenig offensichtlicher Bedarf, wird später bearbeitet
+- **5 Kontakte vorbereitet** (öffentliche Adresse beim Lead gespeichert):
+  - Friseur Haargenau (Turmstraße 1A)
+  - Für alle Felle (Turmstraße 14)
+  - Back Bakery (Ernst-Reuter-Platz 23)
+  - KFZ Akallich (Opladener Str. 191)
+  - Monheimer Blumenmarkt (Niederstraße 15 b)
+- **Gesprächsunterlage:** neuer Abschnitt „Beobachtungen am öffentlichen Profil“ (z. B. nicht beansprucht); interne Arbeitshinweise werden nicht gedruckt.
+- **Tests:** 251/251, Build ok, live Desktop + Handy ohne Fehler. Kein Kontakt aufgenommen, 0 €.
