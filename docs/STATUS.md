@@ -474,3 +474,47 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - 401 ohne Anmeldung
   - Browser Desktop + Handy ohne Überlauf und ohne JS-Fehler
 - Echte Einträge unverändert.
+
+## Update 27.09.2026 (24) — Einnahmequellen als Arbeitsbereich (Katalog, echte Aufgaben, Tageszentrale)
+- **Katalog A–F**:
+  - A Online-Anfragen bearbeiten
+  - B Lead-Recherche / B2B-Daten
+  - C Lokale Unternehmen
+  - D Content-/Produktrecherche
+  - E Affiliate
+  - F Werknetz24: nur Sprung in den eigenen Bereich, keine Daten
+- Ansicht umschaltbar: Katalog oder Status.
+- **Neue Felder** (Migration `20260927220000_einnahmequellen_katalog.sql`): laufende Kosten, Fähigkeiten, Erlösart, Nachfrage (unbekannt/zu prüfen/belegt – „belegt“ nur mit Quelle), rechtliche bzw. Gewerbe-/Steuerprüfung (ja/nein/offen), Kriterien für die Arbeitspriorität, Automatisierungs-/Skalierungspotenzial, Automatisierungsstufe (manuell → teilweise → weitgehend), Automatisierungsplan, Quellenliste. Leere Angaben erscheinen als „noch zu prüfen“.
+- **Arbeitspriorität P1–P4** (`arbeitsPrioritaet`, intern, keine Erfolgsaussage):
+  - P1 = 0 € + schnell testbar + direkte Kunden
+  - P2 = 0 € + wiederholbar
+  - P3 = automatisierbar + skalierbar
+  - P4 = kostenpflichtig, komplex oder Startkosten unbekannt
+- **Quellen**: Quelle, URL, Datum und belegte Aussage sind Pflicht (`pruefeQuelle`).
+- **Automatisierungsplan**: nur vollständige Vorschläge (was, Daten, Tool, Kosten, Risiko, Freigabe). Sobald Kosten entstehen, ist die Freigabe Pflicht. Es wird nie etwas aktiviert.
+- **Aufgaben** (`master_tasks_v2`):
+  - neue Felder: Beschreibung, nächste Aktion, Quelle, Ergebnis
+  - Status nur noch Offen / In Arbeit / Wartet auf Benutzer / Erledigt / Gestoppt; „Blockiert“ per Migration zu „Wartet auf Benutzer“ umbenannt
+  - neue Aufgabenseite mit Filtern: Status, Bereich, Einnahmequelle, Priorität
+- **Tageszentrale** (`?tab=heute`): wichtigste Aufgabe, nächste Benutzeraktion, offene und wartende Aufgaben, aktive Einnahmequellen, erkannte Probleme, heute erledigt, letzte Aktivitäten, Knopf „Tagesbericht erstellen“ (echte Aktion im Log).
+- **Daten eingetragen** (recherchiert, 15 Quellen mit Datum 27.09.2026: GewO § 14, DSGVO Art. 14/28, UWG § 7, UrhG § 51, Amazon PartnerNet, Vergleichsanbieter Google-Profil):
+  - A Anfragen-Service
+  - B Lead-Recherche (P4, rechtlich komplex)
+  - C Google-Profil-Pflege
+  - D Recherchepakete
+  - E Affiliate (nur Vorbereitung, keine Partnerprogramme/Links)
+  - Sortiert24 (pausiert)
+  - Überall Nachfrage „zu prüfen“ und mögliche Einnahmen „noch zu prüfen“.
+  - 5 echte nächste Aufgaben angelegt.
+  - E-Commerce-Aufgaben (Stripe, Lieferanten-Connector) auf „Gestoppt“ gesetzt, weil E-Commerce pausiert ist.
+- **Tests**: 179/179.
+- **Live geprüft** (18 Prüfungen, Testeintrag danach restlos gelöscht):
+  - Login-Schutz
+  - Katalog A–F
+  - P1-Anzeige
+  - Quelle und Vorschlag über die Oberfläche
+  - Datenpersistenz
+  - Kostenschutz
+  - Aufgabe mit allen Feldern, Filter, Statuswechsel
+  - Tageszentrale und Tagesbericht
+  - Desktop + Handy ohne Überlauf und ohne JS-Fehler
