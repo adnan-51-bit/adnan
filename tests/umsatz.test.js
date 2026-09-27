@@ -143,3 +143,11 @@ test("Recherche speichert öffentliche Geschäftsnummer und Adresse aus den Verz
   const d = R.parseDetail(html);
   assert.equal(d.telefon, "+49 2173 12345"); assert.equal(d.adresse, "Hauptstr. 1, 40789 Monheim am Rhein");
 });
+
+test("Bewertung: als 'passt nur eingeschränkt' markierte Leads bekommen beim Angebot 0; Kunst wird bei der Suche ausgeschlossen", async () => {
+  const { bewerteLead } = await import("../lib/lead-bewertung.js");
+  const b = bewerteLead({ ort: "Monheim am Rhein", telefon: "1", notiz: "Adresse laut Verzeichnis: x", profil_analyse: { punkte: 0, werte: { kategorie: "nein", kontakt: "nein" }, notiz: "Künstlerin – passt nur eingeschränkt zum Angebot." } });
+  assert.equal(b.kriterien.find(k => k.id === "angebot").punkte, 0);
+  assert.equal(R.passt({ firma: "Heidis Malereien", branche: "Kunst & Kultur" }), false);
+  assert.equal(R.passt({ firma: "Maler Müller", branche: "Malerbetrieb" }), true);
+});
