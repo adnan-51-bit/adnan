@@ -177,6 +177,7 @@ test("Potenziellen Kunden erfassen: Name/Ort/Branche/Quelle Pflicht, keine Doppe
   assert.equal(d.leads[0].stufe, "LEAD"); assert.equal(d.leads[0].prioritaet.stufe, "OFFEN");
   assert.match(d.naechsteAktion.text, /Google-Profil von „Testbetrieb“ öffnen/);
   assert.match((await P.analyseSpeichern(l.id, ANALYSE)).bericht, /PROFIL-CHECK: Testbetrieb \(Friseur, Monheim am Rhein\)/);
+  assert.equal((await tasks.listTasks()).find(t => t.quelle === "lead:" + l.id).status, "Erledigt", "Analyse-Aufgabe schließt sich selbst");
   assert.ok(q);
 });
 
