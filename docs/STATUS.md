@@ -957,3 +957,13 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Heidis Malereien (kein Profil, passt eingeschränkt)
 - **Stand:** 35 Leads, alle analysiert, 28 mit Bedarf.
 - **Tests:** 255/255, Build ok, live Desktop + Handy ohne Fehler. Kosten 0 €, Einnahmen 0 €.
+
+## Update 27.09.2026 (51) — Sales-Automat: Brief mit Antwort-Link
+
+- **Warum:** Werbe-E-Mails ohne Einwilligung und Werbeanrufe sind unzulässig (UWG § 7), deshalb bleibt der erste Kontakt bei Adnan. Ein Brief, den Adnan selbst einwirft, ist zulässig und kostet 0 €. Alles danach läuft automatisch.
+- **Neu:** lib/antwort-link.js, app/r/[token] (öffentlich, noindex), Briefmodus in /master/profil-check (`?brief=1&ids=…`), Knöpfe im Pilot.
+- **Ablauf:**
+  - Kontakt-Freigabe → Brief drucken → Aufgaben „Brief einwerfen“ (+3) und „Keine Antwort“ (+14).
+  - Antwort „Ja“ → Einwilligung dokumentiert, Interessent, Rückruf-Aufgabe, Angebotsentwurf.
+  - Antwort „Nein“ → Gesperrt.
+- **Tests:** 260/260, Build ok, live geprüft. Kosten 0 €.
