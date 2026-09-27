@@ -403,3 +403,12 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - echte Produktfotos (Kosten Muster/Abo)
   - bei TikTok zusätzlich regelmäßige Videos
 - **Wiederaufnahme:** `docs/SORTIERT24.md` (Start-Checkliste) und `docs/SORTIERT24-PRODUKTQUELLEN.md`.
+
+## Update 27.09.2026 (20) — Neuer Bereich „Einnahmequellen“
+- Master-Zentrale → Reiter **Einnahmequellen** (auch als Kachel unter „Alle Bereiche“). Eigene Tabelle `master_einnahmequellen` (RLS, nur service_role) – getrennt von Werknetz24 und E-Commerce.
+- Felder: Einnahmequelle, Kategorie, Zielgruppe, Angebot, möglicher Preis (mit Quelle), Startkosten, Werkzeuge, Aufwand, Recht, Markt, Nachfrage, Konkurrenz, Kosten, kostenloser Test, Teststatus, Quellen, erste Kunden, Einnahmen, Kosten, Gewinn (berechnet), Status IDEE/PRÜFUNG/TEST/ERSTER KUNDE/AKTIV/PAUSE.
+- Regeln (serverseitig, `lib/einnahmequellen-regeln.js`): **TEST** erst, wenn alle 7 Prüfschritte (Markt, Nachfrage, Konkurrenz, Kosten, Recht, kostenloser Test, Quellen) ausgefüllt sind; **ERSTER KUNDE** nur mit ≥ 1 echtem Kunden; **AKTIV** nur mit echten Einnahmen > 0. Bearbeiten ändert nie den Status.
+- API (keine neue Function): `GET /api/master/businesses?einnahmequellen=1`, `POST` actions `einnahmequelle-anlegen|aendern|status` – nur mit Anmeldung (401 ohne).
+- Übersicht: Aktive / Im kostenlosen Test / Ideen zur Prüfung / Pause / Kosten / Einnahmen / Gewinn.
+- Erste Einträge (live, mit Quellen, nichts geschätzt): Affiliate LKW-Kanal (PRÜFUNG), Pflege Google-Unternehmensprofil (IDEE), Sortiert24 (PAUSE, Link /e-commerce).
+- Tests: `tests/einnahmequellen.test.js` (6), gesamt 153/153 grün; Build ok; live geprüft Desktop + Handy (kein Überlauf, keine neuen JS-Fehler).
