@@ -20,12 +20,18 @@ import { strukturiere, ablaufStand, AUTOMATISIERUNGSGRAD, kontaktErlaubt } from 
 import { listFinance, eqFinanzen } from "../../../../lib/master-finance.js";
 import { pilotDaten, analyseSpeichern, preisFestlegen, vertragStarten, vertragBeenden, berichtText, angebotText, potenziellenKundenAnlegen, googleZugangBestaetigen, aenderungProtokollieren, zugriffEntfernt, rechnungVorbereiten } from "../../../../lib/pilot.js";
 import { listTasks } from "../../../../lib/master-tasks.js";
+import { antwortSeite, briefAntwortErfassen, briefVorbereiten } from "../../../../lib/antwort-link.js";
 
 export const runtime = "nodejs";
 
 export async function GET(request){
   try{
     const params = new URL(request.url).searchParams;
+    // Antwort-Link aus dem Brief (27.09.2026): oeffentlich, nur der eigene Profil-Check des Betriebs.
+    if (params.get("antwort")) {
+      const seite = await antwortSeite(params.get("antwort"));
+      return seite ? NextResponse.json({ ok: true, seite }) : NextResponse.json({ ok: false, error: "Link nicht gefunden" }, { status: 404 });
+    }
     // Full-System-Audit 26.09.2026 (Fund 🔴): die Werknetz24-GET-Zweige waren ohne Anmeldung
     // abrufbar - jeder mit der URL bekam echte Werknetz24-Aufgaben, Rechnungen, Incidents und
     // Kalendertermine; das WERKNETZ24_STATUS_SECRET war durch diesen offenen Proxy wirkungslos.
@@ -168,6 +174,11 @@ export async function GET(request){
 // gegenueber Werknetz24 verwendet - zwei unabhaengige Schutzschichten (wer die Master-Zentrale
 // bedienen darf, und ob Werknetz24 den Schreibzugriff ueberhaupt zulaesst).
 export async function POST(request){
+  // Antwort des Betriebs ueber den Brief-Link: oeffentlich (ohne Anmeldung), nur fuer einen gueltigen Link.
+  if (new URL(request.url).searchParams.get("antwort")) {
+    try { const body = await request.json(); return NextResponse.json(await briefAntwortErfassen(new URL(request.url).searchParams.get("antwort"), body || {})); }
+    catch (error) { return NextResponse.json({ ok: false, error: error.message }, { status: /nicht gefunden/.test(error.message) ? 404 : 400 }); }
+  }
   const authError = await checkAdminSecret(request);
   if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
   try{
@@ -198,6 +209,7 @@ export async function POST(request){
           : a === "pilot-aenderung" ? { lead: await aenderungProtokollieren(body.id, body.aenderung || {}) }
           : a === "pilot-zugriff-entfernt" ? { lead: await zugriffEntfernt(body.id, body.zugang || {}) }
           : a === "pilot-rechnung" ? { text: await rechnungVorbereiten(body.id) }
+          : a === "pilot-brief" ? await briefVorbereiten(body.id)
           : null;
         if (!e) return NextResponse.json({ ok: false, error: "Unbekannte Aktion" }, { status: 400 });
         return NextResponse.json({ ok: true, ...e });

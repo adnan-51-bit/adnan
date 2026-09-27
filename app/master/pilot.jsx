@@ -69,6 +69,7 @@ export function PilotGoogleProfil() {
 
     <section className="panel"><h3>Potenzielle Kunden ({d?.leads?.length ?? "…"})</h3>
       <p className="muted">Nur öffentlich belegte Angaben mit Quelle. Keine Werbe-Mails – Kontakt persönlich. Nichts ist verbindlich, bevor du es entscheidest.</p>
+      {(() => { const briefe = (d?.leads || []).filter(l => l.stufe === "KONTAKT_FREIGEGEBEN" && !(l.pilot_crm?.antworten || []).length); return briefe.length > 0 && <p className="plZeile"><a className="editMini plJa" href={"/master/profil-check?brief=1&ids=" + briefe.map(l => encodeURIComponent(l.id)).join(",")} target="_blank" rel="noreferrer">✉ Briefe mit Antwort-Link drucken ({briefe.length})</a> <span className="muted">Nur freigegebene Betriebe. Ausdrucken, unterschreiben, selbst einwerfen – die Antwort (Interesse oder „bitte nicht mehr kontaktieren“) kommt automatisch hierher.</span></p>; })()}
       {d && !d.leads.length && <p className="muted">Noch kein Betrieb erfasst.</p>}
       {(d?.leads || []).map(l => { const q = String(l.quelle || "").match(/https?:\/\/\S+/)?.[0]; const i = (d.stufen || []).findIndex(([k]) => k === l.stufe); return <article key={l.id} className={"plBetrieb" + (d.naechsteAktion?.lead_id === l.id ? " plDran" : "")}>
         <div className="plKopf"><div><strong>{l.firma || l.name}</strong><small>{[l.branche, l.ort].filter(Boolean).join(" · ") || "—"} · {LEAD_LABEL[l.status]} · erfasst {tag(l.erstellt_am)}</small>
@@ -80,6 +81,7 @@ export function PilotGoogleProfil() {
         {l.bewertung && <p className="plZeile">Bewertung <b>{l.bewertung.summe}/10</b>: {l.bewertung.kriterien.map(k => `${k.name} ${k.punkte}/2 (${k.begruendung})`).join(" · ")}</p>}
         <p className="plZeile">➜ Nächste Aufgabe: <b>{naechsteAufgabe(l)}</b></p>
         {l.pilot_crm?.zustimmung && <p className="plZeile">Zustimmung: {l.pilot_crm.zustimmung.form} am {tag(l.pilot_crm.zustimmung.datum)} ({l.pilot_crm.zustimmung.dokument}) · Bewertungen beantworten: {l.pilot_crm.zustimmung.bewertungen_antworten_erlaubt ? "erlaubt" : "nicht erlaubt"}{l.pilot_crm.google_zugang ? ` · Google-Zugang: ${l.pilot_crm.google_zugang.rolle} seit ${tag(l.pilot_crm.google_zugang.datum)}` : ""}</p>}
+        {(l.pilot_crm?.brief_am || (l.pilot_crm?.antworten || []).length > 0) && <p className="plZeile">✉ Brief vorbereitet {tag(l.pilot_crm.brief_am)}{(l.pilot_crm.antworten || []).map((x, n) => <b key={n}> · Antwort {tag(x.datum)}: {x.wahl === "gespraech" ? `möchte Gespräch – ${x.name}${x.telefon ? ", Tel. " + x.telefon : ""}${x.email ? ", " + x.email : ""}${x.wunsch ? " (" + x.wunsch + ")" : ""}` : "kein Interesse – nicht mehr kontaktieren"}</b>)}{!(l.pilot_crm.antworten || []).length && " · noch keine Antwort"}</p>}
         {(l.pilot_crm?.aenderungen || []).length > 0 && <p className="plZeile">Änderungen: {l.pilot_crm.aenderungen.map(a => tag(a.datum) + " " + a.was).join(" · ")}</p>}
         {l.vertrag && <p className="plZeile">Monatliche Leistung: {eur(l.vertrag.monatspreis_cent)}/Monat seit {tag(l.vertrag.start)} · {l.vertrag.aktiv ? `läuft (zuletzt ${l.vertrag.letzte_periode || "—"})` : "beendet"}</p>}
         <div className="plAktionen">
@@ -87,6 +89,7 @@ export function PilotGoogleProfil() {
           {l.bericht && <button className="editMini" onClick={() => setDialog({ art: "text", titel: "Profil-Check-Bericht", text: l.bericht })}>Bericht</button>}
           {l.profil_analyse && <a className="editMini" href={"/master/profil-check?id=" + encodeURIComponent(l.id)} target="_blank" rel="noreferrer">🖨 Gesprächsunterlage</a>}
           {l.stufe === "GEPRUEFT" && <a className="editMini" href="/master?tab=freigaben">Kontakt freigeben („Wartet auf mich“) →</a>}
+          {l.stufe === "KONTAKT_FREIGEGEBEN" && <a className="editMini" href={"/master/profil-check?brief=1&id=" + encodeURIComponent(l.id)} target="_blank" rel="noreferrer">✉ Brief mit Antwort-Link</a>}
           {l.stufe === "KONTAKT_FREIGEGEBEN" && <button className="editMini" onClick={() => senden({ action: "lead-status", id: l.id, status: "KONTAKT" }, "Gespräch vermerkt")}>Gespräch geführt</button>}
           {l.stufe === "INTERESSE" && l.angebot?.status === "entwurf" && <a className="editMini" href="/master?tab=freigaben">Angebot freigeben („Wartet auf mich“) →</a>}
           {l.stufe === "INTERESSE" && l.angebot?.status === "freigegeben" && <button className="editMini plJa" onClick={() => senden({ action: "lead-status", id: l.id, status: "ANGEBOT" }, "Angebot als übergeben vermerkt – Nachfass-Aufgabe in 7 Tagen angelegt")}>Angebot übergeben</button>}
