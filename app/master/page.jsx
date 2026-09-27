@@ -10,14 +10,15 @@ import { ContentWerbung } from "./content.jsx";
 import { Freigaben } from "./freigaben.jsx";
 import { EmailLeads } from "./leads.jsx";
 import { PilotGoogleProfil } from "./pilot.jsx";
+import { AnfragenService } from "./anfragen.jsx";
 import { FinanzMonitor } from "./zentralen.jsx";
 import { Fehlerzentrale, AgentenZentrale, Werknetz24Systeme, IntegrationenZentrale, BereicheZentrale } from "./control-center.jsx";
 
 // Direkt adressierbare Bereiche (Full-System-Audit Phase 2, 26.09.2026): /master?tab=alerts öffnet
 // sofort die Fehlerzentrale usw. - keine Zwischenseite, Links von außen möglich.
-const TABS=[["overview","◈","Überblick"],["heute","☀","Heute & Tagesbericht"],["freigaben","✋","Wartet auf mich"],["pilot","★","Pilot: Google-Profil"],["einnahmequellen","↗","Einnahmequellen"],["content","✎","Content & Werbung"],["leads","✉","E-Mail & Leads"],["bereiche","▦","Alle Bereiche"],["businesses","▣","Betriebe"],["tasks","✓","Aufgaben"],["automation","↻","Automatisierungen"],["agents","◎","Agenten-Zentrale"],["finance","€","Finanzen"],["alerts","⚠","Fehlerzentrale"],["systems","◉","Systemmonitoring"],["integrations","⇄","Integrationen"],["audit","▤","Audit-Log"],["settings","⚙","Einstellungen"]];
+const TABS=[["overview","◈","Überblick"],["heute","☀","Heute & Tagesbericht"],["freigaben","✋","Wartet auf mich"],["pilot","★","Pilot: Google-Profil"],["anfragen","✉","Pilot: Anfragen-Service"],["einnahmequellen","↗","Einnahmequellen"],["content","✎","Content & Werbung"],["leads","✉","E-Mail & Leads"],["bereiche","▦","Alle Bereiche"],["businesses","▣","Betriebe"],["tasks","✓","Aufgaben"],["automation","↻","Automatisierungen"],["agents","◎","Agenten-Zentrale"],["finance","€","Finanzen"],["alerts","⚠","Fehlerzentrale"],["systems","◉","Systemmonitoring"],["integrations","⇄","Integrationen"],["audit","▤","Audit-Log"],["settings","⚙","Einstellungen"]];
 // Seitenleiste nach Themen gruppiert (27.09.2026, Adnan: "nicht alles auf eine Seite, was zusammengehört auf die jeweilige Seite").
-const GRUPPEN=[["Überblick",["overview","heute","freigaben"]],["Geschäftsbereiche",["pilot","einnahmequellen","content","leads","bereiche","businesses"]],["Steuerung",["tasks","automation","agents","finance"]],["System",["alerts","systems","integrations","audit","settings"]]];
+const GRUPPEN=[["Überblick",["overview","heute","freigaben"]],["Geschäftsbereiche",["pilot","anfragen","einnahmequellen","content","leads","bereiche","businesses"]],["Steuerung",["tasks","automation","agents","finance"]],["System",["alerts","systems","integrations","audit","settings"]]];
 const VALID_TABS=new Set(TABS.map(([id])=>id));
 
 const initialBusinesses = [
@@ -129,6 +130,7 @@ export default function MasterDashboard(){
         {tab==="content" && <ContentWerbung/>}
         {tab==="leads" && <EmailLeads/>}
         {tab==="pilot" && <PilotGoogleProfil/>}
+        {tab==="anfragen" && <AnfragenService/>}
         {tab==="businesses" && <Businesses businesses={visibleBusinesses} search={search} setSearch={setSearch} editing={editing} setEditing={setEditing} saveBusiness={saveBusiness}/>}
         {tab==="alerts" && <Fehlerzentrale systems={systems} tasks={tasks} qualityGate={qualityGate} onReloadSystems={reloadSystems} goTo={setTab}/>}
         {tab==="agents" && <AgentenZentrale systems={systems} onReloadSystems={reloadSystems}/>}

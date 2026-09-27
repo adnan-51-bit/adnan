@@ -8,6 +8,7 @@ import { AKTIONEN } from "../../../../lib/aktionen.js";
 import { fuehreAktionAus, listeLaeufe, ladeTagesbericht, ladeOptimierung } from "../../../../lib/aktion-ausfuehren.js";
 import { ersteEinnahmeCheckliste, eqDashboard } from "../../../../lib/erste-einnahme.js";
 import { emailZentrale, leadZeile, contentZentrale } from "../../../../lib/zentralen.js";
+import { anfragenDaten, anfrageErfassen, anfrageAbschliessen, anfrageArchivieren, angebotsentwurfSpeichern } from "../../../../lib/anfragen.js";
 import { eqReport } from "../../../../lib/eq-automation.js";
 import { listContent, createContent, updateContent, setzeContentStatus, contentVorbereiten, ideenVorschlaege, contentQuelle, contentBild, contentVeroeffentlichung, contentKennzahl, contentVerlauf, contentUebersicht } from "../../../../lib/content.js";
 import { listFreigaben, freigabeEntscheiden, werkzeugStatus, werkzeugAnfragen, syncPlanFreigaben } from "../../../../lib/freigaben.js";
@@ -45,6 +46,11 @@ export async function GET(request){
       return NextResponse.json({ ok: Boolean(e.ok), gelaufen: true });
     }
     // Pilot Google-Profil (Teil 5, 27.09.2026) - nur mit Secret.
+    // Pilot Anfragen-Service (27.09.2026) - nur mit Secret.
+    if (params.get("anfragen")) {
+      if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
+      try { return NextResponse.json({ ok: true, ...(await anfragenDaten()) }); } catch (error) { return NextResponse.json({ ok: false, error: error.message }, { status: /fehlt/.test(error.message) ? 404 : 500 }); }
+    }
     if (params.get("pilot")) {
       if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
       let d; try { d = await pilotDaten(); } catch (error) { return NextResponse.json({ ok: false, error: error.message }, { status: /fehlt/.test(error.message) ? 404 : 500 }); }
@@ -152,6 +158,17 @@ export async function POST(request){
     // Einnahmequellen (27.09.2026): anlegen / Inhalte aendern / Status (nur mit erfuellten Voraussetzungen).
     // Workflow (27.09.2026): Kunde zuordnen, Aufgabe erzeugen (zentrale Aufgabenliste), Start/Stop.
     // Teil 5: Pilot Google-Profil.
+    // Pilot Anfragen-Service: erfassen (-> Analyse, Entwuerfe, Aufgabe), abschliessen, archivieren, Angebotsentwurf. Nichts wird gesendet.
+    if (["anfrage-erfassen", "anfrage-abschliessen", "anfrage-archivieren", "angebotsentwurf-speichern"].includes(body?.action)) {
+      try {
+        const a = body.action;
+        const e = a === "anfrage-erfassen" ? { anfrage: await anfrageErfassen(body.anfrage || {}) }
+          : a === "anfrage-abschliessen" ? { anfrage: await anfrageAbschliessen(body.id, body.ergebnis) }
+          : a === "anfrage-archivieren" ? { anfrage: await anfrageArchivieren(body.id, body.grund) }
+          : { angebotsentwurf: await angebotsentwurfSpeichern(body.entwurf || {}) };
+        return NextResponse.json({ ok: true, ...e }, { status: a === "anfrage-erfassen" ? 201 : 200 });
+      } catch (error) { return NextResponse.json({ ok: false, error: error.message }, { status: /nicht gefunden|fehlt$/.test(error.message) ? 404 : 400 }); }
+    }
     if (String(body?.action || "").startsWith("pilot-")) {
       try {
         const a = body.action;

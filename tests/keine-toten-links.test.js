@@ -59,7 +59,7 @@ test("'Alle Bereiche' enthaelt jeden geforderten Bereich mit Lesen/Schreiben/Ste
   for (const spalte of ["Lesen", "Schreiben", "Steuern", "Status", "Letzter Check", "Letzter Fehler", "Aktion"]) assert.ok(cc.includes(`<th>${spalte}</th>`), spalte);
   const m = read("app/master/page.jsx");
   assert.match(m, /\["bereiche","▦","Alle Bereiche"\]/);
-  assert.match(m, /\["Geschäftsbereiche",\["pilot","einnahmequellen","content","leads","bereiche"/);
+  assert.match(m, /\["Geschäftsbereiche",\["pilot","anfragen","einnahmequellen","content","leads","bereiche"/);
 });
 
 test("Sprungziele in 'Alle Bereiche' zeigen nur auf existierende Tabs", () => {
