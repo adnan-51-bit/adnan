@@ -226,3 +226,25 @@ test("Bericht zeigt den Prüfhinweis (z. B. 'kein Profil gefunden'), damit nicht
   assert.match(G.berichtText({ firma: "X" }, a), /Hinweis zur Prüfung: Kein Google-Unternehmensprofil gefunden/);
   assert.doesNotMatch(G.berichtText({ firma: "X" }, G.pruefeAnalyse(ANALYSE)), /Hinweis zur Prüfung/);
 });
+
+test("Nachfassen: nach freigegebenem Kontakt entstehen datierte Folge-Aufgaben (Gespräch → Interesse → Angebot), Analyse-Aufgabe gehört Claude", async () => {
+  await pilotEq();
+  const l = await P.potenziellenKundenAnlegen({ firma: "Folgebetrieb", ort: "Monheim am Rhein", branche: "Friseur", quelle_url: "https://verzeichnis.test/folge", quelle_datum: "2026-09-27" });
+  const eig = async () => (await tasks.listTasks()).filter(t => t.quelle === "lead:" + l.id);
+  assert.equal((await eig()).find(t => /^Profil-Analyse/.test(t.title)).owner, "Claude / Zentrale");
+  await P.analyseSpeichern(l.id, ANALYSE);
+  await P.kontaktEntscheidung(l.id, true);
+  await L.leadStatusSetzen(l.id, "KONTAKT");
+  let t = await eig();
+  assert.equal(t.find(x => /^Profil-Check-Bericht persönlich zeigen/.test(x.title)).status, "Erledigt");
+  const nach = t.find(x => /^Nachfassen nach Gespräch: Folgebetrieb/.test(x.title));
+  assert.ok(nach && nach.due_at && nach.priority === "Hoch"); assert.match(nach.naechste_aktion, /keine Werbe-Mail/);
+  await L.leadStatusSetzen(l.id, "INTERESSENT");
+  t = await eig();
+  assert.equal(t.find(x => /^Nachfassen nach Gespräch/.test(x.title)).status, "Erledigt");
+  assert.match(t.find(x => /^Angebot übergeben: Folgebetrieb/.test(x.title)).title, /Preis erst nach deiner Entscheidung/);
+  // ohne Kontakt-Freigabe: keine Nachfass-Aufgabe
+  const { lead: o } = await L.leadAnlegen({ name: "Ohne", firma: "Ohne", selbst_angefragt: true, einwilligung: false }, { ohneAufgabe: true });
+  await L.leadStatusSetzen(o.id, "KONTAKT");
+  assert.equal((await tasks.listTasks()).filter(x => x.quelle === "lead:" + o.id).length, 0);
+});
