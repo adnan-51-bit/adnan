@@ -75,3 +75,21 @@ Beispiel (nur zur Veranschaulichung, keine echten Werte): EK 5,00 + Versand 7,50
 - **Die 4 Produktideen** (Garten-Organizer, Heimtextilien, Hunde-Reisetrinkflasche, Schubladen-Organizer): kein konkreter Artikel mit nachvollziehbarem Lieferanten belegt. Die früheren Planwerte ohne Quelle sind entfernt:
   - VK 29,90 / 29,90 / 19,90 / 18,90 €
   - EK 1,21 €
+
+## Symbolbilder (27.09.2026, Adnans Entscheidung „mach das mit Symbolbild“)
+| Produkte | Bild (lokal) | Quelle | Lizenz |
+|---|---|---|---|
+| 4× Klettband | `/produktbilder/symbolbild-klettband.jpg` | Jacek Halicki, „2023 Opaski rzepowe“, Wikimedia Commons | CC BY-SA 4.0 (Namensnennung wird angezeigt) |
+| 2× Kabelbinder | `/produktbilder/symbolbild-kabelbinder.jpg` | Precygrap, „Bridas de nylon blancas y negras“, Wikimedia Commons | CC BY-SA 4.0 |
+| Kofferraum-Organizer | `/produktbilder/symbolbild-kofferraum-organizer.jpg` | Vitali Adutskevich, Pexels (Foto 17000836) | Pexels-Lizenz (keine Namensnennung nötig, trotzdem angegeben) |
+
+- **Lokal gehostet** statt eingebunden → keine Anfragen an Wikimedia/Pexels beim Seitenaufruf (Datenschutz). Nachweise auch in `public/produktbilder/BILDNACHWEISE.txt`.
+- **Überall als „Symbolbild“ gekennzeichnet:**
+  - Zentrale: Markierung am Vorschaubild
+  - Shop: Markierung am Bild, Hinweis „kann in Farbe, Form und Größe abweichen“, Bildnachweis
+- **Ein Symbolbild reicht nie für die Freigabe.** Prüfpunkt „Bilder“ verlangt `bildart = produktfoto`.
+- Verworfen:
+  - Commons „Klettkabelbinder“ (IBM- und Unitec-Logo sichtbar)
+  - Commons „Cable ties“ (bunt; die Ware ist schwarz)
+  - Pexels/Pixabay-Suchen ohne echte Kabelbinder-Motive
+- Hinweis: Das Kofferraum-Symbolbild zeigt am Reißverschlusszieher ein sehr kleines Emblem.
