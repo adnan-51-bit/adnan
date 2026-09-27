@@ -81,9 +81,11 @@ export async function GET(request){
             ...alleTasks.filter(t => t.status === "Erledigt" && /Claude|Zentrale/.test(t.owner || "") && tag(t.updated_at) === heute).slice(0, 6).map(t => t.title),
           ];
           const offen = (await listFreigaben()).filter(f => f.status === "OFFEN");
-          const duMusst = [...offen.filter(f => ["lead-kontakt", "angebot", "pilot"].includes(f.bezug_typ)).map(f => f.titel), ...alleTasks.filter(t => t.status === "Wartet auf Benutzer" && String(t.quelle || "").startsWith("lead:")).map(t => t.title)].slice(0, 8);
+          let duMusst = [...offen.filter(f => ["lead-kontakt", "angebot", "pilot"].includes(f.bezug_typ)).map(f => f.titel), ...alleTasks.filter(t => t.status === "Wartet auf Benutzer" && String(t.quelle || "").startsWith("lead:")).map(t => t.title)];
           const aktuell = na?.lead_id ? leads.find(l => l.id === na.lead_id) : null;
-          return umsatzPipeline({ leads, tasks: alleTasks, finance, naechsterSchritt: na?.text || null, aktuellerLead: aktuell ? { id: aktuell.id, name: aktuell.firma || aktuell.name, punkte: aktuell.profil_analyse?.punkte ?? null, stufe: na.stufe } : null, claudeErledigt, duMusst });
+          // Zuerst was den aktuellen Lead betrifft, dann Preis/Gewerbe, dann der Rest.
+          if (aktuell) duMusst.sort((a, b) => (b.includes(aktuell.firma || aktuell.name) - a.includes(aktuell.firma || aktuell.name)) || (/Monatspreis|Gewerbe/.test(b) - /Monatspreis|Gewerbe/.test(a)));
+          return umsatzPipeline({ leads, tasks: alleTasks, finance, naechsterSchritt: na?.text || null, aktuellerLead: aktuell ? { id: aktuell.id, name: aktuell.firma || aktuell.name, punkte: aktuell.profil_analyse?.punkte ?? null, stufe: na.stufe } : null, claudeErledigt, duMusst: duMusst.slice(0, 8) });
         })() });
     }
     // Content & Werbung + "Wartet auf Freigabe" (Teil 4A, 27.09.2026) - nur mit Secret.
