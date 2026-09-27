@@ -854,3 +854,16 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Ryf 83 (Kette)
   - Mobile Friseurmeisterin Holtmann 14 (Profil unbeansprucht, „eventuell geschlossen“)
 - **Tests:** 250/250, Build ok, live Desktop + Handy ohne Fehler. Kosten 0 €, Einnahmen 0 €.
+
+## Update 27.09.2026 (43) — Kundenfindungs-Pilot, erster Lauf
+
+- **Lauf 27.09.2026:** 28 Verzeichnisseiten geprüft, 5 neue Leads angelegt, kein Fehler. Quelle: monheimer-lokalhelden.de.
+  - Fat Monheim (Kfz)
+  - Änderungsschneiderei Dorniok
+  - Goldschmiede Liebe
+  - Bäckerei Busch Lerchenweg
+  - Jörg Schneider Gartengestaltung
+- **Leads gesamt: 20** (Ziel der ersten Phase erreicht), davon 15 analysiert. Die 5 neuen warten auf die Profil-Analyse: Die Browser-Erweiterung ist nicht verbunden (kein Auslesen von Google Maps ohne Browser).
+- **Kontakt-Freigaben** tragen jetzt den Vermerk „Potentieller Lead – menschliche Prüfung erforderlich.“
+- **Leverkusen/Düsseldorf:** keine kostenlose Quelle mit erlaubtem automatischem Abruf bekannt → Recherche von Hand in den Sitzungen (GELB, dokumentiert).
+- **Tests:** 250/250, Build ok. Kosten 0 €, Einnahmen 0 €.
