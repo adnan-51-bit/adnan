@@ -803,3 +803,10 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Astrid Becker Cosmetics 86/100 (Profil schon gut gepflegt)
 - Berichte, Gesprächsunterlagen, Angebotsvorlagen und 7 Kontakt-Freigaben sind automatisch entstanden. Gate 18/18.
 - Keine neue Funktion gebaut. Kosten 0 €, Einnahmen 0 €.
+
+## Update 27.09.2026 (39) — Fokus erster Umsatz, kein Ausbau
+
+- Der Google-Profil-Service bleibt technisch unverändert. Für alle 7 Leads sind Analyse, Gesprächsunterlage, Angebotsvorlage und Kontakt-Freigabe vorhanden; Nachfass-Aufgaben entstehen automatisch.
+- **Befund (nicht behoben, wartet auf Adnans OK):** „Deine nächste Aktion“ (naechstePilotAktion) prüft die Stufen von vorn. Solange irgendein Lead noch auf „Kontakt freigeben“ steht, zeigt sie diese Freigabe statt des weitesten Leads (z. B. „Bericht bei Haargenau zeigen“). Außerdem steht Markus Lauck vor Haargenau (beide Priorität hoch).
+- Nach dem ersten Kunden bereitet der vorhandene Ablauf den nächsten vor (nächster Lead mit offener Kontakt-Freigabe).
+- Der Affiliate-Pilot folgt erst nach dem ersten Pilotkunden.
