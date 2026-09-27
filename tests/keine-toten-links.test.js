@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 
 const read = p => readFileSync(new URL("../" + p, import.meta.url), "utf8");
-const seiten = ["app/master/page.jsx", "app/master/control-center.jsx", "app/werknetz24/page.jsx", "app/e-commerce/page.jsx"];
+const seiten = ["app/master/page.jsx", "app/master/control-center.jsx", "app/master/steuerung.jsx", "app/werknetz24/page.jsx", "app/e-commerce/page.jsx"];
 const tabsVon = src => {
   const ids = new Set();
   for (const m of src.matchAll(/\[\s*"([a-z0-9-]+)",\s*"[^"]*",\s*"[^"]*"\s*\]/g)) ids.add(m[1]);
@@ -34,8 +34,9 @@ test("alle internen Links zeigen auf existierende Routen und Tabs", () => {
   assert.deepEqual(fehler, []);
 });
 
+// Seit 27.09.2026 stehen die Direktlinks in der Karte des jeweiligen Geschaeftsbereichs (Startseite, steuerung.jsx).
 test("Master-Direktnavigation enthält Kunden (beide Bereiche getrennt), Leads, Rechnungen", () => {
-  const m = read("app/master/page.jsx");
+  const m = read("app/master/steuerung.jsx");
   assert.match(m, /href="\/e-commerce\?tab=kunden"/);
   assert.match(m, /admin-zentrale#kunden/);
   assert.match(m, /admin-zentrale#leads/);
@@ -44,8 +45,8 @@ test("Master-Direktnavigation enthält Kunden (beide Bereiche getrennt), Leads, 
 
 test("Master: 'System' und 'Integrationen' sind direkt anklickbar und fuehren zu existierenden Tabs", () => {
   const m = read("app/master/page.jsx");
-  assert.match(m, /goTo\?\.\("systems"\)\}><b>System<\/b>/);
-  assert.match(m, /goTo\?\.\("integrations"\)\}><b>Integrationen<\/b>/);
+  // Seit 27.09.2026 ueber die gruppierte Seitenleiste (Gruppe "System") statt einer Kachelreihe.
+  assert.match(m, /\["System",\["alerts","systems","integrations"/);
   assert.match(m, /\["integrations","⇄","Integrationen"\]/);
   assert.match(m, /tab==="integrations" && <IntegrationenZentrale/);
 });
@@ -58,7 +59,7 @@ test("'Alle Bereiche' enthaelt jeden geforderten Bereich mit Lesen/Schreiben/Ste
   for (const spalte of ["Lesen", "Schreiben", "Steuern", "Status", "Letzter Check", "Letzter Fehler", "Aktion"]) assert.ok(cc.includes(`<th>${spalte}</th>`), spalte);
   const m = read("app/master/page.jsx");
   assert.match(m, /\["bereiche","▦","Alle Bereiche"\]/);
-  assert.match(m, /goTo\?\.\("bereiche"\)\}><b>Alle Bereiche<\/b>/);
+  assert.match(m, /\["Geschäftsbereiche",\["einnahmequellen","bereiche"/);
 });
 
 test("Sprungziele in 'Alle Bereiche' zeigen nur auf existierende Tabs", () => {

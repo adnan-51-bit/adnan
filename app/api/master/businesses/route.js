@@ -4,6 +4,9 @@ import { checkAdminSecret } from "../../../../lib/auth.js";
 import { listEinnahmequellen, createEinnahmequelle, updateEinnahmequelle, setzeEqStatus, uebersicht } from "../../../../lib/einnahmequellen.js";
 import { fetchWerknetz24Kalender, createWerknetz24KalenderTermin, fetchWerknetz24Aufgaben, fetchWerknetz24Rechnungen, fetchWerknetz24Incidents, fetchWerknetz24Agenten, runWerknetz24Systemcheck, closeWerknetz24Incident } from "../../../../lib/werknetz24-connector.js";
 
+import { AKTIONEN } from "../../../../lib/aktionen.js";
+import { fuehreAktionAus, listeLaeufe, ladeTagesbericht } from "../../../../lib/aktion-ausfuehren.js";
+
 export const runtime = "nodejs";
 
 export async function GET(request){
@@ -20,6 +23,12 @@ export async function GET(request){
       return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
     }
     // Einnahmequellen (27.09.2026): eigener Bereich, nur mit Secret. Hier statt eigener Route (Vercel-Limit 12 Funktionen).
+    // Steuerung (27.09.2026): Aktionskatalog + Automatisierungs-Log, Tagesbericht - nur mit Secret.
+    if (params.get("aktionen") || params.get("tagesbericht")) {
+      if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
+      if (params.get("tagesbericht")) return NextResponse.json({ ok: true, bericht: await ladeTagesbericht() });
+      return NextResponse.json({ ok: true, aktionen: AKTIONEN, laeufe: await listeLaeufe() });
+    }
     if (params.get("einnahmequellen")) {
       if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
       const liste = await listEinnahmequellen();
@@ -88,6 +97,12 @@ export async function POST(request){
     // Fehlerzentrale-Aktionen (Phase 2, 26.09.2026): echte Werknetz24-Aktionen, gleiche doppelte
     // Schutzschicht wie der Kalender (MASTER_API_SECRET hier, WERKNETZ24_WRITE_SECRET gegenueber
     // Werknetz24). Aendern keine Kunden-/Zahlungsdaten.
+    // Zentrale Aktionslogik: Kategorie + Kostenschutz in lib/aktionen.js, Ausfuehrung + Log in lib/aktion-ausfuehren.js.
+    if (body?.action === "aktion-ausfuehren") {
+      const r = await fuehreAktionAus(String(body.id || ""), body.freigabe);
+      const { erlaubt, status, ...rest } = r;
+      return NextResponse.json({ ok: Boolean(erlaubt && r.ok), ...rest }, { status: erlaubt ? (r.ok ? 200 : 502) : status });
+    }
     if (body?.action === "werknetz24-systemcheck") {
       const result = await runWerknetz24Systemcheck();
       if (!result.configured) return NextResponse.json({ ok: false, error: result.reason }, { status: 503 });
