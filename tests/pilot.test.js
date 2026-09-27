@@ -97,7 +97,7 @@ test("Quality Gate: technische Punkte je nach echter Lage; Kosten/Werkzeug/Cron 
   const jetzt = new Date("2026-09-27T12:00:00Z");
   const eqX = { name: "P", quellen_liste: [1, 2, 3].map(i => ({ url: "https://x.test/" + i, datum: "2026-09-27", aussage: "a" })), pilot: {} };
   const lauf = (aktion, stunden) => ({ details: { aktion, ergebnis: "ok" }, created_at: new Date(jetzt - stunden * 3600000).toISOString() });
-  const basis = { eq: eqX, aufgaben: [{}], laeufe: [lauf("wiederkehrende-pruefungen", 5), lauf("tagesbericht", 5)], werkzeuge: [{ kostenlos: false, status: "aus" }], finanzen: { einnahmen_cent: 0, kosten_cent: 0, offen_cent: 0 }, jetzt };
+  const basis = { eq: eqX, leads: [1, 2, 3].map(i => ({ quelle: "https://verzeichnis.test/" + i + " (abgerufen 2026-09-27)" })), aufgaben: [{}], laeufe: [lauf("wiederkehrende-pruefungen", 5), lauf("tagesbericht", 5)], werkzeuge: [{ kostenlos: false, status: "aus" }], finanzen: { einnahmen_cent: 0, kosten_cent: 0, offen_cent: 0 }, jetzt };
   const tech = g => g.filter(x => x.typ === "technisch");
   assert.ok(tech(G.pilotQualityGate(basis)).every(x => x.ok), "alles technisch erfüllt");
   const f = (patch, id) => tech(G.pilotQualityGate({ ...basis, ...patch })).find(x => x.id === id).ok;
@@ -117,4 +117,44 @@ test("API: Pilot nur mit Anmeldung; Aktionen mit Fehlerbehandlung", async () => 
   assert.ok(g.gate.length >= 12); assert.equal(g.kriterien.length, G.KRITERIEN.length);
   assert.equal((await route.POST(req("POST", "", { action: "pilot-preis", monatspreis_cent: -1 }, "test-secret"))).status, 400);
   assert.equal((await route.POST(req("POST", "", { action: "pilot-analyse", id: "x", analyse: ANALYSE }, "test-secret"))).status, 404);
+});
+
+// ---------- Erster-Kunde-Modus (27.09.2026) ----------
+const { erstelleTagesbericht } = await import("../lib/tagesbericht.js");
+const BETRIEB = { firma: "Testbetrieb", ort: "Monheim am Rhein", branche: "Friseur", quelle_url: "https://verzeichnis.test/friseur", quelle_datum: "2026-09-27" };
+
+test("Potenziellen Kunden erfassen: Name/Ort/Branche/Quelle Pflicht, keine Doppelten, Aufgabe 'Profil-Analyse' statt Werbe-Nachfassen", async () => {
+  const q = await pilotEq();
+  await assert.rejects(() => P.potenziellenKundenAnlegen({ ...BETRIEB, quelle_url: "" }), /Quelle/);
+  await assert.rejects(() => P.potenziellenKundenAnlegen({ ...BETRIEB, branche: "" }), /Pflicht/);
+  const l = await P.potenziellenKundenAnlegen(BETRIEB);
+  assert.equal(l.ort, "Monheim am Rhein"); assert.equal(l.branche, "Friseur"); assert.match(l.quelle, /verzeichnis\.test\/friseur \(abgerufen 2026-09-27\)/);
+  assert.equal(l.einwilligung, false); assert.equal(l.selbst_angefragt, false);
+  await assert.rejects(() => P.potenziellenKundenAnlegen({ ...BETRIEB, firma: "TESTBETRIEB" }), /gibt es schon/);
+  const eig = (await tasks.listTasks()).filter(t => t.quelle === "lead:" + l.id);
+  assert.deepEqual(eig.map(t => t.title), ["Profil-Analyse: Testbetrieb (Monheim am Rhein) – Google-Profil öffnen und 10 Punkte prüfen"]);
+  assert.equal(eig[0].priority, "Hoch");
+  const d = await P.pilotDaten();
+  assert.equal(d.leads[0].stufe, "POTENZIELL");
+  assert.match(d.naechsteAktion.text, /Google-Profil von „Testbetrieb“ öffnen/);
+  assert.match((await P.analyseSpeichern(l.id, ANALYSE)).bericht, /PROFIL-CHECK: Testbetrieb \(Friseur, Monheim am Rhein\)/);
+  assert.ok(q);
+});
+
+test("Stufen Potenziell → Gespräch → Interesse → Kunde → Laufende Leistung und genau EINE nächste Aktion in fester Reihenfolge", () => {
+  const S = G.kundenStufe;
+  assert.equal(S({ status: "NEU" }), "POTENZIELL"); assert.equal(S({ status: "KONTAKT" }), "GESPRAECH"); assert.equal(S({ status: "INTERESSENT" }), "INTERESSE");
+  assert.equal(S({ status: "ANGEBOT" }), "INTERESSE"); assert.equal(S({ status: "KUNDE" }), "KUNDE"); assert.equal(S({ status: "KUNDE", vertrag: { aktiv: true } }), "LAUFEND");
+  const A = G.naechstePilotAktion;
+  const L1 = { id: 1, firma: "A", status: "NEU" }, L2 = { id: 2, firma: "B", status: "NEU", profil_analyse: {} }, L3 = { id: 3, firma: "C", status: "KONTAKT", profil_analyse: {} }, L4 = { id: 4, firma: "D", status: "INTERESSENT", profil_analyse: {} };
+  assert.equal(A([L4, L3, L2, L1]).lead_id, 1, "erst analysieren");
+  assert.equal(A([L4, L3, L2]).lead_id, 2, "dann Bericht zeigen");
+  assert.equal(A([L4, L3]).lead_id, 3, "dann nachfragen");
+  assert.equal(A([L4]).lead_id, 4, "dann unverbindliches Angebot");
+  assert.equal(A([{ ...L1, status: "VERLOREN" }]).lead_id, null, "verlorene zählen nicht");
+});
+
+test("Tagesbericht zeigt die nächste Pilot-Aktion als Benutzeraktion", () => {
+  const b = erstelleTagesbericht({ pilotAktion: { lead_id: 1, text: "Google-Profil von „X“ öffnen" } });
+  assert.deepEqual(b.benutzeraktionen.map(x => [x.text, x.ziel]), [["Pilot: Google-Profil von „X“ öffnen", "pilot"]]);
 });

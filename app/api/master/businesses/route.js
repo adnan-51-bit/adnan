@@ -13,7 +13,7 @@ import { istWartend, istOffen } from "../../../../lib/aufgaben-status.js";
 import { listLeads, leadAnlegen, leadAendern, leadStatusSetzen, emailEntwurfErstellen, alsGesendet, antwortErfassen, antwortErledigt, angebotErstellen, angebotEntscheidung, zahlungEingegangen, kostenErfassen, leadVerlauf, leadUebersicht } from "../../../../lib/leads.js";
 import { strukturiere, ablaufStand, AUTOMATISIERUNGSGRAD, kontaktErlaubt } from "../../../../lib/leads-regeln.js";
 import { listFinance, eqFinanzen } from "../../../../lib/master-finance.js";
-import { pilotDaten, analyseSpeichern, preisFestlegen, vertragStarten, vertragBeenden, berichtText, angebotText } from "../../../../lib/pilot.js";
+import { pilotDaten, analyseSpeichern, preisFestlegen, vertragStarten, vertragBeenden, berichtText, angebotText, potenziellenKundenAnlegen } from "../../../../lib/pilot.js";
 import { listTasks } from "../../../../lib/master-tasks.js";
 
 export const runtime = "nodejs";
@@ -154,6 +154,7 @@ export async function POST(request){
           : a === "pilot-preis" ? { einnahmequelle: await preisFestlegen(body.monatspreis_cent) }
           : a === "pilot-vertrag" ? await vertragStarten(body.id, body.vertrag || {})
           : a === "pilot-vertrag-ende" ? { lead: await vertragBeenden(body.id) }
+          : a === "pilot-potenziell" ? { lead: await potenziellenKundenAnlegen(body.betrieb) }
           : null;
         if (!e) return NextResponse.json({ ok: false, error: "Unbekannte Aktion" }, { status: 400 });
         return NextResponse.json({ ok: true, ...e });

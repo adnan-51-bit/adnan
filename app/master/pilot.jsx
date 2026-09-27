@@ -33,8 +33,10 @@ export function PilotGoogleProfil() {
   const tech = gate.filter(g => g.typ === "technisch"), benutzer = gate.filter(g => g.typ === "benutzer");
   const eqId = d?.eq?.id;
   return <div className="pl">
-    <div className="pageTitle"><div><span>PILOT · 0 € BIS ZUR ERSTEN EINNAHME</span><h2>Pilot: Google-Unternehmensprofil</h2></div><div className="quick"><button className="primaryLink" disabled={!d} onClick={() => setDialog({ art: "betrieb" })}>+ Betrieb erfassen</button></div></div>
+    <div className="pageTitle"><div><span>PILOT · 0 € BIS ZUR ERSTEN EINNAHME</span><h2>Pilot: Google-Unternehmensprofil</h2></div><div className="quick"><button className="primaryLink" disabled={!d} onClick={() => setDialog({ art: "betrieb" })}>+ Potenziellen Kunden erfassen</button></div></div>
     {meldung && <div className="panel plMeldung">{meldung}</div>}
+    {d?.naechsteAktion && <section className="plNaechste"><span>Deine nächste Aktion</span><b>{d.naechsteAktion.text}</b>
+      {(() => { const l = d.leads.find(x => x.id === d.naechsteAktion.lead_id); return l && !l.profil_analyse ? <button className="primaryLink" onClick={() => setDialog({ art: "analyse", l })}>Analyse jetzt ausfüllen</button> : null; })()}</section>}
     <section className="panel"><h3>Quality Gate {d ? `– technisch ${tech.filter(g => g.ok).length}/${tech.length} ✓ · wartet auf dich: ${benutzer.filter(g => !g.ok).length}` : "…"}</h3>
       <div className="plGate">{gate.map(g => <div key={g.id} className={"plG " + (g.ok ? "ok" : g.typ === "benutzer" ? "du" : "fehlt")}><b>{g.ok ? "✓" : g.typ === "benutzer" ? "👤" : "✗"}</b><span>{g.titel}<small>{g.info}</small></span></div>)}</div></section>
 
@@ -51,21 +53,29 @@ export function PilotGoogleProfil() {
       <li>Angebot angenommen → <b>Monatliche Leistung starten</b>: Monatsaufgaben + offene Monatsrechnung entstehen automatisch.</li>
       <li>Erst nach Gewerbe-Klärung abrechnen; wenn das Geld da ist: „Geld ist da“ → erste echte Einnahme.</li></ol></section>
 
-    <section className="panel"><h3>Betriebe ({d?.leads?.length ?? "…"})</h3>
-      {d && !d.leads.length && <p className="muted">Noch kein Betrieb erfasst. Starte mit 3 Übungs-Checks an öffentlichen Profilen aus deiner Umgebung.</p>}
-      {(d?.leads || []).map(l => <article key={l.id} className="plBetrieb">
-        <div className="plKopf"><div><strong>{l.firma || l.name}</strong><small>{LEAD_LABEL[l.status]} · Quelle: {l.quelle || "—"} · seit {tag(l.erstellt_am)}</small></div>
+    <section className="panel"><h3>Potenzielle Kunden ({d?.leads?.length ?? "…"})</h3>
+      <p className="muted">Nur öffentlich belegte Angaben mit Quelle. Keine Werbe-Mails – Kontakt persönlich. Nichts ist verbindlich, bevor du es entscheidest.</p>
+      {d && !d.leads.length && <p className="muted">Noch kein Betrieb erfasst.</p>}
+      {(d?.leads || []).map(l => { const q = String(l.quelle || "").match(/https?:\/\/\S+/)?.[0]; const i = (d.stufen || []).findIndex(([k]) => k === l.stufe); return <article key={l.id} className={"plBetrieb" + (d.naechsteAktion?.lead_id === l.id ? " plDran" : "")}>
+        <div className="plKopf"><div><strong>{l.firma || l.name}</strong><small>{[l.branche, l.ort].filter(Boolean).join(" · ") || "—"} · {LEAD_LABEL[l.status]} · erfasst {tag(l.erstellt_am)}</small>
+          <small>Quelle: {q ? <a href={q} target="_blank" rel="noreferrer">{String(l.quelle).replace(q, "").trim() || "Link"} ↗</a> : (l.quelle || "—")} · <a href={"https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent([l.firma || l.name, l.ort].filter(Boolean).join(" "))} target="_blank" rel="noreferrer">Google-Profil suchen ↗</a>{l.profil_analyse ? <> · <a href={l.profil_analyse.quelle} target="_blank" rel="noreferrer">analysiertes Profil ↗</a></> : null}</small></div>
           <b className="plScore">{l.profil_analyse ? `${l.profil_analyse.punkte}/100` : "nicht analysiert"}</b></div>
+        <ol className="plStufen">{(d.stufen || []).map(([k, n], x) => <li key={k} className={x < i ? "fertig" : x === i ? "jetzt" : ""}>{n}</li>)}</ol>
+        {l.profil_analyse?.verbesserungen?.length > 0 && <p className="plZeile">Erkennbare Verbesserungen: {l.profil_analyse.verbesserungen.map(v => (v.dringend ? "⚠ " : "") + v.text).join(" · ")}</p>}
+        <p className="plZeile">➜ Nächste Aufgabe: <b>{naechsteAufgabe(l)}</b></p>
         {l.vertrag && <p className="plZeile">Monatliche Leistung: {eur(l.vertrag.monatspreis_cent)}/Monat seit {tag(l.vertrag.start)} · {l.vertrag.aktiv ? `läuft (zuletzt ${l.vertrag.letzte_periode || "—"})` : "beendet"}</p>}
         <div className="plAktionen">
           <button className="editMini" onClick={() => setDialog({ art: "analyse", l })}>{l.profil_analyse ? "Analyse aktualisieren" : "Profil-Analyse"}</button>
           {l.bericht && <button className="editMini" onClick={() => setDialog({ art: "text", titel: "Profil-Check-Bericht", text: l.bericht })}>Bericht</button>}
+          {l.stufe === "POTENZIELL" && l.profil_analyse && <button className="editMini" onClick={() => senden({ action: "lead-status", id: l.id, status: "KONTAKT" }, "Gespräch vermerkt")}>Gespräch geführt</button>}
+          {l.stufe === "GESPRAECH" && <button className="editMini plJa" onClick={() => senden({ action: "lead-status", id: l.id, status: "INTERESSENT" }, "Interesse vermerkt")}>Hat Interesse</button>}
+          {["POTENZIELL", "GESPRAECH", "INTERESSE"].includes(l.stufe) && l.status !== "VERLOREN" && <button className="editMini" onClick={() => senden({ action: "lead-status", id: l.id, status: "VERLOREN" }, "Als „kein Interesse“ vermerkt")}>Kein Interesse</button>}
           <button className="editMini" onClick={() => setDialog({ art: "text", titel: "Angebot (Vorlage)", text: l.angebotVorlage, hinweis: "Formell anlegen unter „E-Mail & Leads“ → Angebot erstellen." })}>Angebot-Vorlage</button>
           {l.status === "KUNDE" && !l.vertrag?.aktiv && <button className="editMini plJa" onClick={() => setDialog({ art: "vertrag", l })}>Monatliche Leistung starten</button>}
           {l.vertrag?.aktiv && <button className="editMini" onClick={() => senden({ action: "pilot-vertrag-ende", id: l.id }, "Monatliche Leistung beendet")}>Leistung beenden</button>}
           <a className="editMini" href="/master?tab=leads">In „E-Mail & Leads“ →</a>
         </div>
-      </article>)}
+      </article>; })}
     </section>
 
     <section className="panel"><h3>Einnahmen (nur echte Buchungen)</h3>
@@ -83,7 +93,7 @@ export function PilotGoogleProfil() {
       <h4>Vor dem ersten Kunden abhaken</h4>{(d?.vertragCheckliste || []).map(t => <p key={t} className="plZeile">☐ {t}</p>)}
       <p className="muted">Keine Rechtsberatung – offene Fragen mit der Beratung klären.</p></section>
 
-    {dialog?.art === "betrieb" && <BetriebDialog onClose={() => setDialog(null)} onSave={async f => { if (await senden({ action: "lead-anlegen", lead: { ...f, name: f.name || f.firma, einnahmequelle_id: eqId } }, "Betrieb erfasst – jetzt Profil-Analyse")) setDialog(null); }} />}
+    {dialog?.art === "betrieb" && <BetriebDialog onClose={() => setDialog(null)} onSave={async betrieb => { if (await senden({ action: "pilot-potenziell", betrieb }, "Potenzieller Kunde erfasst – Aufgabe „Profil-Analyse“ angelegt")) setDialog(null); }} />}
     {dialog?.art === "analyse" && <AnalyseDialog l={dialog.l} kriterien={d.kriterien} onClose={() => setDialog(null)} onSave={async analyse => { const j = await senden({ action: "pilot-analyse", id: dialog.l.id, analyse }, "Analyse gespeichert – Bericht und Aufgabe erstellt"); if (j) setDialog({ art: "text", titel: "Profil-Check-Bericht", text: j.bericht }); }} />}
     {dialog?.art === "vertrag" && <VertragDialog l={dialog.l} preis={d.eq.pilot?.monatspreis_cent} onClose={() => setDialog(null)} onSave={async v => { if (await senden({ action: "pilot-vertrag", id: dialog.l.id, vertrag: v }, "Monatliche Leistung gestartet – Aufgaben + offene Monatsrechnung angelegt")) setDialog(null); }} />}
     {dialog?.art === "text" && <div className="modalBack"><div className="modal plModal"><div className="modalHead"><h3>{dialog.titel}</h3><button onClick={() => setDialog(null)}>×</button></div>{dialog.hinweis && <p className="note">{dialog.hinweis}</p>}<pre className="plText">{dialog.text}</pre><div className="modalActions"><button onClick={() => navigator.clipboard?.writeText(dialog.text)}>Kopieren</button><button className="primary" onClick={() => setDialog(null)}>Schließen</button></div></div></div>}
@@ -92,15 +102,23 @@ export function PilotGoogleProfil() {
 }
 
 function BetriebDialog({ onClose, onSave }) {
-  const [f, setF] = useState({ firma: "", name: "", quelle: "", telefon: "", email: "", selbst_angefragt: "", einwilligung: "" });
+  const [f, setF] = useState({ firma: "", ort: "Monheim am Rhein", branche: "", quelle_url: "", quelle_datum: heute(), notiz: "" });
   const s = k => e => setF({ ...f, [k]: e.target.value });
-  return <div className="modalBack"><div className="modal plModal"><div className="modalHead"><h3>Betrieb erfassen</h3><button onClick={onClose}>×</button></div>
-    <p className="note">Nur öffentlich sichtbare Betriebsdaten. Werbe-Mails sind ohne Einwilligung nicht erlaubt – den Bericht persönlich zeigen.</p>
-    {[["firma", "Betrieb / Firma"], ["name", "Ansprechpartner (optional)"], ["quelle", "Link zum Google-Profil (Maps)"], ["telefon", "Telefon (optional)"], ["email", "E-Mail (optional)"]].map(([k, l]) => <label key={k}>{l}<input value={f[k]} onChange={s(k)} /></label>)}
-    <label>Hat der Betrieb selbst angefragt?<select value={f.selbst_angefragt} onChange={s("selbst_angefragt")}><option value="">— bitte wählen —</option><option value="ja">ja</option><option value="nein">nein</option></select></label>
-    <label>Einwilligung zu E-Mails?<select value={f.einwilligung} onChange={s("einwilligung")}><option value="">— bitte wählen —</option><option value="ja">ja</option><option value="nein">nein</option></select></label>
-    <div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" disabled={!f.firma.trim() || f.selbst_angefragt === "" || f.einwilligung === ""} onClick={() => onSave({ ...f, selbst_angefragt: f.selbst_angefragt === "ja", einwilligung: f.einwilligung === "ja" })}>Speichern</button></div></div></div>;
+  return <div className="modalBack"><div className="modal plModal"><div className="modalHead"><h3>Potenziellen Kunden erfassen</h3><button onClick={onClose}>×</button></div>
+    <p className="note">Nur öffentlich belegte Angaben (z. B. Branchenverzeichnis, eigene Website des Betriebs) – mit Link und Datum. Keine Kontaktaufnahme, keine Werbe-Mail.</p>
+    {[["firma", "Name des Betriebs"], ["ort", "Ort"], ["branche", "Branche"], ["quelle_url", "Quelle (Link, wo die Angaben stehen)"], ["quelle_datum", "Datum der Recherche", "date"], ["notiz", "Notiz (optional)"]].map(([k, l, t]) => <label key={k}>{l}<input type={t || "text"} value={f[k]} onChange={s(k)} /></label>)}
+    <div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" disabled={!f.firma.trim() || !f.ort.trim() || !f.branche.trim() || !/^https?:\/\//.test(f.quelle_url)} onClick={() => onSave(f)}>Speichern</button></div></div></div>;
 }
+// Naechste Aufgabe je Betrieb aus der Stufe (gleiche Logik wie "Deine naechste Aktion").
+function naechsteAufgabe(l) {
+  if (l.status === "VERLOREN") return "Keine – kein Interesse";
+  if (l.stufe === "LAUFEND") return "Monatsaufgaben erledigen (Aufgabenliste)";
+  if (l.stufe === "KUNDE") return "Monatliche Leistung starten – abrechnen erst nach Gewerbe-Klärung";
+  if (l.stufe === "INTERESSE") return "Unverbindliches Angebot vorbereiten (Preis: deine Entscheidung)";
+  if (l.stufe === "GESPRAECH") return "Nachfragen, ob Interesse besteht";
+  return l.profil_analyse ? "Bericht persönlich zeigen und Gespräch führen" : "Google-Profil öffnen und Analyse ausfüllen";
+}
+
 function AnalyseDialog({ l, kriterien, onClose, onSave }) {
   const a = l.profil_analyse;
   const [f, setF] = useState({ quelle: a?.quelle || (/^https?:/.test(l.quelle) ? l.quelle : ""), datum: heute(), werte: a?.werte || Object.fromEntries(kriterien.map(k => [k.id, "unbekannt"])), notiz: a?.notiz || "" });
@@ -126,6 +144,8 @@ function VertragDialog({ l, preis, onClose, onSave }) {
 const PL_CSS = `.plGate{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px}.plG{display:flex;gap:8px;padding:8px;border-radius:8px;border:1px solid #eaecf0;font-size:13px;min-width:0}.plG small{display:block;color:#667085;font-size:11px;overflow-wrap:anywhere}
 .plG.ok{background:#f6fef9}.plG.ok b{color:#067647}.plG.du{background:#fffcf5;border-color:#fedf89}.plG.fehlt{background:#fef3f2;border-color:#fecdca}.plG.fehlt b{color:#b42318}
 .plDu{border-color:#fedf89!important;background:#fffcf5!important}.plDu p{font-size:13px;margin:4px 0;overflow-wrap:anywhere}.plDu small{color:#667085}.plPreis{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin:8px 0}.plPreis label{font-size:12px;font-weight:700}.plPreis input{display:block;margin-top:4px;padding:8px;border:1px solid #d0d5dd;border-radius:7px;width:140px}
+.plNaechste{display:flex;flex-direction:column;gap:6px;background:#101828;color:#fff;border-radius:12px;padding:14px;margin-bottom:12px}.plNaechste span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#98a2b3;font-weight:800}.plNaechste b{font-size:16px}.plNaechste button{align-self:flex-start;background:#fff!important;color:#101828!important}
+.plStufen{display:flex;flex-wrap:wrap;gap:4px;list-style:none;padding:0;margin:0}.plStufen li{font-size:11px;padding:2px 7px;border-radius:999px;background:#f2f4f7;color:#98a2b3}.plStufen li.fertig{background:#ecfdf3;color:#067647}.plStufen li.jetzt{background:#101828;color:#fff;font-weight:700}.plDran{border-color:#101828!important;box-shadow:0 0 0 1px #101828}
 .plSchritte{margin:0;padding-left:20px;font-size:13px;display:grid;gap:4px}
 .plBetrieb{border:1px solid #eaecf0;border-radius:12px;padding:12px;margin-top:10px;display:flex;flex-direction:column;gap:6px;min-width:0}.plKopf{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.plKopf small{display:block;color:#667085;font-size:12px;overflow-wrap:anywhere}
 .plScore{font-size:12px;padding:3px 8px;border-radius:999px;background:#eff8ff;color:#175cd3;height:fit-content}.plZeile{font-size:13px;margin:3px 0;overflow-wrap:anywhere}.plZeile small{color:#667085}
