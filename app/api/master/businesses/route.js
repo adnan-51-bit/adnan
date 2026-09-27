@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { listBusinesses, updateBusiness, storageMode } from "../../../../lib/master-store";
 import { checkAdminSecret } from "../../../../lib/auth.js";
+import { listEinnahmequellen, createEinnahmequelle, updateEinnahmequelle, setzeEqStatus, uebersicht } from "../../../../lib/einnahmequellen.js";
 import { fetchWerknetz24Kalender, createWerknetz24KalenderTermin, fetchWerknetz24Aufgaben, fetchWerknetz24Rechnungen, fetchWerknetz24Incidents, fetchWerknetz24Agenten, runWerknetz24Systemcheck, closeWerknetz24Incident } from "../../../../lib/werknetz24-connector.js";
 
 export const runtime = "nodejs";
@@ -17,6 +18,12 @@ export async function GET(request){
     const werknetz24Detail = ["werknetz24Kalender", "werknetz24Aufgaben", "werknetz24Rechnungen", "werknetz24Incidents", "werknetz24Agenten"].some(k => params.get(k));
     if (werknetz24Detail && authError) {
       return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
+    }
+    // Einnahmequellen (27.09.2026): eigener Bereich, nur mit Secret. Hier statt eigener Route (Vercel-Limit 12 Funktionen).
+    if (params.get("einnahmequellen")) {
+      if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
+      const liste = await listEinnahmequellen();
+      return NextResponse.json({ ok: true, einnahmequellen: liste, uebersicht: uebersicht(liste) });
     }
     // Werknetz24-Kalender (22.09.2026, "Kommandozentrale"-Folgeauftrag) - eigener Zweig statt
     // neuer Route-Datei (12/12 Serverless-Funktionen bereits belegt, s. PROJECT-AUDIT.md im
@@ -68,6 +75,16 @@ export async function POST(request){
   if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
   try{
     const body = await request.json();
+    // Einnahmequellen (27.09.2026): anlegen / Inhalte aendern / Status (nur mit erfuellten Voraussetzungen).
+    if (body?.action === "einnahmequelle-anlegen" || body?.action === "einnahmequelle-aendern" || body?.action === "einnahmequelle-status") {
+      try {
+        const { action, id, status, ...daten } = body;
+        const q = action === "einnahmequelle-anlegen" ? await createEinnahmequelle(daten) : action === "einnahmequelle-aendern" ? await updateEinnahmequelle(id, daten) : await setzeEqStatus(id, status);
+        return NextResponse.json({ ok: true, einnahmequelle: q }, { status: action === "einnahmequelle-anlegen" ? 201 : 200 });
+      } catch (error) {
+        return NextResponse.json({ ok: false, error: error.message }, { status: /nicht gefunden/.test(error.message) ? 404 : 400 });
+      }
+    }
     // Fehlerzentrale-Aktionen (Phase 2, 26.09.2026): echte Werknetz24-Aktionen, gleiche doppelte
     // Schutzschicht wie der Kalender (MASTER_API_SECRET hier, WERKNETZ24_WRITE_SECRET gegenueber
     // Werknetz24). Aendern keine Kunden-/Zahlungsdaten.
