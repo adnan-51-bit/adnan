@@ -390,3 +390,16 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - unbelegte Planwerte der 4 Produktideen entfernt
   - Bildverbot laut ChiliTec-AGB dokumentiert
 - **Tests:** 145/145. Live: Katalog 20/20, Anmeldung 19/19, App-Runde 90/90.
+
+## Update 27.09.2026 (19) — E-Commerce PAUSIERT (Adnans Entscheidung)
+- Adnan: „dann lass uns E-Commerce erstmal stoppen, weil es viel Invest braucht“.
+- **Stand beim Pausieren** (nichts gelöscht, alles live, Shop geschlossen):
+  - Shop /laden fertig, 7-Punkte-Start-Checkliste
+  - Katalog mit Netto-Kalkulation + TikTok-Marge (9 % Provision, `lib/shop-marke.js`)
+  - 7 belegte Produktkandidaten (ChiliTec/Laprinta) mit Symbolbildern, alle „Recherchieren“
+- **Gründe:**
+  - Gewerbe nötig (eigener Shop, TikTok Shop und Händlerkonten)
+  - echte Einkaufspreise nur mit Händlerkonto
+  - echte Produktfotos (Kosten Muster/Abo)
+  - bei TikTok zusätzlich regelmäßige Videos
+- **Wiederaufnahme:** `docs/SORTIERT24.md` (Start-Checkliste) und `docs/SORTIERT24-PRODUKTQUELLEN.md`.
