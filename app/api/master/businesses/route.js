@@ -85,7 +85,7 @@ export async function GET(request){
           const aktuell = na?.lead_id ? leads.find(l => l.id === na.lead_id) : null;
           // Zuerst was den aktuellen Lead betrifft, dann Preis/Gewerbe, dann der Rest.
           if (aktuell) duMusst.sort((a, b) => (b.includes(aktuell.firma || aktuell.name) - a.includes(aktuell.firma || aktuell.name)) || (/Monatspreis|Gewerbe/.test(b) - /Monatspreis|Gewerbe/.test(a)));
-          return umsatzPipeline({ leads, tasks: alleTasks, finance, naechsterSchritt: na?.text || null, aktuellerLead: aktuell ? { id: aktuell.id, name: aktuell.firma || aktuell.name, punkte: aktuell.profil_analyse?.punkte ?? null, stufe: na.stufe } : null, claudeErledigt, duMusst: duMusst.slice(0, 8) });
+          return umsatzPipeline({ leads: pq ? leads.filter(l => l.einnahmequelle_id === pq.id) : leads, tasks: alleTasks, finance, naechsterSchritt: na?.text || null, aktuellerLead: aktuell ? { id: aktuell.id, name: aktuell.firma || aktuell.name, punkte: aktuell.profil_analyse?.punkte ?? null, stufe: na.stufe } : null, claudeErledigt, duMusst: duMusst.slice(0, 8) });
         })() });
     }
     // Content & Werbung + "Wartet auf Freigabe" (Teil 4A, 27.09.2026) - nur mit Secret.
@@ -209,7 +209,7 @@ export async function POST(request){
         const a = body.action, id = body.id;
         const e =
           a === "lead-strukturieren" ? { erkannt: strukturiere(body.text) }
-          : a === "lead-anlegen" ? await leadAnlegen(body.lead || {})
+          : a === "lead-anlegen" ? await leadAnlegen(body.lead || {}, { ohneAufgabe: body.ohneAufgabe === true })
           : a === "lead-aendern" ? { lead: await leadAendern(id, body.daten) }
           : a === "lead-status" ? { lead: await leadStatusSetzen(id, body.status) }
           : a === "lead-entwurf" ? { lead: await emailEntwurfErstellen(id, body.art) }
