@@ -77,6 +77,7 @@ export function PilotGoogleProfil() {
         <p className="plZeile">Website: {l.website ? <a href={l.website} target="_blank" rel="noreferrer">{l.website}</a> : "keine verifizierte Website gefunden"}</p>
         <ol className="plStufen">{(d.stufen || []).map(([k, n], x) => <li key={k} className={x < i ? "fertig" : x === i ? "jetzt" : ""}>{n}</li>)}</ol>
         {l.profil_analyse?.verbesserungen?.length > 0 && <p className="plZeile">Erkennbare Verbesserungen: {l.profil_analyse.verbesserungen.map(v => (v.dringend ? "⚠ " : "") + v.text).join(" · ")}</p>}
+        {l.bewertung && <p className="plZeile">Bewertung <b>{l.bewertung.summe}/10</b>: {l.bewertung.kriterien.map(k => `${k.name} ${k.punkte}/2 (${k.begruendung})`).join(" · ")}</p>}
         <p className="plZeile">➜ Nächste Aufgabe: <b>{naechsteAufgabe(l)}</b></p>
         {l.pilot_crm?.zustimmung && <p className="plZeile">Zustimmung: {l.pilot_crm.zustimmung.form} am {tag(l.pilot_crm.zustimmung.datum)} ({l.pilot_crm.zustimmung.dokument}) · Bewertungen beantworten: {l.pilot_crm.zustimmung.bewertungen_antworten_erlaubt ? "erlaubt" : "nicht erlaubt"}{l.pilot_crm.google_zugang ? ` · Google-Zugang: ${l.pilot_crm.google_zugang.rolle} seit ${tag(l.pilot_crm.google_zugang.datum)}` : ""}</p>}
         {(l.pilot_crm?.aenderungen || []).length > 0 && <p className="plZeile">Änderungen: {l.pilot_crm.aenderungen.map(a => tag(a.datum) + " " + a.was).join(" · ")}</p>}

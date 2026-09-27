@@ -26,7 +26,7 @@ const mockFetch = async url => url.endsWith("sitemap-vendors.xml")
   : { ok: true, text: async () => SEITEN[url.split("/").pop()] || "" };
 
 test("Recherche: Detailseite parsen, nur passende Branchen in Monheim, keine Versicherungen/Ketten", () => {
-  assert.deepEqual(R.parseDetail(SEITEN.a), { firma: "Salon A", branche: "Friseur", ort: "Monheim am Rhein", website: "https://salona.test" });
+  assert.deepEqual(R.parseDetail(SEITEN.a), { firma: "Salon A", branche: "Friseur", ort: "Monheim am Rhein", website: "https://salona.test", telefon: "", adresse: "" });
   assert.equal(R.parseDetail(SEITEN.f), null, "nicht Monheim");
   assert.equal(R.passt(R.parseDetail(SEITEN.b)), false); assert.equal(R.passt(R.parseDetail(SEITEN.c)), true);
   assert.equal(R.parseDetail("<title>Blumen X - Blumen &amp; Floristik in Monheim am Rhein</title>").branche, "Blumen & Floristik");
@@ -39,7 +39,8 @@ test("Recherche-Lauf: höchstens 5 neu, nichts wenn genug Betriebe auf Analyse w
   let r = await R.rechercheLauf({ bekannt: new Set([R.VERZEICHNIS + "/vendors/a"]), wartend: 0, anlegen, fetchImpl: mockFetch, heute: "2026-09-28" });
   assert.equal(r.neu.length, 3); assert.ok(angelegt.every(x => /^https:\/\/www\.monheimer-lokalhelden\.de\/vendors\//.test(x.quelle_url) && x.quelle_datum === "2026-09-28"));
   assert.ok(!angelegt.some(x => x.firma === "Salon A" || x.firma === "Allianz B"), "bekannt bzw. ausgeschlossen");
-  assert.ok(angelegt.every(x => !("telefon" in x) && !("email" in x)), "keine Kontaktdaten gespeichert");
+  // Seit 27.09.2026: öffentliche Geschäftsnummer aus den Verzeichnisdaten ja (Kontaktweg), E-Mail-Adressen nie.
+  assert.ok(angelegt.every(x => !("email" in x)), "keine E-Mail-Adressen gespeichert");
   r = await R.rechercheLauf({ bekannt: new Set(), wartend: 5, anlegen, fetchImpl: mockFetch });
   assert.equal(r.neu.length, 0); assert.match(r.grund, /warten noch/);
   r = await R.rechercheLauf({ bekannt: new Set(), wartend: 4, anlegen: async () => ({ id: "x" }), fetchImpl: mockFetch });
@@ -107,8 +108,10 @@ test("Top-5: nachvollziehbar bewertet – Lücken, unbeanspruchtes Profil vorn, 
     { id: "6", firma: "Neu", status: "NEU" },
   ];
   const t = top5(L);
-  assert.deepEqual(t.map(x => x.name), ["Back", "Haar", "Ohne"]);
-  assert.equal(t[1].quelle, "https://q.test/1"); assert.match(t[0].gruende.join(" "), /nicht vom Inhaber beansprucht/); assert.match(t[2].gruende.join(" "), /kein Google-Profil/);
+  // Seit 27.09.2026 nach den 5 dokumentierten Kriterien: „kein Profil“ passt am besten zum Einmal-Paket (Profil anlegen).
+  assert.deepEqual(t.map(x => x.name), ["Ohne", "Back", "Haar"]);
+  assert.equal(t[2].quelle, "https://q.test/1"); assert.match(t[1].gruende.join(" "), /nicht vom Inhaber beansprucht/); assert.match(t[0].gruende.join(" "), /kein Google-Profil/);
+  assert.match(t[0].gruende[0], /^Bewertung \d+\/10$/);
   assert.equal(leadBewertung(L[5]), null);
 });
 
@@ -121,4 +124,22 @@ test("Recherche merkt sich geprüfte Seiten 30 Tage – kein doppeltes Prüfen a
   assert.equal(r2.geprueft + Object.keys(r1.gemerkt).length, 6);
   const r3 = await R.rechercheLauf({ bekannt: new Set(), wartend: 0, anlegen, fetchImpl: mockFetch, heute: "2026-11-15", schonGeprueft: r1.gemerkt });
   assert.equal(r3.geprueft, 6, "nach 30 Tagen wieder prüfbar");
+});
+
+test("Lead-Bewertung: 5 dokumentierte Kriterien je 0–2 mit Begründung, keine Wahrscheinlichkeit", async () => {
+  const { bewerteLead, KRITERIEN } = await import("../lib/lead-bewertung.js");
+  assert.deepEqual(KRITERIEN.map(k => k[0]), ["bedarf", "kontakt", "angebot", "naehe", "info"]);
+  const werte = { kategorie: "ja", kontakt: "teilweise", oeffnungszeiten: "unbekannt", beschreibung: "nein", leistungen: "unbekannt", fotos: "nein", beitraege: "unbekannt", bewertungen_antworten: "nein", bewertungen_aktuell: "unbekannt", fragen: "unbekannt" };
+  const b = bewerteLead({ ort: "Monheim am Rhein", telefon: "02173 1", website: "", notiz: "Standort: X", profil_analyse: { punkte: 30, werte, notiz: "NICHT vom Inhaber beansprucht" } });
+  assert.deepEqual(b.kriterien.map(k => k.punkte), [2, 2, 2, 2, 1]); assert.equal(b.summe, 9); assert.equal(b.stufe, "HOCH");
+  assert.ok(b.kriterien.every(k => k.begruendung.length > 3));
+  const n = bewerteLead({ ort: "Köln", profil_analyse: null });
+  assert.equal(n.summe, 0); assert.equal(n.kriterien[0].begruendung, "noch nicht analysiert");
+  assert.equal(bewerteLead({ ort: "x", notiz: "Adresse laut Verzeichnis: Hauptstr. 1, 40764 Langenfeld", profil_analyse: null }).kriterien.find(k => k.id === "naehe").punkte, 1);
+});
+
+test("Recherche speichert öffentliche Geschäftsnummer und Adresse aus den Verzeichnisdaten", () => {
+  const html = `<title>Salon Z - Friseur in Monheim am Rhein</title><script type="application/ld+json">${JSON.stringify({ "@type": "LocalBusiness", name: "Salon Z", telephone: "+49 2173 12345", address: { streetAddress: "Hauptstr. 1", postalCode: "40789", addressLocality: "Monheim am Rhein" } })}</script>`;
+  const d = R.parseDetail(html);
+  assert.equal(d.telefon, "+49 2173 12345"); assert.equal(d.adresse, "Hauptstr. 1, 40789 Monheim am Rhein");
 });
