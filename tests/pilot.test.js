@@ -134,6 +134,9 @@ test("Quality Gate: technische Punkte je nach echter Lage; Kosten/Werkzeug/Cron 
   assert.equal(f({ finanzen: { ...basis.finanzen, kosten_cent: 100 } }, "kosten"), false);
   assert.equal(f({ werkzeuge: [{ kostenlos: false, status: "freigegeben – Einrichtung ausstehend", name: "KI" }] }, "kosten"), false);
   assert.equal(f({ laeufe: [lauf("wiederkehrende-pruefungen", 30)] }, "cron"), false);
+  // Erledigte Arbeit darf das Gate nicht rot machen: erledigte Pilot-Aufgaben zählen als Nachweis mit.
+  assert.equal(f({ aufgaben: [], erledigteAufgaben: [] }, "aufgaben"), false);
+  assert.equal(f({ aufgaben: [], erledigteAufgaben: [{ title: "Profil-Analyse: X", status: "Erledigt" }] }, "aufgaben"), true);
   assert.equal(f({ eq: { ...eqX, quellen_liste: eqX.quellen_liste.slice(0, 2) } }, "quellen"), false);
   // Verkaufs-Gate: Daten, Belege, Automatik, Google-Regeln, Datenschutz
   const L0 = basis.leads[0];
