@@ -8,10 +8,31 @@ import { adminFetch } from "../../lib/admin-fetch.js";
 const eur = c => ((c || 0) / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 const datum = t => t ? new Date(t).toLocaleDateString("de-DE") : "—";
 
-function Spalte({ titel, eintraege, leer, klasse = "", onZiel }) {
-  return <div className={"zsSpalte " + klasse}><h4>{titel} <b>{eintraege?.length ?? "…"}</b></h4>
-    {!eintraege ? <p className="zsLeer">…</p> : !eintraege.length ? <p className="zsLeer">{leer}</p> :
-      <ul>{eintraege.slice(0, 8).map((e, i) => <li key={i}>{onZiel && e.ziel ? <button type="button" onClick={() => onZiel(e.ziel)}>{e.text}</button> : e.text}</li>)}{eintraege.length > 8 && <li className="zsLeer">+ {eintraege.length - 8} weitere</li>}</ul>}
+// Eine Zeile je Eintrag; lange Angaben (Laufberichte, URLs) nur nach Klick auf „Details“. Nichts wird weggelassen.
+function Zeile({ e, onZiel }) {
+  const [auf, setAuf] = useState(false);
+  const details = e.details || [];
+  return <li className="zsZeile">
+    <span className="zsPunkt" aria-hidden="true" />
+    <div className="zsInhalt">
+      <div className="zsKopfzeile">
+        {onZiel && e.ziel ? <button type="button" className="zsText" title={e.text} onClick={() => onZiel(e.ziel)}>{e.text}</button> : <span className="zsText" title={e.text}>{e.text}</span>}
+        {details.length > 0 && <button type="button" className="zsDetailKnopf" aria-expanded={auf} onClick={() => setAuf(!auf)}>{auf ? "weniger" : "Details"}</button>}
+      </div>
+      {auf && <ul className="zsDetails">{details.map((d, i) => <li key={i}>{String(d).split(/(https?:\/\/\S+)/).map((t, j) => /^https?:\/\//.test(t) ? <a key={j} href={t.replace(/[),.]+$/, "")} target="_blank" rel="noreferrer">{t}</a> : t)}</li>)}</ul>}
+    </div>
+  </li>;
+}
+
+function Spalte({ titel, eintraege, leer, klasse = "", onZiel, symbol = "" }) {
+  const [alle, setAlle] = useState(false);
+  const liste = eintraege || [];
+  const sichtbar = alle ? liste : liste.slice(0, 8);
+  return <div className={"zsSpalte " + klasse}>
+    <h4><span>{symbol ? symbol + " " : ""}{titel}</span><b className="zsAnzahl">{eintraege?.length ?? "…"}</b></h4>
+    {!eintraege ? <p className="zsLeer">…</p> : !liste.length ? <p className="zsLeer">{leer}</p> :
+      <ul className="zsListe">{sichtbar.map((e, i) => <Zeile key={i} e={e} onZiel={onZiel} />)}</ul>}
+    {liste.length > 8 && <button type="button" className="zsDetailKnopf zsMehr" onClick={() => setAlle(!alle)}>{alle ? "weniger anzeigen" : `alle ${liste.length} anzeigen`}</button>}
   </div>;
 }
 
@@ -21,15 +42,15 @@ export function AufgabenZentraleKarte({ goTo }) {
   if (z === null) return null;
   const ziel = t => t?.startsWith("/") ? window.location.assign(t) : goTo?.(t);
   return <section className="panel zs"><h3>Aufgaben-Zentrale</h3>
-    {z?.naechsteAktion && <p className="zsNaechste">👉 <b>Nächste Aktion:</b> <button type="button" onClick={() => ziel(z.naechsteAktion.ziel)}>{z.naechsteAktion.text}</button></p>}
+    {z?.naechsteAktion && <div className="zsNaechste"><span className="zsNaechsteLabel">👉 Nächste Aktion</span><button type="button" onClick={() => ziel(z.naechsteAktion.ziel)}>{z.naechsteAktion.text}</button></div>}
     <div className="zsGitter">
-      <Spalte titel="Heute" eintraege={z?.heute} leer="Nichts fällig." onZiel={ziel} />
-      <Spalte titel="Automatisch erledigt" eintraege={z?.automatischErledigt} leer="Heute noch nichts." onZiel={ziel} />
-      <Spalte titel="Wartet auf mich" eintraege={z?.wartetAufMich} leer="Nichts." klasse="zsWarten" onZiel={ziel} />
-      <Spalte titel="Fehler" eintraege={z?.fehler} leer="Keine." klasse="zsFehler" onZiel={ziel} />
-      <Spalte titel="Erfolgreich (heute erledigt)" eintraege={z?.erfolgreich} leer="Heute noch nichts." onZiel={ziel} />
+      <Spalte titel="Heute" symbol="📅" eintraege={z?.heute} leer="Nichts fällig." klasse="zsHeute" onZiel={ziel} />
+      <Spalte titel="Automatisch erledigt" symbol="⚙" eintraege={z?.automatischErledigt} leer="Heute noch nichts." klasse="zsAuto" onZiel={ziel} />
+      <Spalte titel="Wartet auf mich" symbol="✋" eintraege={z?.wartetAufMich} leer="Nichts." klasse="zsWarten" onZiel={ziel} />
+      <Spalte titel="Fehler" symbol="⚠" eintraege={z?.fehler} leer="Keine." klasse="zsFehler" onZiel={ziel} />
+      <Spalte titel="Erfolgreich (heute erledigt)" symbol="✓" eintraege={z?.erfolgreich} leer="Heute noch nichts." klasse="zsErfolg" onZiel={ziel} />
     </div>
-    <p className="zsLeer">Erledigte Aufgaben werden automatisch mit Datum dokumentiert (Feld „Ergebnis“), wenn keine Notiz eingetragen ist.</p>
+    <p className="zsLeer">Gleiche automatische Läufe sind zusammengefasst (×Anzahl); jeder einzelne Lauf steht unter „Details“. Erledigte Aufgaben ohne Notiz werden automatisch mit Datum dokumentiert.</p>
     <style dangerouslySetInnerHTML={{ __html: ZS_CSS }} />
   </section>;
 }
@@ -94,14 +115,27 @@ export function FinanzMonitor({ m }) {
 }
 
 const ZS_CSS = `
-.zs h4{margin:0 0 6px;font-size:13px;display:flex;justify-content:space-between;gap:8px}
-.zsGitter{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:8px}
-.zsSpalte{background:rgba(127,127,127,.06);border-radius:10px;padding:10px;min-width:0}
-.zsSpalte ul{margin:0;padding-left:16px;display:grid;gap:4px;font-size:13px}
-.zsSpalte li{overflow-wrap:anywhere}
-.zsSpalte button,.zsNaechste button{background:none;border:0;padding:0;color:inherit;text-align:left;cursor:pointer;text-decoration:underline;font:inherit}
-.zsWarten{outline:1px solid rgba(245,158,11,.5)}.zsFehler{outline:1px solid rgba(239,68,68,.45)}
-.zsLeer{font-size:12px;opacity:.7;margin:4px 0}
+.zs h4{margin:0 0 8px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1px solid rgba(127,127,127,.25)}
+.zsAnzahl{min-width:24px;text-align:center;padding:1px 8px;border-radius:999px;background:rgba(127,127,127,.15);font-size:12px}
+.zsGitter{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:10px}
+.zsSpalte{background:rgba(127,127,127,.06);border-radius:10px;padding:10px 12px;min-width:0;border-top:3px solid rgba(127,127,127,.35)}
+.zsHeute{border-top-color:#3b82f6}.zsAuto{border-top-color:#10b981}.zsWarten{border-top-color:#f59e0b;background:rgba(245,158,11,.07)}.zsFehler{border-top-color:#ef4444;background:rgba(239,68,68,.06)}.zsErfolg{border-top-color:#22c55e}
+.zsListe,.zsSpalte>ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.zsZeile{display:grid;grid-template-columns:8px minmax(0,1fr);gap:8px;align-items:start;font-size:13px}
+.zsPunkt{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.55;margin-top:7px}
+.zsInhalt{min-width:0}
+.zsKopfzeile{display:flex;align-items:baseline;gap:6px;min-width:0}
+.zsText{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+button.zsText{background:none;border:0;padding:0;color:inherit;text-align:left;cursor:pointer;font:inherit}
+button.zsText:hover{text-decoration:underline}
+.zsDetailKnopf{flex:0 0 auto;background:none;border:1px solid rgba(127,127,127,.4);border-radius:6px;padding:0 6px;font-size:11px;line-height:18px;color:inherit;cursor:pointer}
+.zsMehr{margin-top:8px}
+.zsDetails{list-style:disc;margin:6px 0 2px;padding-left:16px;font-size:12px;opacity:.9;display:grid;gap:3px}
+.zsDetails li{overflow-wrap:anywhere;white-space:normal}
+.zsNaechste{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:10px 12px;border-radius:10px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.5);margin:6px 0 4px}
+.zsNaechsteLabel{font-weight:700;font-size:13px;white-space:nowrap}
+.zsNaechste button{background:none;border:0;padding:0;color:inherit;text-align:left;cursor:pointer;font:inherit;text-decoration:underline;min-width:0;overflow-wrap:anywhere}
+.zsLeer{font-size:12px;opacity:.7;margin:6px 0}
 .zsKpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin:8px 0}
 .zsKpis div{background:rgba(127,127,127,.06);border-radius:10px;padding:8px}.zsKpis span{display:block;font-size:12px;opacity:.75}.zsKpis b{font-size:18px}
 .zsScroll{overflow-x:auto;max-width:100%}

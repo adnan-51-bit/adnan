@@ -102,8 +102,10 @@ test("Aufgaben-Zentrale: Heute / automatisch erledigt / Wartet auf mich / Fehler
     freigaben: [{ status: "OFFEN", titel: "Preis festlegen?" }] });
   assert.deepEqual(z.heute.map(x => x.text), ["Heute fällig", "Alt · überfällig"]);
   assert.deepEqual(z.wartetAufMich.map(x => x.text), ["Preis festlegen?", "Warte"]);
-  assert.deepEqual(z.fehler.map(x => x.text), ["Quellen: 404", "Überfällig: Alt"]);
-  assert.equal(z.automatischErledigt.length, 2); assert.deepEqual(z.erfolgreich.map(x => x.text), ["Fertig – ok"]);
+  assert.deepEqual(z.fehler.map(x => x.text), ["Quellen – fehlgeschlagen", "Überfällig: Alt"]);
+  assert.match(z.fehler[0].details[0], /404/, "Fehlertext bleibt in den Details");
+  assert.equal(z.automatischErledigt.length, 2); assert.deepEqual(z.erfolgreich.map(x => x.text), ["Fertig"]);
+  assert.ok(z.erfolgreich[0].details.includes("Ergebnis: ok"));
   assert.match(z.naechsteAktion.text, /Preis festlegen/);
 });
 
@@ -129,4 +131,12 @@ test("Content-Zentrale: Ideen, Video-Ideen, Skripte, Texte, Titel, Affiliate-Ken
   assert.deepEqual(c.fertigeTexte.map(x => x.id), [3]); assert.equal(c.affiliate[0].gekennzeichnet, true);
   assert.deepEqual(c.veroeffentlichung, { wartetAufFreigabe: 1, freigegeben: 0, veroeffentlicht: 1 });
   assert.equal(c.ergebnisse[0].aufrufe, 120); assert.ok(!c.titel.includes("Weg"));
+});
+
+test("Aufgaben-Zentrale kompakt: gleiche Läufe zusammengefasst (×n), jeder Lauf bleibt in den Details", () => {
+  const jetzt = new Date("2026-09-27T10:00:00Z");
+  const lauf = (h, z) => ({ action: "automation.lauf", created_at: `2026-09-27T0${h}:00:00Z`, details: { name: "Tagesbericht erstellen", ergebnis: "ok", zusammenfassung: z } });
+  const z = Z.aufgabenZentrale({ jetzt, audit: [lauf(5, "A"), lauf(6, "B"), lauf(7, "https://sehr-lange-url.test/…")] });
+  assert.deepEqual(z.automatischErledigt.map(x => [x.text, x.anzahl]), [["Tagesbericht erstellen ×3", 3]]);
+  assert.equal(z.automatischErledigt[0].details.length, 3); assert.match(z.automatischErledigt[0].details[2], /sehr-lange-url/);
 });
