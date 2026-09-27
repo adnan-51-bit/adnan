@@ -14,7 +14,7 @@ create table if not exists public.master_anfragen (
   naechste_aktion text not null default '',
   kategorie text not null default '',
   dringlichkeit text not null default '',
-  analyse jsonb not null default '{}'::jsonb,
+  "analyse" jsonb not null default '{}'::jsonb,
   entwuerfe jsonb not null default '{}'::jsonb,
   task_id text,
   ergebnis text not null default '',
