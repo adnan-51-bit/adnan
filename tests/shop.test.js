@@ -239,3 +239,12 @@ test("Shop-Produktdaten kennzeichnen Symbolbild + Bildnachweis", () => {
   assert.equal(o.symbolbild, true); assert.equal(o.bildnachweis, "Foto: A, CC BY-SA 4.0");
   assert.throws(() => store.pruefeProduktZusatz({ bildart: "fake" }));
 });
+
+test("TikTok-Marge = Rohmarge minus Provision vom Brutto-Verkaufspreis", () => {
+  const p = { einkaufspreis_cent: 500, versandkosten_cent: 750, verkaufspreis_cent: 1990 };
+  const t = kalk.kalkuliereTikTok(p, 9, 19);
+  assert.equal(t.provision, 179);          // 9 % von 19,90
+  assert.equal(t.marge, 422 - 179);        // Rohmarge 4,22 − 1,79 = 2,43
+  assert.equal(t.quote, 14.5);             // 2,43 / 16,72
+  assert.equal(kalk.kalkuliereTikTok({ verkaufspreis_cent: 1990 }).marge, null, "ohne EK keine Marge");
+});

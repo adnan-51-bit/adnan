@@ -15,8 +15,8 @@ import { useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { adminFetch } from "../../lib/admin-fetch.js";
 import { AnmeldeKnopf } from "../_teile/anmelde-knopf.jsx";
-import { kalkuliere, bildFehlt, istSymbolbild, KATALOG_STATUS, KATALOG_LABEL, BILDRECHTE, BILDART, pruefpunkte } from "../../lib/kalkulation.js";
-import { UMSATZSTEUER_SATZ } from "../../lib/shop-marke.js";
+import { kalkuliere, kalkuliereTikTok, bildFehlt, istSymbolbild, KATALOG_STATUS, KATALOG_LABEL, BILDRECHTE, BILDART, pruefpunkte } from "../../lib/kalkulation.js";
+import { UMSATZSTEUER_SATZ, TIKTOK_PROVISION_PROZENT } from "../../lib/shop-marke.js";
 
 const BUSINESS_ID = "ecommerce";
 
@@ -297,9 +297,9 @@ function Produkte({ products, suppliers, coreLoading, supplierName, onCreate, on
       <select className="search" value={filter} onChange={e => setFilter(e.target.value)}><option value="alle">Alle Status</option>{KATALOG_STATUS.map(s => <option key={s} value={s}>{KATALOG_LABEL[s]} ({zaehle(s)})</option>)}</select>
       <input className="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Suchen…" />
       <button className="primaryLink" onClick={() => setCreating(true)}>+ Produkt hinzufügen</button></div></div>
-    <p className="note">Rechnung (netto, USt {UMSATZSTEUER_SATZ} % – Annahme Regelbesteuerung): EK + Versand + sonstige Kosten = Einstand · VK netto − Einstand = Rohmarge · Rohmarge / VK netto = Quote. „—“ = Wert fehlt (wird nicht geschätzt).</p>
+    <p className="note">Rechnung (netto, USt {UMSATZSTEUER_SATZ} % – Annahme Regelbesteuerung): EK + Versand + sonstige Kosten = Einstand · VK netto − Einstand = Rohmarge · Rohmarge / VK netto = Quote. TikTok-Marge = Rohmarge − {TIKTOK_PROVISION_PROZENT} % Provision vom Verkaufspreis. „—“ = Wert fehlt (wird nicht geschätzt).</p>
     {coreLoading ? <Panel title="Produkte"><p>Daten werden geladen…</p></Panel> : <div className="ccTableWrap"><table className="katalog">
-      <thead><tr><th>Produkt</th><th>Bild</th><th>Lieferant</th><th>EK netto</th><th>Versand</th><th>VK brutto / netto</th><th>Marge</th><th>Lieferzeit</th><th>Beschreibung</th><th>Quelle</th><th>Status</th><th>Aktionen</th></tr></thead>
+      <thead><tr><th>Produkt</th><th>Bild</th><th>Lieferant</th><th>EK netto</th><th>Versand</th><th>VK brutto / netto</th><th>Marge eigener Shop / TikTok</th><th>Lieferzeit</th><th>Beschreibung</th><th>Quelle</th><th>Status</th><th>Aktionen</th></tr></thead>
       <tbody>{visible.map(p => { const k = kalkuliere(p); const st = p.katalog_status || "RECHERCHIEREN"; const fehlt = pruefpunkte(p, suppliers).filter(x => !x.ok); return <tr key={p.id}>
         <td><strong>{p.name}</strong><small>{p.kategorie}{p.sku ? " · " + p.sku : ""}</small></td>
         <td>{bildFehlt(p) ? <em className="warnBadge">Bild fehlt / Rechte ungeklärt – Produkt noch nicht veröffentlichen</em> : <span className="bildZelle"><img src={p.bilder[0]} alt="" className="miniBild" title={p.bildnachweis || ""} />{istSymbolbild(p) && <em className="symbolTag">Symbolbild</em>}</span>}</td>
@@ -307,7 +307,7 @@ function Produkte({ products, suppliers, coreLoading, supplierName, onCreate, on
         <td>{eur(k.ek)}{k.ek !== null && !p.ek_quelle && <small className="warn">ohne Quelle</small>}</td>
         <td>{eur(k.versand)}{k.versand !== null && !p.versand_quelle && <small className="warn">ohne Quelle</small>}</td>
         <td>{eur(k.vkBrutto)}<small>{k.vkNetto !== null ? "netto " + eur(k.vkNetto) : ""}</small></td>
-        <td>{k.rohmarge === null ? "—" : <><span style={{ color: k.rohmarge > 0 ? "#067647" : "#b42318" }}>{eur(k.rohmarge)}</span><small>{k.quote} %</small></>}</td>
+        <td>{k.rohmarge === null ? "—" : (() => { const t = kalkuliereTikTok(p); return <><span style={{ color: k.rohmarge > 0 ? "#067647" : "#b42318" }}>{eur(k.rohmarge)}</span><small>{k.quote} %</small><small style={{ color: t.marge > 0 ? "#067647" : "#b42318" }}>TikTok: {eur(t.marge)} ({t.quote} %)</small></>; })()}</td>
         <td>{p.lieferzeit || "—"}</td>
         <td>{p.kurzbeschreibung ? <small title={p.kurzbeschreibung}>{p.kurzbeschreibung.slice(0, 60)}{p.kurzbeschreibung.length > 60 ? "…" : ""}</small> : <small className="warn">fehlt</small>}</td>
         <td>{p.lieferanten_url ? <a href={p.lieferanten_url} target="_blank" rel="noreferrer">Produktquelle ↗</a> : <small className="warn">fehlt</small>}</td>
@@ -359,7 +359,7 @@ function ProductEditModal({ product: p, suppliers, onClose, onSave }) {
     {Feld({ l: "Versandkosten (€)", k: "vek", inputMode: "decimal", placeholder: "leer = unbekannt" })}{Feld({ l: "Quelle Versand", k: "versand_quelle" })}
     {Feld({ l: "Sonstige nachweisbare Kosten (€, optional)", k: "sonst", inputMode: "decimal" })}{Feld({ l: "Nachweis sonstige Kosten", k: "sonst_quelle" })}
     {Feld({ l: "Verkaufspreis BRUTTO (€, Endpreis im Shop – leer = noch nicht kalkuliert)", k: "vk", inputMode: "decimal" })}
-    <p className="note">Einstand {eur(k.einstand)} · VK netto {eur(k.vkNetto)} · Rohmarge <strong>{eur(k.rohmarge)}</strong>{k.quote !== null ? ` · ${k.quote} %` : ""}{k.rohmarge !== null && k.rohmarge <= 0 ? " – nicht verkaufbar" : ""}</p>
+    <p className="note">Einstand {eur(k.einstand)} · VK netto {eur(k.vkNetto)} · Rohmarge <strong>{eur(k.rohmarge)}</strong>{k.quote !== null ? ` · ${k.quote} %` : ""}{k.rohmarge !== null && k.rohmarge <= 0 ? " – nicht verkaufbar" : ""}{(() => { const t = kalkuliereTikTok({ einkaufspreis_cent: euroZuCent(f.ek), versandkosten_cent: euroZuCent(f.vek), sonstige_kosten_cent: euroZuCent(f.sonst), verkaufspreis_cent: euroZuCent(f.vk) }); return t.marge === null ? null : <><br />Im TikTok Shop (−{t.provisionProzent} % = {eur(t.provision)} Provision): <strong>{eur(t.marge)}</strong> · {t.quote} %{t.marge <= 0 ? " – lohnt sich dort nicht" : ""}</>; })()}</p>
     <h4>Lager & Lieferung</h4>
     {Feld({ l: "Lagerstatus / Bestand (leer = unbekannt)", k: "bestand", inputMode: "numeric" })}{Feld({ l: "Lieferzeit (Angabe des Lieferanten)", k: "lieferzeit" })}
     <h4>Texte</h4>
