@@ -67,7 +67,14 @@ test("Kompletter Ablauf: Lead → Kontakt → Angebot → Kunde → offene Einna
   assert.equal((await eq.listEinnahmequellen())[0].kunden.length, 1, "Kunde in der Einnahmequelle");
   await L.zahlungEingegangen(buchung.id, "2026-10-01");
   await assert.rejects(() => L.zahlungEingegangen(buchung.id), /Nur offene Einnahmen/);
-  await L.kostenErfassen(q.id, { betrag_cent: 1500, beschreibung: "Domain", quelle: "Rechnung 1", datum: "2026-10-01" });
+  // Kostenregel (seit 27.09.2026): ohne freigegebene Kosten-Freigabe keine Ausgabe
+  await assert.rejects(() => L.kostenErfassen(q.id, { betrag_cent: 1500, beschreibung: "Domain", quelle: "Rechnung 1", datum: "2026-10-01" }), /freigegebener Kosten-Freigabe/);
+  const { freigabeEntscheiden } = await import("../lib/freigaben.js");
+  const vorschlag = await L.kostenVorschlagen(q.id, { was: "Domain", warum: "eigene Seite", betrag_cent: 1500, rhythmus: "jährlich" });
+  assert.equal(vorschlag.art, "KOSTEN"); assert.equal(vorschlag.status, "OFFEN");
+  await freigabeEntscheiden(vorschlag.id, "FREIGEGEBEN", "ok");
+  await L.kostenErfassen(q.id, { betrag_cent: 1500, beschreibung: "Domain", quelle: "Rechnung 1", datum: "2026-10-01", freigabe_id: vorschlag.id });
+  await assert.rejects(() => L.kostenErfassen(q.id, { betrag_cent: 1500, beschreibung: "Domain", quelle: "Rechnung 1", freigabe_id: vorschlag.id }), /schon verbucht/);
   f = fin.eqFinanzen(await fin.listFinance(), q.id);
   assert.deepEqual([f.einnahmen_cent, f.kosten_cent, f.gewinn_cent, f.offen_cent], [9900, 1500, 8400, 0]);
   const aktuell = (await eq.listEinnahmequellen())[0];

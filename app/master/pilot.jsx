@@ -59,20 +59,27 @@ export function PilotGoogleProfil() {
       {(d?.leads || []).map(l => { const q = String(l.quelle || "").match(/https?:\/\/\S+/)?.[0]; const i = (d.stufen || []).findIndex(([k]) => k === l.stufe); return <article key={l.id} className={"plBetrieb" + (d.naechsteAktion?.lead_id === l.id ? " plDran" : "")}>
         <div className="plKopf"><div><strong>{l.firma || l.name}</strong><small>{[l.branche, l.ort].filter(Boolean).join(" · ") || "—"} · {LEAD_LABEL[l.status]} · erfasst {tag(l.erstellt_am)}</small>
           <small>Quelle: {q ? <a href={q} target="_blank" rel="noreferrer">{String(l.quelle).replace(q, "").trim() || "Link"} ↗</a> : (l.quelle || "—")} · <a href={"https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent([l.firma || l.name, l.ort].filter(Boolean).join(" "))} target="_blank" rel="noreferrer">Google-Profil suchen ↗</a>{l.profil_analyse ? <> · <a href={l.profil_analyse.quelle} target="_blank" rel="noreferrer">analysiertes Profil ↗</a></> : null}</small></div>
-          <b className="plScore">{l.profil_analyse ? `${l.profil_analyse.punkte}/100` : "nicht analysiert"}</b></div>
+          <span className="plBadges"><b className="plScore">{l.profil_analyse ? `${l.profil_analyse.punkte}/100` : "nicht analysiert"}</b><b className={"plPrio p" + l.prioritaet?.stufe} title="Arbeitspriorität aus der eigenen Analyse – keine Erfolgsaussage">Priorität: {l.prioritaet?.text}</b></span></div>
+        <p className="plZeile">Website: {l.website ? <a href={l.website} target="_blank" rel="noreferrer">{l.website}</a> : "keine verifizierte Website gefunden"}</p>
         <ol className="plStufen">{(d.stufen || []).map(([k, n], x) => <li key={k} className={x < i ? "fertig" : x === i ? "jetzt" : ""}>{n}</li>)}</ol>
         {l.profil_analyse?.verbesserungen?.length > 0 && <p className="plZeile">Erkennbare Verbesserungen: {l.profil_analyse.verbesserungen.map(v => (v.dringend ? "⚠ " : "") + v.text).join(" · ")}</p>}
         <p className="plZeile">➜ Nächste Aufgabe: <b>{naechsteAufgabe(l)}</b></p>
+        {l.pilot_crm?.zustimmung && <p className="plZeile">Zustimmung: {l.pilot_crm.zustimmung.form} am {tag(l.pilot_crm.zustimmung.datum)} ({l.pilot_crm.zustimmung.dokument}) · Bewertungen beantworten: {l.pilot_crm.zustimmung.bewertungen_antworten_erlaubt ? "erlaubt" : "nicht erlaubt"}{l.pilot_crm.google_zugang ? ` · Google-Zugang: ${l.pilot_crm.google_zugang.rolle} seit ${tag(l.pilot_crm.google_zugang.datum)}` : ""}</p>}
+        {(l.pilot_crm?.aenderungen || []).length > 0 && <p className="plZeile">Änderungen: {l.pilot_crm.aenderungen.map(a => tag(a.datum) + " " + a.was).join(" · ")}</p>}
         {l.vertrag && <p className="plZeile">Monatliche Leistung: {eur(l.vertrag.monatspreis_cent)}/Monat seit {tag(l.vertrag.start)} · {l.vertrag.aktiv ? `läuft (zuletzt ${l.vertrag.letzte_periode || "—"})` : "beendet"}</p>}
         <div className="plAktionen">
           <button className="editMini" onClick={() => setDialog({ art: "analyse", l })}>{l.profil_analyse ? "Analyse aktualisieren" : "Profil-Analyse"}</button>
           {l.bericht && <button className="editMini" onClick={() => setDialog({ art: "text", titel: "Profil-Check-Bericht", text: l.bericht })}>Bericht</button>}
-          {l.stufe === "POTENZIELL" && l.profil_analyse && <button className="editMini" onClick={() => senden({ action: "lead-status", id: l.id, status: "KONTAKT" }, "Gespräch vermerkt")}>Gespräch geführt</button>}
+          {l.stufe === "GEPRUEFT" && <a className="editMini" href="/master?tab=freigaben">Kontakt freigeben („Wartet auf mich“) →</a>}
+          {l.stufe === "KONTAKT_FREIGEGEBEN" && <button className="editMini" onClick={() => senden({ action: "lead-status", id: l.id, status: "KONTAKT" }, "Gespräch vermerkt")}>Gespräch geführt</button>}
           {l.stufe === "GESPRAECH" && <button className="editMini plJa" onClick={() => senden({ action: "lead-status", id: l.id, status: "INTERESSENT" }, "Interesse vermerkt")}>Hat Interesse</button>}
-          {["POTENZIELL", "GESPRAECH", "INTERESSE"].includes(l.stufe) && l.status !== "VERLOREN" && <button className="editMini" onClick={() => senden({ action: "lead-status", id: l.id, status: "VERLOREN" }, "Als „kein Interesse“ vermerkt")}>Kein Interesse</button>}
+          {["LEAD", "GEPRUEFT", "KONTAKT_FREIGEGEBEN", "GESPRAECH", "INTERESSE", "ANGEBOT"].includes(l.stufe) && l.status !== "VERLOREN" && <button className="editMini" onClick={() => senden({ action: "lead-status", id: l.id, status: "VERLOREN" }, "Als „kein Interesse“ vermerkt")}>Kein Interesse</button>}
           <button className="editMini" onClick={() => setDialog({ art: "text", titel: "Angebot (Vorlage)", text: l.angebotVorlage, hinweis: "Formell anlegen unter „E-Mail & Leads“ → Angebot erstellen." })}>Angebot-Vorlage</button>
-          {l.status === "KUNDE" && !l.vertrag?.aktiv && <button className="editMini plJa" onClick={() => setDialog({ art: "vertrag", l })}>Monatliche Leistung starten</button>}
-          {l.vertrag?.aktiv && <button className="editMini" onClick={() => senden({ action: "pilot-vertrag-ende", id: l.id }, "Monatliche Leistung beendet")}>Leistung beenden</button>}
+          {l.stufe === "KUNDE" && <button className="editMini plJa" onClick={() => setDialog({ art: "vertrag", l })}>Zustimmung dokumentieren + Leistung starten</button>}
+          {l.stufe === "LAUFEND" && !l.pilot_crm?.google_zugang && <button className="editMini plJa" onClick={() => setDialog({ art: "datum", l, action: "pilot-google-zugang", titel: "Google-Zugang als Administrator bestätigt", erfolg: "Google-Zugang bestätigt" })}>Google-Zugang bestätigt</button>}
+          {l.stufe === "LAUFEND" && l.pilot_crm?.google_zugang && <button className="editMini" onClick={() => setDialog({ art: "aenderung", l })}>Änderung protokollieren</button>}
+          {l.vertrag?.aktiv && <button className="editMini" onClick={() => senden({ action: "pilot-vertrag-ende", id: l.id }, "Leistung beendet – Aufgabe „Zugriff entfernen“ (7 Arbeitstage) angelegt")}>Leistung beenden</button>}
+          {l.stufe === "BEENDET" && !l.pilot_crm?.zugriff_entfernt_am && <button className="editMini plJa" onClick={() => setDialog({ art: "datum", l, action: "pilot-zugriff-entfernt", titel: "Google-Zugriff entfernt", erfolg: "Zugriff entfernt vermerkt" })}>Zugriff entfernt</button>}
           <a className="editMini" href="/master?tab=leads">In „E-Mail & Leads“ →</a>
         </div>
       </article>; })}
@@ -80,7 +87,7 @@ export function PilotGoogleProfil() {
 
     <section className="panel"><h3>Einnahmen (nur echte Buchungen)</h3>
       {d && <div className="plFin"><span>Einnahmen <b>{eur(d.finanzen.einnahmen_cent)}</b></span><span>Offen <b>{eur(d.finanzen.offen_cent)}</b></span><span>Kosten <b>{eur(d.finanzen.kosten_cent)}</b></span><span>Gewinn <b>{eur(d.finanzen.gewinn_cent)}</b></span></div>}
-      {(d?.finanzen?.buchungen || []).map(b => <p key={b.id} className="plZeile">{tag(b.datum)} · {b.art} {eur(b.betrag_cent)} · {b.status} · {b.beschreibung}</p>)}
+      {(d?.finanzen?.buchungen || []).map(b => <p key={b.id} className="plZeile">{tag(b.datum)} · {b.art} {eur(b.betrag_cent)} · {b.status} · {b.beschreibung} {b.art === "Einnahme" && <button className="editMini" onClick={async () => { const j = await senden({ action: "pilot-rechnung", id: b.id }, "Rechnungsentwurf erstellt"); if (j) setDialog({ art: "text", titel: "Rechnung (Entwurf)", text: j.text, hinweis: "Nur ein Entwurf – nicht versenden, bevor Gewerbe/Steuer geklärt sind." }); }}>Rechnung vorbereiten</button>}</p>)}
       <a href="/master?tab=leads">„Geld ist da“ unter E-Mail & Leads →</a></section>
 
     <section className="panel"><h3>Aufgaben ({d?.aufgaben?.length ?? "…"})</h3>
@@ -90,33 +97,40 @@ export function PilotGoogleProfil() {
     <section className="panel"><h3>Dokumentation & Quellen</h3>
       <h4>Quellen</h4>{(d?.eq?.quellen_liste || []).map((q, i) => <p key={i} className="plZeile">• <a href={q.url} target="_blank" rel="noreferrer">{q.quelle}</a> <small>({q.datum}) – {q.aussage}</small></p>)}
       <h4>Monatliche Leistung (Standard)</h4>{(d?.monatsAufgaben || []).map(t => <p key={t} className="plZeile">• {t}</p>)}
+      <h4>Google-Regeln für Drittanbieter</h4>{(d?.googleRegeln?.punkte || []).map(t => <p key={t} className="plZeile">• {t}</p>)}{d?.googleRegeln && <p className="plZeile"><small>Quelle: <a href={d.googleRegeln.quelle} target="_blank" rel="noreferrer">Google Unternehmensprofil – Richtlinien für Drittanbieter</a> (abgerufen {d.googleRegeln.datum})</small></p>}
       <h4>Vor dem ersten Kunden abhaken</h4>{(d?.vertragCheckliste || []).map(t => <p key={t} className="plZeile">☐ {t}</p>)}
       <p className="muted">Keine Rechtsberatung – offene Fragen mit der Beratung klären.</p></section>
 
     {dialog?.art === "betrieb" && <BetriebDialog onClose={() => setDialog(null)} onSave={async betrieb => { if (await senden({ action: "pilot-potenziell", betrieb }, "Potenzieller Kunde erfasst – Aufgabe „Profil-Analyse“ angelegt")) setDialog(null); }} />}
     {dialog?.art === "analyse" && <AnalyseDialog l={dialog.l} kriterien={d.kriterien} onClose={() => setDialog(null)} onSave={async analyse => { const j = await senden({ action: "pilot-analyse", id: dialog.l.id, analyse }, "Analyse gespeichert – Bericht und Aufgabe erstellt"); if (j) setDialog({ art: "text", titel: "Profil-Check-Bericht", text: j.bericht }); }} />}
     {dialog?.art === "vertrag" && <VertragDialog l={dialog.l} preis={d.eq.pilot?.monatspreis_cent} onClose={() => setDialog(null)} onSave={async v => { if (await senden({ action: "pilot-vertrag", id: dialog.l.id, vertrag: v }, "Monatliche Leistung gestartet – Aufgaben + offene Monatsrechnung angelegt")) setDialog(null); }} />}
+    {dialog?.art === "datum" && <DatumDialog titel={dialog.titel + " – " + (dialog.l.firma || dialog.l.name)} onClose={() => setDialog(null)} onSave={async datum => { if (await senden({ action: dialog.action, id: dialog.l.id, zugang: { rolle: "Administrator", datum } }, dialog.erfolg)) setDialog(null); }} />}
+    {dialog?.art === "aenderung" && <AenderungDialog l={dialog.l} onClose={() => setDialog(null)} onSave={async aenderung => { if (await senden({ action: "pilot-aenderung", id: dialog.l.id, aenderung }, "Änderung protokolliert – erscheint im Kundenbericht")) setDialog(null); }} />}
     {dialog?.art === "text" && <div className="modalBack"><div className="modal plModal"><div className="modalHead"><h3>{dialog.titel}</h3><button onClick={() => setDialog(null)}>×</button></div>{dialog.hinweis && <p className="note">{dialog.hinweis}</p>}<pre className="plText">{dialog.text}</pre><div className="modalActions"><button onClick={() => navigator.clipboard?.writeText(dialog.text)}>Kopieren</button><button className="primary" onClick={() => setDialog(null)}>Schließen</button></div></div></div>}
     <style dangerouslySetInnerHTML={{ __html: PL_CSS }} />
   </div>;
 }
 
 function BetriebDialog({ onClose, onSave }) {
-  const [f, setF] = useState({ firma: "", ort: "Monheim am Rhein", branche: "", quelle_url: "", quelle_datum: heute(), notiz: "" });
+  const [f, setF] = useState({ firma: "", ort: "Monheim am Rhein", branche: "", website: "", quelle_url: "", quelle_datum: heute(), notiz: "" });
   const s = k => e => setF({ ...f, [k]: e.target.value });
   return <div className="modalBack"><div className="modal plModal"><div className="modalHead"><h3>Potenziellen Kunden erfassen</h3><button onClick={onClose}>×</button></div>
     <p className="note">Nur öffentlich belegte Angaben (z. B. Branchenverzeichnis, eigene Website des Betriebs) – mit Link und Datum. Keine Kontaktaufnahme, keine Werbe-Mail.</p>
-    {[["firma", "Name des Betriebs"], ["ort", "Ort"], ["branche", "Branche"], ["quelle_url", "Quelle (Link, wo die Angaben stehen)"], ["quelle_datum", "Datum der Recherche", "date"], ["notiz", "Notiz (optional)"]].map(([k, l, t]) => <label key={k}>{l}<input type={t || "text"} value={f[k]} onChange={s(k)} /></label>)}
+    {[["firma", "Name des Betriebs"], ["ort", "Ort"], ["branche", "Branche"], ["website", "Website (optional, nur wenn sicher zum Betrieb gehörig)"], ["quelle_url", "Quelle (Link, wo die Angaben stehen)"], ["quelle_datum", "Datum der Recherche", "date"], ["notiz", "Notiz (optional)"]].map(([k, l, t]) => <label key={k}>{l}<input type={t || "text"} value={f[k]} onChange={s(k)} /></label>)}
     <div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" disabled={!f.firma.trim() || !f.ort.trim() || !f.branche.trim() || !/^https?:\/\//.test(f.quelle_url)} onClick={() => onSave(f)}>Speichern</button></div></div></div>;
 }
 // Naechste Aufgabe je Betrieb aus der Stufe (gleiche Logik wie "Deine naechste Aktion").
 function naechsteAufgabe(l) {
   if (l.status === "VERLOREN") return "Keine – kein Interesse";
-  if (l.stufe === "LAUFEND") return "Monatsaufgaben erledigen (Aufgabenliste)";
-  if (l.stufe === "KUNDE") return "Monatliche Leistung starten – abrechnen erst nach Gewerbe-Klärung";
+  if (l.stufe === "BEENDET") return l.pilot_crm?.zugriff_entfernt_am ? "Keine – beendet" : "Google-Zugriff innerhalb von 7 Arbeitstagen entfernen";
+  if (l.stufe === "LAUFEND") return l.pilot_crm?.google_zugang ? "Monatsaufgaben erledigen, Änderungen protokollieren" : "Einladung als Administrator abwarten und bestätigen";
+  if (l.stufe === "KUNDE") return "Schriftliche Zustimmung dokumentieren und Leistung starten – abrechnen erst nach Gewerbe-Klärung";
+  if (l.stufe === "ANGEBOT") return "Rückmeldung zum Angebot abwarten bzw. nachfragen";
   if (l.stufe === "INTERESSE") return "Unverbindliches Angebot vorbereiten (Preis: deine Entscheidung)";
   if (l.stufe === "GESPRAECH") return "Nachfragen, ob Interesse besteht";
-  return l.profil_analyse ? "Bericht persönlich zeigen und Gespräch führen" : "Google-Profil öffnen und Analyse ausfüllen";
+  if (l.stufe === "KONTAKT_FREIGEGEBEN") return "Bericht persönlich zeigen und Gespräch führen";
+  if (l.stufe === "GEPRUEFT") return "Entscheiden: Kontakt freigeben? (Wartet auf mich)";
+  return "Google-Profil öffnen und Analyse ausfüllen";
 }
 
 function AnalyseDialog({ l, kriterien, onClose, onSave }) {
@@ -131,19 +145,41 @@ function AnalyseDialog({ l, kriterien, onClose, onSave }) {
     <label>Notiz<textarea rows={2} value={f.notiz} onChange={e => setF({ ...f, notiz: e.target.value })} /></label>
     <div className="modalActions"><span className="muted">{geprueft}/{kriterien.length} geprüft</span><button onClick={onClose}>Abbrechen</button><button className="primary" disabled={geprueft < 5 || !/^https?:\/\//.test(f.quelle)} onClick={() => onSave(f)}>Speichern + Bericht</button></div></div></div>;
 }
+function DatumDialog({ titel, onClose, onSave }) {
+  const [d, setD] = useState(heute());
+  return <div className="modalBack"><div className="modal plModal"><div className="modalHead"><h3>{titel}</h3><button onClick={onClose}>×</button></div>
+    <p className="note">Rolle immer „Administrator“ – der Kunde bleibt Inhaber. Nie ein Passwort annehmen oder speichern.</p>
+    <label>Datum<input type="date" value={d} onChange={e => setD(e.target.value)} /></label>
+    <div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" onClick={() => onSave(d)}>Bestätigen</button></div></div></div>;
+}
+function AenderungDialog({ l, onClose, onSave }) {
+  const [f, setF] = useState({ datum: heute(), was: "" });
+  return <div className="modalBack"><div className="modal plModal"><div className="modalHead"><h3>Änderung protokollieren – {l.firma || l.name}</h3><button onClick={onClose}>×</button></div>
+    <p className="note">Nur im vereinbarten Umfang ändern. Jede Änderung wird dem Kunden im Monatsbericht mitgeteilt (Google-Regel).</p>
+    <label>Datum<input type="date" value={f.datum} onChange={e => setF({ ...f, datum: e.target.value })} /></label>
+    <label>Was wurde geändert?<textarea rows={3} value={f.was} onChange={e => setF({ ...f, was: e.target.value })} /></label>
+    <div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" disabled={!f.was.trim()} onClick={() => onSave(f)}>Speichern</button></div></div></div>;
+}
 function VertragDialog({ l, preis, onClose, onSave }) {
-  const [f, setF] = useState({ preis: preis ? String(preis / 100).replace(".", ",") : "", start: heute() });
+  const [f, setF] = useState({ preis: preis ? String(preis / 100).replace(".", ",") : "", start: heute(), z_datum: heute(), form: "", dokument: "", gebuehren: false, inhaber: false, bewertungen: "" });
   const cent = euroZuCent(f.preis);
   return <div className="modalBack"><div className="modal plModal"><div className="modalHead"><h3>Monatliche Leistung – {l.firma || l.name}</h3><button onClick={onClose}>×</button></div>
-    <p className="note">Jeden Monat entstehen automatisch die Monatsaufgaben und eine OFFENE Monatsrechnung. Einnahme erst nach „Geld ist da“. Kundenzugang (Google-Verwalter-Einladung) landet unter „Wartet auf mich“.</p>
+    <p className="note">Nur mit schriftlicher oder digitaler Zustimmung des Inhabers (Google-Regel). Danach entstehen jeden Monat automatisch die Monatsaufgaben, ein Kundenbericht und eine OFFENE Monatsrechnung. Einnahme erst nach „Geld ist da“.</p>
+    <label>Zustimmung vom<input type="date" value={f.z_datum} onChange={e => setF({ ...f, z_datum: e.target.value })} /></label>
+    <label>Form der Zustimmung<select value={f.form} onChange={e => setF({ ...f, form: e.target.value })}><option value="">— bitte wählen —</option><option value="schriftlich">schriftlich (unterschrieben)</option><option value="digital">digital (z. B. E-Mail)</option></select></label>
+    <label>Wo liegt der Nachweis? (z. B. „unterschriebenes Angebot, Ordner Kunden“)<input value={f.dokument} onChange={e => setF({ ...f, dokument: e.target.value })} /></label>
+    <label className="plCheck"><input type="checkbox" checked={f.gebuehren} onChange={e => setF({ ...f, gebuehren: e.target.checked })} /> Gebühren wurden vorher schriftlich offengelegt</label>
+    <label className="plCheck"><input type="checkbox" checked={f.inhaber} onChange={e => setF({ ...f, inhaber: e.target.checked })} /> Kunde bleibt Inhaber, ich werde nur Administrator</label>
+    <label>Antworten auf Bewertungen ausdrücklich erlaubt?<select value={f.bewertungen} onChange={e => setF({ ...f, bewertungen: e.target.value })}><option value="">— bitte wählen —</option><option value="ja">ja</option><option value="nein">nein</option></select></label>
     <label>Monatspreis (€)<input inputMode="decimal" value={f.preis} onChange={e => setF({ ...f, preis: e.target.value })} /></label>
     <label>Start<input type="date" value={f.start} onChange={e => setF({ ...f, start: e.target.value })} /></label>
-    <div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" disabled={!cent} onClick={() => onSave({ monatspreis_cent: cent, start: f.start })}>Starten</button></div></div></div>;
+    <div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" disabled={!cent || !f.form || !f.dokument.trim() || !f.gebuehren || !f.inhaber || !f.bewertungen} onClick={() => onSave({ monatspreis_cent: cent, start: f.start, zustimmung: { datum: f.z_datum, form: f.form, dokument: f.dokument, gebuehren_offengelegt: f.gebuehren, kunde_bleibt_inhaber: f.inhaber, bewertungen_antworten_erlaubt: f.bewertungen === "ja" } })}>Starten</button></div></div></div>;
 }
 
 const PL_CSS = `.plGate{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px}.plG{display:flex;gap:8px;padding:8px;border-radius:8px;border:1px solid #eaecf0;font-size:13px;min-width:0}.plG small{display:block;color:#667085;font-size:11px;overflow-wrap:anywhere}
 .plG.ok{background:#f6fef9}.plG.ok b{color:#067647}.plG.du{background:#fffcf5;border-color:#fedf89}.plG.fehlt{background:#fef3f2;border-color:#fecdca}.plG.fehlt b{color:#b42318}
 .plDu{border-color:#fedf89!important;background:#fffcf5!important}.plDu p{font-size:13px;margin:4px 0;overflow-wrap:anywhere}.plDu small{color:#667085}.plPreis{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin:8px 0}.plPreis label{font-size:12px;font-weight:700}.plPreis input{display:block;margin-top:4px;padding:8px;border:1px solid #d0d5dd;border-radius:7px;width:140px}
+.plBadges{display:flex;gap:6px;flex-wrap:wrap;height:fit-content}.plPrio{font-size:12px;padding:3px 8px;border-radius:999px;background:#f2f4f7}.plPrio.pHOCH{background:#fef3f2;color:#b42318}.plPrio.pMITTEL{background:#fffaeb;color:#b54708}.plCheck{display:flex!important;gap:8px;align-items:center;font-weight:400!important}.plCheck input{width:auto!important;display:inline!important;margin:0!important}
 .plNaechste{display:flex;flex-direction:column;gap:6px;background:#101828;color:#fff;border-radius:12px;padding:14px;margin-bottom:12px}.plNaechste span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#98a2b3;font-weight:800}.plNaechste b{font-size:16px}.plNaechste button{align-self:flex-start;background:#fff!important;color:#101828!important}
 .plStufen{display:flex;flex-wrap:wrap;gap:4px;list-style:none;padding:0;margin:0}.plStufen li{font-size:11px;padding:2px 7px;border-radius:999px;background:#f2f4f7;color:#98a2b3}.plStufen li.fertig{background:#ecfdf3;color:#067647}.plStufen li.jetzt{background:#101828;color:#fff;font-weight:700}.plDran{border-color:#101828!important;box-shadow:0 0 0 1px #101828}
 .plSchritte{margin:0;padding-left:20px;font-size:13px;display:grid;gap:4px}

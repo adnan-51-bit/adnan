@@ -52,7 +52,7 @@ export function EmailLeads() {
         <div className="ldEqKopf"><strong>{q.name}</strong><small>{q.ablauf.naechste ? "Nächster Schritt: " + EINNAHME_LABEL[q.ablauf.naechste] : "Alle Schritte erreicht"}</small></div>
         <ol className="ldAblauf">{EINNAHME_ABLAUF.map(s => <li key={s} className={q.ablauf.erreicht[s] ? "fertig" : s === q.ablauf.naechste ? "jetzt" : ""}>{EINNAHME_LABEL[s]}</li>)}</ol>
         <div className="ldFin"><span>Einnahmen <b>{eur(q.finanzen.einnahmen_cent)}</b></span><span>Kosten <b>{eur(q.finanzen.kosten_cent)}</b></span><span>Gewinn <b>{eur(q.finanzen.gewinn_cent)}</b></span><span>Offen <b>{eur(q.finanzen.offen_cent)}</b></span>
-          <button className="editMini" onClick={() => setDialog({ art: "kosten", eq: q })}>Kosten erfassen</button></div>
+          <button className="editMini" onClick={() => setDialog({ art: "kosten", eq: q })}>Kosten vorschlagen</button></div>
         {q.finanzen.buchungen.length > 0 && <table className="ldTab"><thead><tr><th>Datum</th><th>Art</th><th>Betrag</th><th>Status</th><th>Quelle</th><th></th></tr></thead><tbody>
           {q.finanzen.buchungen.map(b => <tr key={b.id}><td>{tag(b.datum)}</td><td>{b.art}</td><td>{eur(b.betrag_cent)}</td><td>{b.status}</td><td>{b.quelle}{b.beschreibung ? " – " + b.beschreibung : ""}</td>
             <td>{b.status === "offen" && <button className="editMini" onClick={() => setDialog({ art: "bezahlt", b })}>Geld ist da</button>}</td></tr>)}</tbody></table>}
@@ -75,7 +75,7 @@ export function EmailLeads() {
     {dialog?.art === "neu" && <NeuDialog eqs={eqs} senden={senden} onClose={() => setDialog(null)} />}
     {dialog?.art === "antwort" && <TextDialog titel={"Antwort erfassen – " + dialog.l.name} hinweis="Antwort hier einfügen. Die Zentrale erkennt automatisch Interesse, Frage, Termin, Absage oder Widerspruch (bitte prüfen)." feld="Antworttext" onClose={() => setDialog(null)} onSave={async text => { if (await senden({ action: "lead-antwort", id: dialog.l.id, text }, "Antwort erfasst")) setDialog(null); }} />}
     {dialog?.art === "angebot" && <AngebotDialog l={dialog.l} onClose={() => setDialog(null)} onSave={async (text, betrag_cent) => { if (await senden({ action: "lead-angebot", id: dialog.l.id, text, betrag_cent }, "Angebot gespeichert – jetzt E-Mail-Entwurf „Angebot“ erstellen")) setDialog(null); }} />}
-    {dialog?.art === "kosten" && <KostenDialog eq={dialog.eq} onClose={() => setDialog(null)} onSave={async k => { if (await senden({ action: "eq-kosten", id: dialog.eq.id, kosten: k }, "Kosten erfasst")) setDialog(null); }} />}
+    {dialog?.art === "kosten" && <KostenDialog eq={dialog.eq} onClose={() => setDialog(null)} onSave={async v => { if (await senden({ action: "eq-kosten-vorschlag", id: dialog.eq.id, vorschlag: v }, "Kostenvorschlag liegt unter „Wartet auf mich“")) setDialog(null); }} />}
     {dialog?.art === "bezahlt" && <TextDialog titel={`Zahlung eingegangen: ${eur(dialog.b.betrag_cent)}`} hinweis="Nur bestätigen, wenn das Geld wirklich auf dem Konto ist." feld="Eingangsdatum (JJJJ-MM-TT)" start={heute()} einzeilig onClose={() => setDialog(null)} onSave={async datum => { if (await senden({ action: "zahlung-eingegangen", id: dialog.b.id, datum }, "Einnahme als bezahlt erfasst")) setDialog(null); }} />}
     <style dangerouslySetInnerHTML={{ __html: LD_CSS }} />
   </div>;
@@ -144,12 +144,13 @@ function AngebotDialog({ l, onClose, onSave }) {
     <div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" disabled={!f.text.trim() || Number.isNaN(cent)} onClick={() => onSave(f.text, cent)}>Speichern</button></div></div></div>;
 }
 function KostenDialog({ eq, onClose, onSave }) {
-  const [f, setF] = useState({ betrag: "", beschreibung: "", quelle: "", datum: heute() });
+  const [f, setF] = useState({ was: "", warum: "", betrag: "", rhythmus: "" });
   const cent = euroZuCent(f.betrag);
-  return <div className="modalBack"><div className="modal ldModal"><div className="modalHead"><h3>Kosten erfassen – {eq.name}</h3><button onClick={onClose}>×</button></div>
-    <p className="note">Nur echte, bezahlte Ausgaben mit Beleg. Bis zur ersten Einnahme sollten hier 0 € stehen.</p>
-    {[["betrag", "Betrag in €"], ["beschreibung", "Wofür?"], ["quelle", "Beleg (z. B. Rechnung vom …)"], ["datum", "Datum (JJJJ-MM-TT)"]].map(([k, l]) => <label key={k}>{l}<input value={f[k]} onChange={e => setF({ ...f, [k]: e.target.value })} /></label>)}
-    <div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" disabled={!cent || !f.beschreibung.trim() || !f.quelle.trim()} onClick={() => onSave({ betrag_cent: cent, beschreibung: f.beschreibung, quelle: f.quelle, datum: f.datum })}>Speichern</button></div></div></div>;
+  return <div className="modalBack"><div className="modal ldModal"><div className="modalHead"><h3>Kosten vorschlagen – {eq.name}</h3><button onClick={onClose}>×</button></div>
+    <p className="note">0-Euro-Modus bis zur ersten echten Einnahme. Danach werden Kosten nur vorgeschlagen – ausgegeben wird erst nach deiner Freigabe unter „Wartet auf mich“.</p>
+    {[["was", "Was?"], ["warum", "Warum / welche Leistung wird erwartet?"], ["betrag", "Betrag in €"]].map(([k, l]) => <label key={k}>{l}<input value={f[k]} onChange={e => setF({ ...f, [k]: e.target.value })} /></label>)}
+    <label>Rhythmus<select value={f.rhythmus} onChange={e => setF({ ...f, rhythmus: e.target.value })}><option value="">— bitte wählen —</option><option>einmalig</option><option>monatlich</option><option>jährlich</option></select></label>
+    <div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" disabled={!cent || !f.was.trim() || !f.warum.trim() || !f.rhythmus} onClick={() => onSave({ was: f.was, warum: f.warum, betrag_cent: cent, rhythmus: f.rhythmus })}>Vorschlagen</button></div></div></div>;
 }
 
 const LD_CSS = `.ldKpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px;margin:10px 0}.ldKpis div{background:#fff;border:1px solid #eaecf0;border-radius:10px;padding:8px}.ldKpis span{display:block;font-size:11px;color:#667085}.ldKpis b{font-size:18px}

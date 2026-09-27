@@ -10,10 +10,10 @@ import { eqReport } from "../../../../lib/eq-automation.js";
 import { listContent, createContent, updateContent, setzeContentStatus, contentVorbereiten, ideenVorschlaege, contentQuelle, contentBild, contentVeroeffentlichung, contentKennzahl, contentVerlauf, contentUebersicht } from "../../../../lib/content.js";
 import { listFreigaben, freigabeEntscheiden, werkzeugStatus, werkzeugAnfragen, syncPlanFreigaben } from "../../../../lib/freigaben.js";
 import { istWartend, istOffen } from "../../../../lib/aufgaben-status.js";
-import { listLeads, leadAnlegen, leadAendern, leadStatusSetzen, emailEntwurfErstellen, alsGesendet, antwortErfassen, antwortErledigt, angebotErstellen, angebotEntscheidung, zahlungEingegangen, kostenErfassen, leadVerlauf, leadUebersicht } from "../../../../lib/leads.js";
+import { listLeads, leadAnlegen, leadAendern, leadStatusSetzen, emailEntwurfErstellen, alsGesendet, antwortErfassen, antwortErledigt, angebotErstellen, angebotEntscheidung, zahlungEingegangen, kostenErfassen, kostenVorschlagen, leadVerlauf, leadUebersicht } from "../../../../lib/leads.js";
 import { strukturiere, ablaufStand, AUTOMATISIERUNGSGRAD, kontaktErlaubt } from "../../../../lib/leads-regeln.js";
 import { listFinance, eqFinanzen } from "../../../../lib/master-finance.js";
-import { pilotDaten, analyseSpeichern, preisFestlegen, vertragStarten, vertragBeenden, berichtText, angebotText, potenziellenKundenAnlegen } from "../../../../lib/pilot.js";
+import { pilotDaten, analyseSpeichern, preisFestlegen, vertragStarten, vertragBeenden, berichtText, angebotText, potenziellenKundenAnlegen, googleZugangBestaetigen, aenderungProtokollieren, zugriffEntfernt, rechnungVorbereiten } from "../../../../lib/pilot.js";
 import { listTasks } from "../../../../lib/master-tasks.js";
 
 export const runtime = "nodejs";
@@ -155,13 +155,17 @@ export async function POST(request){
           : a === "pilot-vertrag" ? await vertragStarten(body.id, body.vertrag || {})
           : a === "pilot-vertrag-ende" ? { lead: await vertragBeenden(body.id) }
           : a === "pilot-potenziell" ? { lead: await potenziellenKundenAnlegen(body.betrieb) }
+          : a === "pilot-google-zugang" ? { lead: await googleZugangBestaetigen(body.id, body.zugang || {}) }
+          : a === "pilot-aenderung" ? { lead: await aenderungProtokollieren(body.id, body.aenderung || {}) }
+          : a === "pilot-zugriff-entfernt" ? { lead: await zugriffEntfernt(body.id, body.zugang || {}) }
+          : a === "pilot-rechnung" ? { text: await rechnungVorbereiten(body.id) }
           : null;
         if (!e) return NextResponse.json({ ok: false, error: "Unbekannte Aktion" }, { status: 400 });
         return NextResponse.json({ ok: true, ...e });
       } catch (error) { return NextResponse.json({ ok: false, error: error.message }, { status: /nicht gefunden|fehlt$/.test(error.message) ? 404 : 400 }); }
     }
     // Teil 4B: E-Mail & Leads, Angebote, Einnahmen/Kosten je Einnahmequelle.
-    if (String(body?.action || "").startsWith("lead-") || ["zahlung-eingegangen", "eq-kosten"].includes(body?.action)) {
+    if (String(body?.action || "").startsWith("lead-") || ["zahlung-eingegangen", "eq-kosten", "eq-kosten-vorschlag"].includes(body?.action)) {
       try {
         const a = body.action, id = body.id;
         const e =
@@ -177,6 +181,7 @@ export async function POST(request){
           : a === "lead-angebot-entscheidung" ? await angebotEntscheidung(id, body.angenommen)
           : a === "zahlung-eingegangen" ? { buchung: await zahlungEingegangen(id, body.datum) }
           : a === "eq-kosten" ? { buchung: await kostenErfassen(id, body.kosten || {}) }
+          : a === "eq-kosten-vorschlag" ? { freigabe: await kostenVorschlagen(id, body.vorschlag || {}) }
           : null;
         if (!e) return NextResponse.json({ ok: false, error: "Unbekannte Aktion" }, { status: 400 });
         return NextResponse.json({ ok: true, ...e }, { status: ["lead-anlegen", "eq-kosten"].includes(a) ? 201 : 200 });

@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { adminFetch, anmeldeUrl } from "../../lib/admin-fetch.js";
 
 const ARTEN = { ENTSCHEIDUNG: "👤 Entscheidung", VEROEFFENTLICHUNG: "📣 Veröffentlichung", KOSTEN: "💶 Kosten", WERKZEUG: "🧰 Werkzeug aktivieren", AUTOMATISIERUNG: "⚙ Automatisierung", RECHT: "⚖️ Rechtliches" };
-const ZIEL = { pilot: "/master?tab=pilot", content: "/master?tab=content", werkzeug: "/master?tab=content", "eq-plan": "/master?tab=einnahmequellen" };
+const ZIEL = { "lead-kontakt": "/master?tab=pilot", "eq-kosten": "/master?tab=leads", pilot: "/master?tab=pilot", content: "/master?tab=content", werkzeug: "/master?tab=content", "eq-plan": "/master?tab=einnahmequellen" };
 const zeit = t => t ? new Date(t).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }) : "—";
 
 export function Freigaben() {
@@ -42,7 +42,7 @@ export function Freigaben() {
     {(d?.wartendeAufgaben || []).length > 0 && <section className="panel"><h3>Zur Info: Aufgaben, die nur du erledigen kannst ({d.wartendeAufgaben.length})</h3>
       {d.wartendeAufgaben.map(t => <p key={t.id} className="fgZeile">• {t.title}{t.naechste_aktion ? <small> – {t.naechste_aktion}</small> : null}</p>)}<a href="/master?tab=tasks">Zur Aufgabenliste →</a></section>}
     <section className="panel"><h3>Werkzeuge</h3>{(d?.werkzeuge || []).map(w => <p key={w.id} className="fgZeile">• <b>{w.name}</b> – {w.status} <small>(Kosten: {w.kosten})</small></p>)}</section>
-    {erledigt.length > 0 && <section className="panel"><h3>Zuletzt entschieden</h3>{erledigt.map(f => <p key={f.id} className="fgZeile">{f.status === "FREIGEGEBEN" ? "✓" : "✗"} {f.titel} <small>{zeit(f.entschieden_am)}{f.entscheidung_notiz ? " – " + f.entscheidung_notiz : ""}</small></p>)}</section>}
+    {erledigt.length > 0 && <section className="panel"><h3>Zuletzt entschieden</h3>{erledigt.map(f => <p key={f.id} className="fgZeile">{f.status === "FREIGEGEBEN" ? "✓" : "✗"} {f.titel} <small>{zeit(f.entschieden_am)}{f.entscheidung_notiz ? " – " + f.entscheidung_notiz : ""}</small>{f.status === "FREIGEGEBEN" && f.bezug_typ === "eq-kosten" && <button className="fgKlein" onClick={async () => { const betrag = prompt("Tatsächlich bezahlter Betrag in € (nur mit Beleg):"); const beleg = betrag && prompt("Beleg (z. B. Rechnung vom …):"); if (!betrag || !beleg) return; const cent = Math.round(Number(String(betrag).replace(",", ".")) * 100); const r = await adminFetch("/api/master/businesses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "eq-kosten", id: String(f.bezug_id).split(":")[0], kosten: { betrag_cent: cent, beschreibung: f.titel.replace(/^Kosten: /, ""), quelle: beleg, freigabe_id: f.id } }) }); const j = await r.json().catch(() => ({})); setMeldung(r.ok ? "✅ Ausgabe erfasst" : "❌ " + (j.error || r.status)); laden(); }}>Ausgabe erfassen</button>}</p>)}</section>}
     <style dangerouslySetInnerHTML={{ __html: FG_CSS }} />
   </div>;
 }
@@ -50,4 +50,4 @@ export function Freigaben() {
 const FG_CSS = `.fgKarte{border:1px solid #fedf89;background:#fffcf5;border-radius:12px;padding:12px;margin-top:10px;display:flex;flex-direction:column;gap:6px;min-width:0}.fgKarte p{margin:0;font-size:13px;overflow-wrap:anywhere}
 .fgKopf{display:flex;justify-content:space-between;gap:8px;font-size:12px}.fgKopf small{color:#667085}.fgKosten{color:#b54708;font-weight:700}
 .fgKarte input{padding:8px;border:1px solid #d0d5dd;border-radius:7px;font:inherit}.fgKnoepfe{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.fgKnoepfe button{padding:8px 14px;border-radius:8px;border:1px solid #d0d5dd;background:#fff;font:inherit;cursor:pointer;font-weight:700}
-.fgJa{background:#ecfdf3!important;border-color:#abefc6!important;color:#067647}.fgNein{color:#b42318}.fgZeile{font-size:13px;margin:4px 0;overflow-wrap:anywhere}.fgZeile small{color:#667085}.fg .muted{color:#98a2b3;font-size:13px}`;
+.fgJa{background:#ecfdf3!important;border-color:#abefc6!important;color:#067647}.fgNein{color:#b42318}.fgZeile{font-size:13px;margin:4px 0;overflow-wrap:anywhere}.fgZeile small{color:#667085}.fgKlein{margin-left:6px;font-size:12px;padding:2px 8px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;cursor:pointer}.fg .muted{color:#98a2b3;font-size:13px}`;
