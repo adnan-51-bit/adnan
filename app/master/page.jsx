@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { adminFetch } from "../../lib/admin-fetch.js";
 import { AnmeldeKnopf } from "../_teile/anmelde-knopf.jsx";
+import { Gesamtstatus } from "./gesamtstatus.jsx";
 import { Einnahmequellen } from "./einnahmequellen.jsx";
 import { Fehlerzentrale, AgentenZentrale, Werknetz24Systeme, IntegrationenZentrale, BereicheZentrale } from "./control-center.jsx";
 
@@ -113,7 +114,7 @@ export default function MasterDashboard(){
 
       <section className="content">{loading && <div className="notice">Master-Daten werden geladen…</div>}
         {notice && <div className="notice">{notice}<button onClick={()=>setNotice("")}>×</button></div>}
-        {tab==="overview" && <Overview businesses={businesses} tasks={tasks} tasksLocked={tasksLocked} systems={systems} qualityGate={qualityGate} qgLoading={qgLoading} recentActivity={recentActivity} goTo={setTab}/>}
+        {tab==="overview" && <Overview businesses={businesses} finance={finance} tasks={tasks} tasksLocked={tasksLocked} systems={systems} qualityGate={qualityGate} qgLoading={qgLoading} recentActivity={recentActivity} goTo={setTab}/>}
         {tab==="businesses" && <Businesses businesses={visibleBusinesses} search={search} setSearch={setSearch} editing={editing} setEditing={setEditing} saveBusiness={saveBusiness}/>}
         {tab==="alerts" && <Fehlerzentrale systems={systems} tasks={tasks} qualityGate={qualityGate} onReloadSystems={reloadSystems} goTo={setTab}/>}
         {tab==="agents" && <AgentenZentrale systems={systems} onReloadSystems={reloadSystems}/>}
@@ -134,13 +135,14 @@ export default function MasterDashboard(){
   </main>
 }
 
-function Overview({businesses,tasks,tasksLocked,systems,qualityGate,qgLoading,recentActivity,goTo}){
+function Overview({businesses,finance,tasks,tasksLocked,systems,qualityGate,qgLoading,recentActivity,goTo}){
   const openTasks=tasks.filter(t=>t.status!=="Erledigt").length;
   const blocked=systems.filter(s=>s.status==="🔴").length;
   const qgLabel=qgLoading?"…":qualityGate?.productionReady?"🟢 Bereit":"🔴 Gesperrt";
   const qgBlocking=qualityGate?.blocking?.length||0;
   return <>
     <div className="pageTitle"><div><span>CONTROL CENTER</span><h2>Was passiert gerade?</h2></div><div className="quick"><a href="/produkt-pipeline">Produkt prüfen</a><a href="/automation">Automation testen</a></div></div>
+    <Gesamtstatus businesses={businesses} tasks={tasks} tasksLocked={tasksLocked} systems={systems} finance={finance} qualityGate={qualityGate} goTo={goTo}/>
     <nav className="areaNav" aria-label="Direktnavigation"><button onClick={()=>goTo?.("bereiche")}><b>Alle Bereiche</b><small>Status + Aktionen</small></button><button onClick={()=>goTo?.("einnahmequellen")}><b>Einnahmequellen</b><small>Ideen · Tests · Gewinn</small></button><a href="https://werknetz24.de" target="_blank" rel="noreferrer"><b>Internetseite</b><small>werknetz24.de ↗</small></a><a href="/laden" target="_blank" rel="noreferrer"><b>Sortiert24-Shop</b><small>Kundenansicht ↗</small></a><a href="/werknetz24"><b>Werknetz24</b><small>eigener Bereich</small></a><a href="/e-commerce"><b>E-Commerce</b><small>eigener Bereich</small></a><button onClick={()=>goTo?.("agents")}><b>Agenten</b><small>Agenten-Zentrale</small></button><button onClick={()=>goTo?.("alerts")}><b>Fehler</b><small>Fehlerzentrale</small></button><button onClick={()=>goTo?.("systems")}><b>System</b><small>Systemmonitoring</small></button><button onClick={()=>goTo?.("integrations")}><b>Integrationen</b><small>alle Anbieter</small></button><button onClick={()=>goTo?.("finance")}><b>Finanzen</b><small>Finanzbereich</small></button></nav>
     {/* Direktsprünge in die Datenbereiche (26.09.2026). Kunden gibt es in BEIDEN Bereichen - bewusst zwei
         getrennte Ziele statt einer vermischten Liste. Leads/Rechnungen existieren nur bei Werknetz24. */}
