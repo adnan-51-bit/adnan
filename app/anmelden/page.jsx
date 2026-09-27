@@ -32,6 +32,7 @@ export default function Anmelden() {
       if (r.ok) { speichereSecret(c); window.location.assign(ziel); return; }
       await new Promise(res => setTimeout(res, 800)); // bremst schnelles Durchprobieren etwas
       if (r.status === 401) setMeldung("Code falsch. Bitte den Master-Code verwenden – nicht den Werknetz24-Admin-Code.");
+      else if (r.status === 429) setMeldung("Zu viele Fehlversuche. Die Anmeldung ist für 15 Minuten gesperrt – bitte später erneut versuchen.");
       else if (r.status === 503) setMeldung("Auf dem Server ist noch kein Master-Code eingerichtet (MASTER_API_SECRET in Vercel).");
       else setMeldung("Anmeldung gerade nicht möglich (Fehler " + r.status + ").");
     } catch { setMeldung("Keine Verbindung. Bitte später erneut versuchen."); }

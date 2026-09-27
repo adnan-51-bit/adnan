@@ -44,14 +44,14 @@ export async function GET(request) {
     try {
       const gate = shopStartGate({ products: await listProducts() });
       const body = { ok: true, offen: gate.offen, produkte: gate.offen ? gate.verkaufbar.map(oeffentlichesProdukt) : [], versand_cent: gate.offen ? VERSANDKOSTEN_CENT : null };
-      if (!checkAdminSecret(request)) body.checkliste = gate.checks;
+      if (!(await await checkAdminSecret(request))) body.checkliste = gate.checks;
       return NextResponse.json(body);
     } catch (error) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
   }
   if (["customers", "orders", "returns"].includes(type)) {
-    const authError = checkAdminSecret(request);
+    const authError = await checkAdminSecret(request);
     if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
   }
   try {
@@ -71,7 +71,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   if (new URL(request.url).searchParams.get("type") === "shop-bestellung") return shopBestellung(request);
-  const authError = checkAdminSecret(request);
+  const authError = await checkAdminSecret(request);
   if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
   const url = new URL(request.url);
   const type = url.searchParams.get("type") || "orders";
@@ -139,7 +139,7 @@ export async function POST(request) {
 }
 
 export async function PATCH(request) {
-  const authError = checkAdminSecret(request);
+  const authError = await checkAdminSecret(request);
   if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
   const url = new URL(request.url);
   const type = url.searchParams.get("type");

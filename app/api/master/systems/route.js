@@ -7,7 +7,7 @@ export async function GET(){
   catch(error){ return Response.json({ok:false,error:error.message},{status:500}); }
 }
 export async function PATCH(request){
-  const authError=checkAdminSecret(request);
+  const authError=await checkAdminSecret(request);
   if(authError) return Response.json({ok:false,error:authError.error},{status:authError.status});
   try{
     const body=await request.json();

@@ -13,7 +13,7 @@ export async function GET(request){
     // Kalendertermine; das WERKNETZ24_STATUS_SECRET war durch diesen offenen Proxy wirkungslos.
     // Werknetz24-Daten (inkl. aggregiertem liveStatus) gibt es jetzt nur mit MASTER_API_SECRET,
     // die restliche Betriebsliste bleibt wie bisher ohne Anmeldung lesbar.
-    const authError = checkAdminSecret(request);
+    const authError = await checkAdminSecret(request);
     const werknetz24Detail = ["werknetz24Kalender", "werknetz24Aufgaben", "werknetz24Rechnungen", "werknetz24Incidents", "werknetz24Agenten"].some(k => params.get(k));
     if (werknetz24Detail && authError) {
       return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
@@ -64,7 +64,7 @@ export async function GET(request){
 // gegenueber Werknetz24 verwendet - zwei unabhaengige Schutzschichten (wer die Master-Zentrale
 // bedienen darf, und ob Werknetz24 den Schreibzugriff ueberhaupt zulaesst).
 export async function POST(request){
-  const authError = checkAdminSecret(request);
+  const authError = await checkAdminSecret(request);
   if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
   try{
     const body = await request.json();
@@ -99,7 +99,7 @@ export async function POST(request){
 }
 
 export async function PATCH(request){
-  const authError = checkAdminSecret(request);
+  const authError = await checkAdminSecret(request);
   if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
   try{
     const body=await request.json();
