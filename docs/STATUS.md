@@ -967,3 +967,10 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Antwort „Ja“ → Einwilligung dokumentiert, Interessent, Rückruf-Aufgabe, Angebotsentwurf.
   - Antwort „Nein“ → Gesperrt.
 - **Tests:** 260/260, Build ok, live geprüft. Kosten 0 €.
+
+## Update 27.09.2026 (52) — Tagesabschluss
+
+- Brief-Link lautet jetzt `werknetz24.de/r/<Code>` (Weiterleitung im werknetz24-landing-Repo, vercel.json). Datenschutzerklärung von werknetz24.de um Abschnitt 6a (Profil-Check per Brief und Antwort-Link) ergänzt.
+- Live geprüft: Weiterleitung 307, Antwortseite 200 + noindex, Datenschutz online. Tests 260/260 (master) und 969/969 (landing).
+- Stand: 50 Leads, alle analysiert. 0 Interessenten, 0 Kunden, 0 € Einnahmen, 0 € Kosten.
+- Nächster Schritt (Adnan): Kontakt-Freigaben, Briefe drucken und einwerfen.
