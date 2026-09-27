@@ -195,12 +195,14 @@ test("CRM: Lead → geprüft → Kontakt freigegeben → Gespräch → Interesse
   const A = G.naechstePilotAktion;
   const L1 = { id: 1, firma: "A", status: "NEU" }, L2 = { id: 2, firma: "B", status: "NEU", profil_analyse: { punkte: 80 } }, L2b = { id: 22, firma: "B2", status: "NEU", profil_analyse: { punkte: 30 } };
   const L3 = { id: 3, firma: "C", status: "NEU", profil_analyse: { punkte: 50 }, pilot_crm: { kontakt_freigegeben: true } }, L4 = { id: 4, firma: "D", status: "KONTAKT" }, L5 = { id: 5, firma: "E", status: "INTERESSENT" };
-  assert.equal(A([L5, L4, L3, L2, L1]).lead_id, 1, "erst analysieren");
-  assert.equal(A([L5, L4, L3, L2, L2b]).lead_id, 22, "dann Kontakt-Freigabe – höhere Priorität zuerst");
+  // Seit dem Umsatzmodus (27.09.2026): der weiteste Betrieb zuerst – erster Kunde vor neuen Freigaben/Analysen.
+  assert.equal(A([L5, L4, L3, L2, L1]).lead_id, 5, "Interessent zuerst (Angebot freigeben)");
+  assert.match(A([L5]).text, /Angebot für „E“ freigeben/);
+  assert.equal(A([L4, L3, L2, L1]).lead_id, 4, "dann nachfragen");
+  assert.equal(A([L3, L2, L2b, L1]).lead_id, 3, "dann Bericht zeigen");
+  assert.equal(A([L2, L2b, L1]).lead_id, 22, "dann Kontakt-Freigabe – höhere Priorität zuerst");
   assert.match(A([L2]).text, /Kontakt zu „B“ freigeben\? \(unter „Wartet auf mich“\)/);
-  assert.equal(A([L5, L4, L3]).lead_id, 3, "dann Bericht zeigen");
-  assert.equal(A([L5, L4]).lead_id, 4, "dann nachfragen");
-  assert.equal(A([L5]).lead_id, 5, "dann unverbindliches Angebot");
+  assert.equal(A([L1]).lead_id, 1, "zuletzt analysieren");
   assert.equal(A([{ ...L1, status: "VERLOREN" }]).lead_id, null, "verlorene zählen nicht");
 });
 

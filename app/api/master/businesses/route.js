@@ -8,6 +8,8 @@ import { AKTIONEN } from "../../../../lib/aktionen.js";
 import { fuehreAktionAus, listeLaeufe, ladeTagesbericht, ladeOptimierung } from "../../../../lib/aktion-ausfuehren.js";
 import { ersteEinnahmeCheckliste, eqDashboard } from "../../../../lib/erste-einnahme.js";
 import { emailZentrale, leadZeile, contentZentrale } from "../../../../lib/zentralen.js";
+import { umsatzPipeline } from "../../../../lib/umsatz-pipeline.js";
+import { naechstePilotAktion } from "../../../../lib/google-profil.js";
 import { anfragenDaten, anfrageErfassen, anfrageAbschliessen, anfrageArchivieren, angebotsentwurfSpeichern } from "../../../../lib/anfragen.js";
 import { eqReport } from "../../../../lib/eq-automation.js";
 import { listContent, createContent, updateContent, setzeContentStatus, contentVorbereiten, ideenVorschlaege, contentQuelle, contentBild, contentVeroeffentlichung, contentKennzahl, contentVerlauf, contentUebersicht } from "../../../../lib/content.js";
@@ -61,7 +63,7 @@ export async function GET(request){
       if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
       const lid = params.get("id");
       if (lid) return NextResponse.json({ ok: true, verlauf: await leadVerlauf(lid) });
-      const [leads, eqs, finance, content, laeufe] = await Promise.all([listLeads(), listEinnahmequellen(), listFinance(), listContent(), listeLaeufe(200)]);
+      const [leads, eqs, finance, content, laeufe, alleTasks] = await Promise.all([listLeads(), listEinnahmequellen(), listFinance(), listContent(), listeLaeufe(200), listTasks()]);
       const reportLaeufe = laeufe.filter(l => ["eq-report", "tagesbericht", "wiederkehrende-pruefungen"].includes(l.details?.aktion) && l.details?.ergebnis === "ok");
       const einnahmequellen = eqs.map(q => {
         const finanzen = eqFinanzen(finance, q.id);
@@ -69,7 +71,8 @@ export async function GET(request){
         const reportNachEinnahme = Boolean(ersteEinnahme && reportLaeufe.some(l => l.created_at > ersteEinnahme));
         return { id: q.id, name: q.name, status: q.status, finanzen, ablauf: ablaufStand(q, { content, leads, finanzen, reportNachEinnahme }) };
       });
-      return NextResponse.json({ ok: true, leads: leads.map(l => ({ ...l, kontakt: kontaktErlaubt(l), zeile: leadZeile(l) })), uebersicht: leadUebersicht(leads), einnahmequellen, automatisierungsgrad: AUTOMATISIERUNGSGRAD, emailZentrale: emailZentrale({ leads, tasks: await listTasks() }) });
+      return NextResponse.json({ ok: true, leads: leads.map(l => ({ ...l, kontakt: kontaktErlaubt(l), zeile: leadZeile(l) })), uebersicht: leadUebersicht(leads), einnahmequellen, automatisierungsgrad: AUTOMATISIERUNGSGRAD, emailZentrale: emailZentrale({ leads, tasks: alleTasks }),
+        umsatz: umsatzPipeline({ leads, tasks: alleTasks, finance, naechsterSchritt: (() => { const pq = eqs.find(q => q.kategorie === "C"); return pq ? naechstePilotAktion(leads.filter(l => l.einnahmequelle_id === pq.id)).text : null; })() }) });
     }
     // Content & Werbung + "Wartet auf Freigabe" (Teil 4A, 27.09.2026) - nur mit Secret.
     if (params.get("content") || params.get("freigaben")) {

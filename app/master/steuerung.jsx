@@ -8,6 +8,7 @@ import { adminFetch } from "../../lib/admin-fetch.js";
 import { berechneGesamtstatus, bereichsStatus } from "../../lib/gesamtstatus.js";
 import { KATEGORIE_LABEL } from "../../lib/aktionen.js";
 import { ErsteEinnahmeKarte, EqDashboardTabelle } from "./erste-einnahme.jsx";
+import { UmsatzPipeline } from "./zentralen.jsx";
 
 const eur = c => (c / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 const zeit = t => t ? new Date(t).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }) : "—";
@@ -73,6 +74,7 @@ export function Startseite({ businesses, tasks, tasksLocked, systems, finance, q
   const oeffne = z => z.startsWith("/") ? window.location.assign(z) : goTo?.(z);
   return <>
     <div className="pageTitle"><div><span>MASTER-ZENTRALE</span><h2>Überblick</h2></div><div className="quick"><button className="primaryLink" onClick={() => goTo?.("heute")}>Heute & Bericht →</button></div></div>
+    <UmsatzPipeline u={eqLeads?.umsatz} goTo={goTo} />
     <div className="stLeiste" aria-label="Statusleiste">{chips.map(([l, v, z, rw, voll]) =>
       <button type="button" key={l} className="stChip" onClick={() => oeffne(z)} title={rw.join("\n")}><span>{l}</span><b>{v}</b>{voll === false && <em>unvollständig</em>}</button>)}
     </div>

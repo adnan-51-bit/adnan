@@ -8,6 +8,7 @@ import { adminFetch, anmeldeUrl } from "../../lib/admin-fetch.js";
 import { ANTWORTEN, GESPRAECHSLEITFADEN, ENTSCHEIDUNGEN } from "../../lib/google-profil.js";
 import { LEAD_LABEL } from "../../lib/leads-regeln.js";
 import { ErsteEinnahmeKarte, EqDashboardTabelle } from "./erste-einnahme.jsx";
+import { UmsatzPipeline } from "./zentralen.jsx";
 
 const eur = c => ((c || 0) / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 const heute = () => new Date().toISOString().slice(0, 10);
@@ -38,6 +39,7 @@ export function PilotGoogleProfil() {
     {meldung && <div className="panel plMeldung">{meldung}</div>}
     {d?.naechsteAktion && <section className="plNaechste"><span>Deine nächste Aktion</span><b>{d.naechsteAktion.text}</b>
       {(() => { const l = d.leads.find(x => x.id === d.naechsteAktion.lead_id); return l && !l.profil_analyse ? <button className="primaryLink" onClick={() => setDialog({ art: "analyse", l })}>Analyse jetzt ausfüllen</button> : null; })()}</section>}
+    <UmsatzPipeline laden />
     {d?.ersteEinnahme && <ErsteEinnahmeKarte daten={d.ersteEinnahme} />}
     <section className="panel"><h3>Quality Gate {d ? `– technisch ${tech.filter(g => g.ok).length}/${tech.length} ✓ · wartet auf dich: ${benutzer.filter(g => !g.ok).length}` : "…"}</h3>
       <div className="plGate">{gate.map(g => <div key={g.id} className={"plG " + (g.ok ? "ok" : g.typ === "benutzer" ? "du" : "fehlt")}><b>{g.ok ? "✓" : g.typ === "benutzer" ? "👤" : "✗"}</b><span>{g.titel}<small>{g.info}</small></span></div>)}</div></section>
@@ -85,6 +87,9 @@ export function PilotGoogleProfil() {
           {l.profil_analyse && <a className="editMini" href={"/master/profil-check?id=" + encodeURIComponent(l.id)} target="_blank" rel="noreferrer">🖨 Gesprächsunterlage</a>}
           {l.stufe === "GEPRUEFT" && <a className="editMini" href="/master?tab=freigaben">Kontakt freigeben („Wartet auf mich“) →</a>}
           {l.stufe === "KONTAKT_FREIGEGEBEN" && <button className="editMini" onClick={() => senden({ action: "lead-status", id: l.id, status: "KONTAKT" }, "Gespräch vermerkt")}>Gespräch geführt</button>}
+          {l.stufe === "INTERESSE" && l.angebot?.status === "entwurf" && <a className="editMini" href="/master?tab=freigaben">Angebot freigeben („Wartet auf mich“) →</a>}
+          {l.stufe === "INTERESSE" && l.angebot?.status === "freigegeben" && <button className="editMini plJa" onClick={() => senden({ action: "lead-status", id: l.id, status: "ANGEBOT" }, "Angebot als übergeben vermerkt – Nachfass-Aufgabe in 7 Tagen angelegt")}>Angebot übergeben</button>}
+          {l.stufe === "ANGEBOT" && <button className="editMini plJa" onClick={() => senden({ action: "lead-angebot-entscheidung", id: l.id, angenommen: true }, "Auftrag erteilt – jetzt Zustimmung dokumentieren und Leistung starten")}>Auftrag erteilt</button>}
           {l.stufe === "GESPRAECH" && <button className="editMini plJa" onClick={() => senden({ action: "lead-status", id: l.id, status: "INTERESSENT" }, "Interesse vermerkt")}>Hat Interesse</button>}
           {["LEAD", "GEPRUEFT", "KONTAKT_FREIGEGEBEN", "GESPRAECH", "INTERESSE", "ANGEBOT"].includes(l.stufe) && l.status !== "VERLOREN" && <button className="editMini" onClick={() => senden({ action: "lead-status", id: l.id, status: "VERLOREN" }, "Als „kein Interesse“ vermerkt")}>Kein Interesse</button>}
           <button className="editMini" onClick={() => setDialog({ art: "text", titel: "Angebot (Vorlage)", text: l.angebotVorlage, hinweis: "Formell anlegen unter „E-Mail & Leads“ → Angebot erstellen." })}>Angebot-Vorlage</button>
