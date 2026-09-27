@@ -30,6 +30,7 @@ export default function ProfilCheck() {
     <article className="pcBlatt">
       <header><small>KOSTENLOSER PROFIL-CHECK · unverbindlich</small><h1>{l.firma || l.name}</h1><p>{[l.branche, l.ort].filter(Boolean).join(" · ")}</p></header>
       <section className="pcPunkte"><b>{a.punkte}</b><span>von 100 Punkten<br /><small>eigene Checkliste, keine Bewertung durch Google · Stand {new Date(a.datum).toLocaleDateString("de-DE")}</small></span></section>
+      {a.notiz && <><h2>Beobachtungen am öffentlichen Profil</h2><p className="pcKlein pcNotiz">{a.notiz.replace(/^WICHTIG: /, "").replace(/ WICHTIG: /g, " ")}</p></>}
       <h2>Das Wichtigste zuerst</h2>
       {wichtig.length ? <ol>{wichtig.map(v => <li key={v.id}>{v.text}</li>)}</ol> : <p>Keine dringenden Punkte gefunden.</p>}
       <h2>Alle geprüften Punkte</h2>
@@ -53,7 +54,7 @@ const CSS = `
 .pcPunkte{display:flex;align-items:center;gap:14px;margin:18px 0;padding:12px 16px;border-radius:10px;background:#f4f6f8}.pcPunkte b{font-size:44px;line-height:1}.pcPunkte small{color:#555}
 .pcBlatt h2{font-size:16px;margin:20px 0 6px;border-bottom:1px solid #eee;padding-bottom:4px}
 .pcBlatt table{width:100%;border-collapse:collapse;font-size:14px}.pcBlatt td{border-bottom:1px solid #eee;padding:6px 4px;vertical-align:top}.pcZ{width:28px;text-align:center;font-weight:700}.pcA{white-space:nowrap;color:#555;text-align:right}
-.pcBlatt li{margin:3px 0}.pcKlein{font-size:12px;color:#444}
+.pcBlatt li{margin:3px 0}.pcKlein{font-size:12px;color:#444}.pcNotiz{font-size:13px;background:#f7f7f7;border-left:3px solid #999;padding:8px 10px;border-radius:4px}
 .pcBlatt footer{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-top:28px}.pcBlatt footer small{color:#555}.pcLinie{display:block;border-bottom:1px solid #999;height:26px}
 @media(max-width:560px){.pcBlatt{padding:14px}.pcBlatt h1{font-size:21px}.pcA{white-space:normal}.pcBlatt footer{grid-template-columns:1fr}}
 @media print{.pcLeiste{display:none}.pc{padding:0;max-width:none}.pcBlatt{border:0;padding:0}@page{margin:16mm}}
