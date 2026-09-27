@@ -282,6 +282,8 @@ function Overview({ coreLoading, products, suppliers, customers, orders, returns
 // lib/kalkulation.js (netto, gleiche Formel wie der Server). Nichts wird vorbelegt oder geschaetzt.
 // Kurzbezeichnungen der Pruefpunkte fuer die "Fehlt:"-Zeile (volle Texte im Pruefdialog).
 const FEHLT_KURZ = { lieferant: "verifizierter Lieferant", ek: "EK mit Quelle", versand: "Versand mit Quelle", sonstige: "Nachweis sonstige Kosten", bilder: "echtes Produktfoto", hersteller: "Hersteller", texte: "Beschreibung", lieferzeit: "Lieferzeit", marge: "VK/positive Marge" };
+// Prozent im deutschen Format (25,2 statt 25.2)
+const pz = q => (q === null || q === undefined ? "—" : q.toLocaleString("de-DE"));
 const KATALOG_FARBE = { RECHERCHIEREN: "#b54708", GEPRUEFT: "#175cd3", BEREIT: "#067647", GESPERRT: "#b42318" };
 function Produkte({ products, suppliers, coreLoading, supplierName, onCreate, onSave, onKatalog, setTab }) {
   const [creating, setCreating] = useState(false);
@@ -307,7 +309,7 @@ function Produkte({ products, suppliers, coreLoading, supplierName, onCreate, on
         <td>{eur(k.ek)}{k.ek !== null && !p.ek_quelle && <small className="warn">ohne Quelle</small>}</td>
         <td>{eur(k.versand)}{k.versand !== null && !p.versand_quelle && <small className="warn">ohne Quelle</small>}</td>
         <td>{eur(k.vkBrutto)}<small>{k.vkNetto !== null ? "netto " + eur(k.vkNetto) : ""}</small></td>
-        <td>{k.rohmarge === null ? "—" : (() => { const t = kalkuliereTikTok(p); return <><span style={{ color: k.rohmarge > 0 ? "#067647" : "#b42318" }}>{eur(k.rohmarge)}</span><small>{k.quote} %</small><small style={{ color: t.marge > 0 ? "#067647" : "#b42318" }}>TikTok: {eur(t.marge)} ({t.quote} %)</small></>; })()}</td>
+        <td>{k.rohmarge === null ? "—" : (() => { const t = kalkuliereTikTok(p); return <><span style={{ color: k.rohmarge > 0 ? "#067647" : "#b42318" }}>{eur(k.rohmarge)}</span><small>{pz(k.quote)} %</small><small style={{ color: t.marge > 0 ? "#067647" : "#b42318" }}>TikTok: {eur(t.marge)} ({pz(t.quote)} %)</small></>; })()}</td>
         <td>{p.lieferzeit || "—"}</td>
         <td>{p.kurzbeschreibung ? <small title={p.kurzbeschreibung}>{p.kurzbeschreibung.slice(0, 60)}{p.kurzbeschreibung.length > 60 ? "…" : ""}</small> : <small className="warn">fehlt</small>}</td>
         <td>{p.lieferanten_url ? <a href={p.lieferanten_url} target="_blank" rel="noreferrer">Produktquelle ↗</a> : <small className="warn">fehlt</small>}</td>
@@ -359,7 +361,7 @@ function ProductEditModal({ product: p, suppliers, onClose, onSave }) {
     {Feld({ l: "Versandkosten (€)", k: "vek", inputMode: "decimal", placeholder: "leer = unbekannt" })}{Feld({ l: "Quelle Versand", k: "versand_quelle" })}
     {Feld({ l: "Sonstige nachweisbare Kosten (€, optional)", k: "sonst", inputMode: "decimal" })}{Feld({ l: "Nachweis sonstige Kosten", k: "sonst_quelle" })}
     {Feld({ l: "Verkaufspreis BRUTTO (€, Endpreis im Shop – leer = noch nicht kalkuliert)", k: "vk", inputMode: "decimal" })}
-    <p className="note">Einstand {eur(k.einstand)} · VK netto {eur(k.vkNetto)} · Rohmarge <strong>{eur(k.rohmarge)}</strong>{k.quote !== null ? ` · ${k.quote} %` : ""}{k.rohmarge !== null && k.rohmarge <= 0 ? " – nicht verkaufbar" : ""}{(() => { const t = kalkuliereTikTok({ einkaufspreis_cent: euroZuCent(f.ek), versandkosten_cent: euroZuCent(f.vek), sonstige_kosten_cent: euroZuCent(f.sonst), verkaufspreis_cent: euroZuCent(f.vk) }); return t.marge === null ? null : <><br />Im TikTok Shop (−{t.provisionProzent} % = {eur(t.provision)} Provision): <strong>{eur(t.marge)}</strong> · {t.quote} %{t.marge <= 0 ? " – lohnt sich dort nicht" : ""}</>; })()}</p>
+    <p className="note">Einstand {eur(k.einstand)} · VK netto {eur(k.vkNetto)} · Rohmarge <strong>{eur(k.rohmarge)}</strong>{k.quote !== null ? ` · ${pz(k.quote)} %` : ""}{k.rohmarge !== null && k.rohmarge <= 0 ? " – nicht verkaufbar" : ""}{(() => { const t = kalkuliereTikTok({ einkaufspreis_cent: euroZuCent(f.ek), versandkosten_cent: euroZuCent(f.vek), sonstige_kosten_cent: euroZuCent(f.sonst), verkaufspreis_cent: euroZuCent(f.vk) }); return t.marge === null ? null : <><br />Im TikTok Shop (−{t.provisionProzent} % = {eur(t.provision)} Provision): <strong>{eur(t.marge)}</strong> · {pz(t.quote)} %{t.marge <= 0 ? " – lohnt sich dort nicht" : ""}</>; })()}</p>
     <h4>Lager & Lieferung</h4>
     {Feld({ l: "Lagerstatus / Bestand (leer = unbekannt)", k: "bestand", inputMode: "numeric" })}{Feld({ l: "Lieferzeit (Angabe des Lieferanten)", k: "lieferzeit" })}
     <h4>Texte</h4>
