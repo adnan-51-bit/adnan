@@ -898,3 +898,17 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Monheimer Blumenmarkt (Niederstraße 15 b)
 - **Gesprächsunterlage:** neuer Abschnitt „Beobachtungen am öffentlichen Profil“ (z. B. nicht beansprucht); interne Arbeitshinweise werden nicht gedruckt.
 - **Tests:** 251/251, Build ok, live Desktop + Handy ohne Fehler. Kein Kontakt aufgenommen, 0 €.
+
+## Update 27.09.2026 (46) — Werknetz24/Lisa: nur Recherche (Werknetz24 bleibt pausiert)
+
+- **Famulor-Stand (lesend geprüft):** Guthaben 4,79 €. Einziger verzeichneter Lisa-Anruf am 12.09.2026: Status „failed“. Lisa ist nicht nachweislich funktionsfähig.
+- **Adnans Entscheidung:** nur recherchieren, eigene Liste in der Zentrale, keine Kontakt-Freigaben.
+- **Neue Einnahmequelle** „Werknetz24 – Lisa Telefonassistent (nur Recherche)“, Status Pause, getrennt vom Google-Profil-Piloten. Die Umsatz-Pipeline zählt nur Pilot-Leads.
+- **7 Leads** (Monheim, Handwerk; Quelle öffentliche Google-Profile, 27.09.2026):
+  - Hohe Priorität: Meuten (nicht beansprucht, keine Öffnungszeiten), Kausch (nicht beansprucht, keine Öffnungszeiten, nur Mobilnummer)
+  - Mittlere Priorität: Butz, Elektro Ari, Wiese
+  - Niedrige Priorität: Scheidt, Schiefer
+  - In keiner sichtbaren Rezension ein belegter Hinweis auf verpasste Anrufe; nichts erfunden.
+- **Technik:** Leads lassen sich über „lead-anlegen“ mit `ohneAufgabe` ohne Nachfass-Aufgabe anlegen.
+- **Verkaufsablauf Lead → Kunde (Adnans Vorgabe):** noch nicht umgesetzt, solange Werknetz24 pausiert ist. Vorhanden: Status, Notizen, Nachfass-Aufgaben, „kein Interesse“ stoppt Aufgaben. Es fehlen für Werknetz24-Leads: Kontakt-Freigabe und eine Kontaktvorlage für Besuch/Telefon.
+- **Tests:** 251/251, Build ok. Kosten 0 €.
