@@ -64,3 +64,10 @@ test("Tagesbericht beantwortet die Pflichtfragen und nennt den nächsten Schritt
   assert.match(t["Wichtigste nächste Aktion"], /Schritt 3: Profil-Analysen/);
   assert.match(t["Welche neuen Möglichkeiten gibt es?"], /Google-Profil/);
 });
+
+test("Abgelehnte Geld-Aktionen sind kein Fehler, sondern stehen als 'blockiert' im Bericht", () => {
+  const jetzt = new Date();
+  const b = erstelleTagesbericht({ jetzt, audit: [{ action: "automation.lauf", created_at: jetzt.toISOString(), details: { aktion: "geld-ausgeben", name: "Geld ausgeben", ergebnis: "abgelehnt", fehler: "Blockiert (Geld-Schutz)" } }] });
+  const t = Object.fromEntries(b.bericht);
+  assert.equal(b.fehler.length, 0); assert.match(t["Was wurde blockiert (Geld-Schutz/Verbote)?"], /Geld ausgeben – nichts ausgeführt, 0 € Kosten/);
+});
