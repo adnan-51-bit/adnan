@@ -216,3 +216,9 @@ test("Tagesbericht zeigt die nächste Pilot-Aktion als Benutzeraktion", () => {
   const b = erstelleTagesbericht({ pilotAktion: { lead_id: 1, text: "Google-Profil von „X“ öffnen" } });
   assert.deepEqual(b.benutzeraktionen.map(x => [x.text, x.ziel]), [["Pilot: Google-Profil von „X“ öffnen", "pilot"]]);
 });
+
+test("Bericht zeigt den Prüfhinweis (z. B. 'kein Profil gefunden'), damit nichts falsch verstanden wird", () => {
+  const a = G.pruefeAnalyse({ ...ANALYSE, notiz: "Kein Google-Unternehmensprofil gefunden (2 Suchen am 27.09.2026)" });
+  assert.match(G.berichtText({ firma: "X" }, a), /Hinweis zur Prüfung: Kein Google-Unternehmensprofil gefunden/);
+  assert.doesNotMatch(G.berichtText({ firma: "X" }, G.pruefeAnalyse(ANALYSE)), /Hinweis zur Prüfung/);
+});
