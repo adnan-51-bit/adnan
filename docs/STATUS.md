@@ -745,3 +745,22 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - **Startseite:** nur noch 12 Kernkennzahlen, alles Weitere unter „Rechenwege & weitere Kennzahlen“.
 - **Tests:** 231/231, Build ok. Live-Check am Desktop und am Handy auf 6 Seiten, ohne Überlauf und ohne JS-Fehler.
 - **Hinweis:** Die Startseite zeigt 18,11 € Kosten. Das sind echte, bezahlte Werknetz24-Ausgaben aus dessen eigener Buchhaltung; Master und Einnahmequellen stehen bei 0 €.
+
+## Update 27.09.2026 (34) — Pilot Anfragen-Service vorbereitet (TEST, 0 €)
+
+- **Neuer Reiter „Pilot: Anfragen-Service“** (`app/master/anfragen.jsx`, `lib/anfragen.js`, `lib/anfragen-regeln.js`, Tabelle `master_anfragen` mit RLS).
+- **Anfrage-Eingang:** Datum, Quelle, Unternehmen, Anfrage, Status, Priorität, nächste Aktion.
+- **Automatischer Ablauf beim Erfassen:** Analyse → Kategorie (Reklamation / Auftrag / Termin / Angebot / Rückruf / Frage / Sonstiges) → Dringlichkeit → Entwürfe → Aufgabe („Wartet auf Benutzer“) → Status gespeichert, jeder Schritt im Verlauf. Abschluss mit dokumentiertem Ergebnis durch den Menschen.
+- **Entwurfs-Arbeitsbereich:** Antwort-E-Mail, Rückfrage, Angebotstext (ohne Preise), Zusammenfassung, nächste Aktion. Kostenlose Textvorlagen, kein Sprachmodell; nichts wird gesendet.
+- **Kunden-Bereich:** Interessent / Pilotkunde / aktiver Kunde / beendet, nur aus echten Leads. Dazu Einnahmen, offene Aufgaben, Leistung, Ergebnisse.
+- **Angebots-/Einnahmen-Modul:** Leistung, möglicher Preis (Text, unverbindlich), einmalig/monatlich, Kosten, erwartete Einnahmen (Zahl nur mit Quelle), tatsächliche Einnahmen aus den Buchungen.
+- **Schutz:**
+  - Echte Anfragen nur mit echtem Pilotkunden, bis dahin nur Testfälle (TEST, gestrichelt).
+  - Testfälle werden archiviert, nicht gelöscht, und zählen nie als echte Anfragen.
+  - Neue RECHT-Freigabe „Auftragsverarbeitung (AVV) vor echten Kundendaten“ (Art. 28 DSGVO).
+- **Live-Test:**
+  - Ein interner, fiktiver Testfall lief komplett durch (Anfrage → Analyse → 5 Entwürfe → Aufgabe [TEST] → Abschluss → Archiv).
+  - Eine echte Anfrage ohne Kunden wurde abgelehnt (400).
+  - Desktop und Handy ohne Überlauf und ohne JS-Fehler; Finanzen weiter 0 €.
+- **Befund:** Die Migration schlug zuerst fehl, weil `analyse` ein reserviertes Wort ist. Der Spaltenname ist jetzt in Anführungszeichen gesetzt; kurzzeitig lieferte die neue Seite live einen Fehler.
+- **Tests:** 239/239, Build ok.
