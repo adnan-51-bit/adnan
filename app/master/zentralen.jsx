@@ -123,6 +123,11 @@ export function UmsatzPipeline({ u, laden = false, goTo }) {
   return <section className="panel up" aria-label="Umsatz-Pipeline"><h3>Umsatz-Pipeline</h3>
     <ol className="upStufen">{d.stufen.map((s, i) => <li key={s.id} className={s.anzahl ? "an" : ""}><b>{s.anzahl}</b><span>{s.name}</span>{i < d.stufen.length - 1 && <i aria-hidden="true">→</i>}</li>)}</ol>
     <div className="zsKpis">{[["Leads", k.leads], ["Interessenten", k.interessenten], ["Offene Nachfassungen", k.offeneNachfassungen], ["Angebote", k.angebote], ["Gewonnene Aufträge", k.auftraege], ["Einnahmen", eur(k.einnahmen_cent)], ["Kosten", eur(k.kosten_cent)], ["Gewinn", eur(k.gewinn_cent)]].map(([l, v]) => <div key={l}><span>{l}</span><b>{v}</b></div>)}</div>
+    <div className="zsGitter">
+      <div className="zsSpalte zsHeute"><h4><span>🎯 Aktueller Lead</span></h4><p className="upLead">{d.aktuellerLead ? <><b>{d.aktuellerLead.name}</b>{d.aktuellerLead.punkte != null ? ` · ${d.aktuellerLead.punkte}/100` : ""}</> : "—"}</p></div>
+      <div className="zsSpalte zsAuto"><h4><span>⚙ Claude hat heute erledigt</span><b className="zsAnzahl">{d.claudeErledigt?.length ?? 0}</b></h4>{d.claudeErledigt?.length ? <ul className="zsListe">{d.claudeErledigt.map((t, i) => <li key={i} className="zsZeile"><span className="zsPunkt" /><span className="zsText" title={t}>{t}</span></li>)}</ul> : <p className="zsLeer">Heute noch nichts.</p>}</div>
+      <div className="zsSpalte zsWarten"><h4><span>✋ Du musst</span><b className="zsAnzahl">{d.duMusst?.length ?? 0}</b></h4>{d.duMusst?.length ? <ul className="zsListe">{d.duMusst.map((t, i) => <li key={i} className="zsZeile"><span className="zsPunkt" /><span className="zsText" title={t}>{t}</span></li>)}</ul> : <p className="zsLeer">Nichts.</p>}</div>
+    </div>
     {d.naechsterSchritt && <div className="zsNaechste"><span className="zsNaechsteLabel">👉 Nächster konkreter Schritt</span>{goTo ? <button type="button" onClick={() => goTo("pilot")}>{d.naechsterSchritt}</button> : <span>{d.naechsterSchritt}</span>}</div>}
     <p className="zsLeer">„Bezahlt“ zählt nur mit Zahlungsnachweis. {k.offen_cent ? `Offen (noch kein Geld): ${eur(k.offen_cent)}.` : ""}</p>
     <style dangerouslySetInnerHTML={{ __html: ZS_CSS }} />
@@ -130,11 +135,12 @@ export function UmsatzPipeline({ u, laden = false, goTo }) {
 }
 
 const ZS_CSS = `
-.upStufen{list-style:none;margin:6px 0 10px;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.upStufen{list-style:none;margin:6px 0 10px;padding:0;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
+.upLead{margin:4px 0;font-size:15px}
 .upStufen li{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px;border-radius:10px;background:rgba(127,127,127,.08);text-align:center;min-width:0}
 .upStufen li.an{background:rgba(16,185,129,.14)}.upStufen b{font-size:22px}.upStufen span{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;overflow-wrap:anywhere}
 .upStufen i{position:absolute;right:-6px;top:50%;transform:translateY(-50%);font-style:normal;opacity:.5;font-size:12px}
-@media(max-width:560px){.upStufen{grid-template-columns:repeat(3,minmax(0,1fr))}.upStufen i{display:none}}
+@media(max-width:900px){.upStufen{grid-template-columns:repeat(4,minmax(0,1fr))}.upStufen i{display:none}}
 .zs h4{margin:0 0 8px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1px solid rgba(127,127,127,.25)}
 .zsAnzahl{min-width:24px;text-align:center;padding:1px 8px;border-radius:999px;background:rgba(127,127,127,.15);font-size:12px}
 .zsGitter{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:10px}

@@ -88,7 +88,9 @@ test("Umsatz-Pipeline: Stufen nur aus echten Daten, bezahlt nur mit bestätigter
   const finance = [{ kind: "income", status: "confirmed", amount: 49, lead_id: "5" }, { kind: "income", status: "confirmed", amount: 99, lead_id: "4", ist_test: true }, { kind: "income", status: "pending", amount: 49, lead_id: "4" }];
   const tk = [{ title: "Nachfassen nach Gespräch: X", status: "Offen", quelle: "lead:2" }, { title: "Angebot nachfassen: Y", status: "Erledigt", quelle: "lead:4" }];
   const u = umsatzPipeline({ leads, tasks: tk, finance, naechsterSchritt: "X" });
-  assert.deepEqual(u.stufen.map(s => [s.id, s.anzahl]), [["leads", 5], ["kontaktiert", 4], ["interesse", 3], ["angebot", 2], ["auftrag", 1], ["bezahlt", 1]]);
+  assert.deepEqual(u.stufen.map(s => [s.id, s.anzahl]), [["leads", 5], ["analysiert", 0], ["vorbereitet", 4], ["gespraech", 4], ["interesse", 3], ["angebot", 2], ["auftrag", 1], ["bezahlt", 1]]);
+  const v = umsatzPipeline({ leads: [{ id: "a", status: "NEU", profil_analyse: { punkte: 33 } }, { id: "b", status: "NEU", profil_analyse: { punkte: 60 }, pilot_crm: { kontakt_freigegeben: true } }], aktuellerLead: { name: "A" }, claudeErledigt: ["x"], duMusst: ["y"] });
+  assert.deepEqual(v.stufen.slice(0, 4).map(s => s.anzahl), [2, 2, 1, 0]); assert.equal(v.aktuellerLead.name, "A"); assert.deepEqual([v.claudeErledigt, v.duMusst], [["x"], ["y"]]);
   assert.equal(u.kennzahlen.offeneNachfassungen, 1); assert.equal(u.kennzahlen.angebote, 3); assert.equal(u.kennzahlen.einnahmen_cent, 4900); assert.equal(u.kennzahlen.offen_cent, 4900);
   assert.equal(u.naechsterSchritt, "X");
 });

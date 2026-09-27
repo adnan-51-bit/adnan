@@ -72,7 +72,19 @@ export async function GET(request){
         return { id: q.id, name: q.name, status: q.status, finanzen, ablauf: ablaufStand(q, { content, leads, finanzen, reportNachEinnahme }) };
       });
       return NextResponse.json({ ok: true, leads: leads.map(l => ({ ...l, kontakt: kontaktErlaubt(l), zeile: leadZeile(l) })), uebersicht: leadUebersicht(leads), einnahmequellen, automatisierungsgrad: AUTOMATISIERUNGSGRAD, emailZentrale: emailZentrale({ leads, tasks: alleTasks }),
-        umsatz: umsatzPipeline({ leads, tasks: alleTasks, finance, naechsterSchritt: (() => { const pq = eqs.find(q => q.kategorie === "C"); return pq ? naechstePilotAktion(leads.filter(l => l.einnahmequelle_id === pq.id)).text : null; })() }) });
+        umsatz: await (async () => {
+          const pq = eqs.find(q => q.kategorie === "C");
+          const na = pq ? naechstePilotAktion(leads.filter(l => l.einnahmequelle_id === pq.id)) : null;
+          const heute = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }); const tag = t => t ? new Date(t).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }) : "";
+          const claudeErledigt = [
+            ...laeufe.filter(l => tag(l.created_at) === heute && l.details?.ergebnis === "ok" && ["lead-recherche", "engine", "optimierung", "pilot-monatslauf"].includes(l.details?.aktion)).slice(0, 4).map(l => l.details.name + ": " + (l.details.zusammenfassung || "ok")),
+            ...alleTasks.filter(t => t.status === "Erledigt" && /Claude|Zentrale/.test(t.owner || "") && tag(t.updated_at) === heute).slice(0, 6).map(t => t.title),
+          ];
+          const offen = (await listFreigaben()).filter(f => f.status === "OFFEN");
+          const duMusst = [...offen.filter(f => ["lead-kontakt", "angebot", "pilot"].includes(f.bezug_typ)).map(f => f.titel), ...alleTasks.filter(t => t.status === "Wartet auf Benutzer" && String(t.quelle || "").startsWith("lead:")).map(t => t.title)].slice(0, 8);
+          const aktuell = na?.lead_id ? leads.find(l => l.id === na.lead_id) : null;
+          return umsatzPipeline({ leads, tasks: alleTasks, finance, naechsterSchritt: na?.text || null, aktuellerLead: aktuell ? { id: aktuell.id, name: aktuell.firma || aktuell.name, punkte: aktuell.profil_analyse?.punkte ?? null, stufe: na.stufe } : null, claudeErledigt, duMusst });
+        })() });
     }
     // Content & Werbung + "Wartet auf Freigabe" (Teil 4A, 27.09.2026) - nur mit Secret.
     if (params.get("content") || params.get("freigaben")) {
