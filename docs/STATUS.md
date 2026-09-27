@@ -810,3 +810,20 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - **Befund (nicht behoben, wartet auf Adnans OK):** „Deine nächste Aktion“ (naechstePilotAktion) prüft die Stufen von vorn. Solange irgendein Lead noch auf „Kontakt freigeben“ steht, zeigt sie diese Freigabe statt des weitesten Leads (z. B. „Bericht bei Haargenau zeigen“). Außerdem steht Markus Lauck vor Haargenau (beide Priorität hoch).
 - Nach dem ersten Kunden bereitet der vorhandene Ablauf den nächsten vor (nächster Lead mit offener Kontakt-Freigabe).
 - Der Affiliate-Pilot folgt erst nach dem ersten Pilotkunden.
+
+## Update 27.09.2026 (40) — Auftrags- und Umsatzmodus
+
+- **Umsatz-Pipeline** prominent auf Startseite und Pilot: LEADS → KONTAKTIERT → INTERESSE → ANGEBOT → AUFTRAG → BEZAHLT. Dazu Leads, Interessenten, offene Nachfassungen, Angebote, gewonnene Aufträge, Einnahmen, Kosten, Gewinn und nächster konkreter Schritt.
+- **Tägliche Lead-Recherche** (07:00, Aktion `lead-recherche`):
+  - Quelle: öffentliches Verzeichnis monheimer-lokalhelden.de (robots.txt erlaubt), nur passende kleine Betriebe.
+  - Gespeichert werden nur Firmenname, Branche, Ort und Quelle, keine Telefonnummern oder E-Mails.
+  - Höchstens 3 neue Betriebe pro Tag, und nur solange weniger als 3 Betriebe auf eine Analyse warten.
+  - Live-Lauf: Back Bakery, emma's (Blumen), Für alle Felle (Hundesalon).
+- **Google-Profil-Analyse:** nicht automatisierbar ohne Kosten (die Places-Schnittstelle braucht ein Google-Abrechnungskonto mit Kreditkarte, blockiert). Claude analysiert in den Sitzungen mit der Browser-Erweiterung; bis dahin ist es eine Aufgabe für Claude.
+- **Angebot:**
+  - Bei „Hat Interesse“ entsteht automatisch ein Angebotsentwurf und die Freigabe „Angebot freigeben“.
+  - Freigabe nur mit festgelegtem Monatspreis; danach übergabefertig mit Preis.
+  - „Angebot übergeben“ → Nachfassen (+7 Tage); „Auftrag erteilt“ → Kunde.
+  - Keine Einnahmebuchung beim Auftrag (die Monatsrechnung entsteht erst nach dokumentierter Zustimmung, bezahlt nur mit Nachweis).
+- **Nächster Schritt:** Der Betrieb, der am weitesten ist, kommt zuerst; Betriebe ohne Google-Profil sind nachrangig. Aktuell: Kontakt zu Friseur Haargenau freigeben.
+- **Tests:** 248/248, Build ok, live Desktop + Handy ohne Fehler.
