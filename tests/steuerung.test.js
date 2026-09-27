@@ -106,3 +106,14 @@ test("Geschäfts-Control-Center: 🟢 AKTIV / 🟡 TEST / ⚪ PAUSE / 🔴 FEHLE
   assert.equal(st[0].grund, "3 System(e) rot"); assert.equal(st[2].tab, "einnahmequellen");
   assert.equal(bereichsStatus({ businesses: [], einnahmequellen: [{ status: "AKTIV" }] })[0].ampel, "🟢");
 });
+
+test("privates Repository (GitHub 404 ohne Token) wird ehrlich als 'nicht prüfbar' gemeldet, nicht als bestanden", async () => {
+  delete process.env.GITHUB_TOKEN;
+  const privat = async url => url.includes("werknetz24-landing") ? { ok: false, status: 404 } : githubMock()(url);
+  const r = await fuehreAktionAus("test-status", undefined, { fetchImpl: privat });
+  assert.equal(r.ok, true);
+  assert.match(r.zusammenfassung, /adnan: ✓ bestanden/);
+  assert.match(r.zusammenfassung, /werknetz24-landing: nicht prüfbar \(privat, kein Lese-Token\)/);
+  const g = await fuehreAktionAus("git-status", undefined, { fetchImpl: privat });
+  assert.match(g.zusammenfassung, /adnan: abcdef1 feat: x · werknetz24-landing: nicht prüfbar/);
+});
