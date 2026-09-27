@@ -109,7 +109,7 @@ export default function MasterDashboard(){
 
     <div className="layout">
       <aside className="sidebar">
-        <div className="sideAreas"><span>Geschäftsbereiche</span><a href="/werknetz24">▸ Werknetz24</a><a href="/e-commerce">▸ E-Commerce</a><a href="https://werknetz24.de" target="_blank" rel="noreferrer">▸ Internetseite ↗</a><a href="/laden" target="_blank" rel="noreferrer">▸ Sortiert24-Shop ↗</a></div>
+        <div className="sideAreas"><span>Direkt öffnen</span><a href="/werknetz24">▸ Werknetz24</a><a href="/e-commerce">▸ E-Commerce</a><a href="https://werknetz24.de" target="_blank" rel="noreferrer">▸ Internetseite ↗</a><a href="/laden" target="_blank" rel="noreferrer">▸ Sortiert24-Shop ↗</a></div>
         {GRUPPEN.map(([gruppe,ids])=><div className="sideGruppe" key={gruppe}><span>{gruppe}</span>{ids.map(id=>TABS.find(t=>t[0]===id)).map(([id,icon,label])=><button key={id} className={tab===id?"selected":""} onClick={()=>setTab(id)}><b>{icon}</b>{label}</button>)}</div>)}
         <div className="sideBottom"><a href="/e-commerce?tab=pipeline">↳ Produkt-Pipeline</a><a href="/e-commerce?tab=lieferanten">↳ Lieferanten</a><a href="/e-commerce?tab=automation">↳ Automationen</a><a href="https://werknetz24.de/admin-zentrale" target="_blank" rel="noreferrer">↳ Werknetz24-Verwaltung ↗</a></div>
       </aside>

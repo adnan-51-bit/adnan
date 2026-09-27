@@ -43,7 +43,7 @@ export function Startseite({ businesses, tasks, tasksLocked, systems, finance, q
   const b = bericht?.bericht;
   const chips = [
     ["System", g.system.ampel, "alerts", g.system.rechenweg],
-    ["Geschäftsbereiche", `${bereiche.filter(x => x.ampel === "🟢").length} aktiv · ${bereiche.filter(x => x.ampel === "⚪").length} Pause`, "bereiche", bereiche.map(x => `${x.name}: ${x.label}`)],
+    ["Geschäftsbereiche", [["🟢", "aktiv"], ["🟡", "Test"], ["🔴", "Fehler"], ["⚪", "Pause"]].map(([amp, t]) => [bereiche.filter(x => x.ampel === amp).length, t]).filter(([n]) => n).map(([n, t]) => n + " " + t).join(" · "), "bereiche", bereiche.map(x => `${x.name}: ${x.label}`)],
     ["Einnahmen", eur(g.einnahmen.cent), "finance", g.einnahmen.rechenweg, g.einnahmen.vollstaendig],
     ["Kosten", eur(g.kosten.cent), "finance", g.kosten.rechenweg, g.kosten.vollstaendig],
     ["Gewinn", eur(g.gewinn.cent), "finance", g.gewinn.rechenweg, g.gewinn.vollstaendig],
