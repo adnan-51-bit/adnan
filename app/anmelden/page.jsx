@@ -31,7 +31,7 @@ export default function Anmelden() {
       const r = await fetch("/api/master/tasks", { headers: { Authorization: "Bearer " + c }, cache: "no-store" });
       if (r.ok) { speichereSecret(c); window.location.assign(ziel); return; }
       await new Promise(res => setTimeout(res, 800)); // bremst schnelles Durchprobieren etwas
-      if (r.status === 401) setMeldung("Code falsch. Bitte den Master-Code verwenden – nicht den Werknetz24-Admin-Code.");
+      if (r.status === 401) setMeldung("Code falsch. Bitte erneut versuchen.");
       else if (r.status === 429) setMeldung("Zu viele Fehlversuche. Die Anmeldung ist für 15 Minuten gesperrt – bitte später erneut versuchen.");
       else if (r.status === 503) setMeldung("Auf dem Server ist noch kein Master-Code eingerichtet (MASTER_API_SECRET in Vercel).");
       else setMeldung("Anmeldung gerade nicht möglich (Fehler " + r.status + ").");
@@ -42,7 +42,7 @@ export default function Anmelden() {
   return <main style={S.seite}>
     <form onSubmit={absenden} style={S.karte}>
       <h1 style={{ fontSize: 22, margin: 0 }}>Master-Zentrale anmelden</h1>
-      <p style={{ margin: 0, color: "#475467", fontSize: 14 }}>Gilt für die Master-Zentrale und E-Commerce (Sortiert24). Die Werknetz24-Verwaltung hat einen eigenen Code.</p>
+      <p style={{ margin: 0, color: "#475467", fontSize: 14 }}>Gilt für die Master-Zentrale und E-Commerce (Sortiert24). Nach 5 falschen Versuchen ist die Anmeldung 15 Minuten gesperrt.</p>
       {schonAngemeldet && <p style={{ margin: 0, fontSize: 13, color: "#067647" }}>In diesem Browser ist bereits ein Code gespeichert.</p>}
       <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, fontWeight: 600 }}>Master-Code
         <input type="password" name="master-code" autoComplete="current-password" autoFocus required value={code} onChange={e => setCode(e.target.value)} style={S.feld} />
