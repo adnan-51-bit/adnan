@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { adminFetch, anmeldeUrl } from "../../lib/admin-fetch.js";
 import { EQ_STATUS, EQ_LABEL, EQ_ABLAUF, EQ_GRUPPE, KATEGORIEN, kategorieName, NACHFRAGE, POTENZIAL, AUTO_STUFEN, PLAN_FELDER, pruefstand, gewinnCent, kundenAnzahl, leadsAnzahl, naechsteStufe, arbeitsPrioritaet } from "../../lib/einnahmequellen-regeln.js";
 import { ENTWURF_ARTEN } from "../../lib/eq-automation.js";
+import { ErsteEinnahmeKarte, EqDashboardTabelle } from "./erste-einnahme.jsx";
 const LEAD_STATUS = ["neu", "kontaktiert", "interessiert", "kunde", "verloren"];
 
 const eur = c => ((c || 0) / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
@@ -71,6 +72,8 @@ export function Einnahmequellen() {
       {[["Aktive Einnahmequellen", u.aktiv], ["Im kostenlosen Test", u.test], ["Ideen zur Prüfung", u.pruefung], ["Pause", u.pause], ["Kosten", eur(u.kosten_cent)], ["Einnahmen", eur(u.einnahmen_cent)], ["Gewinn", eur(u.gewinn_cent)]].map(([l, v]) =>
         <div className="kpi" key={l}><span>{l}</span><strong>{daten ? v : "…"}</strong></div>)}
     </div>
+    <ErsteEinnahmeKarte daten={daten?.ersteEinnahme} />
+    <EqDashboardTabelle zeilen={daten?.dashboard} />
     <div className="eqAnsicht" role="tablist">{[["katalog", "Katalog nach Kategorie"], ["status", "Nach Status"]].map(([k, l]) => <button key={k} role="tab" aria-selected={ansicht === k} className={ansicht === k ? "an" : ""} onClick={() => setAnsicht(k)}>{l}</button>)}</div>
     {ansicht === "katalog" ? <>
       {KATEGORIEN.map(([code, name]) => { const g = liste.filter(q => q.kategorie === code); return <section className="panel" key={code}><h3>{code}) {name} ({code === "F" ? "eigener Bereich" : g.length})</h3>

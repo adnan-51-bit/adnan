@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { adminFetch } from "../../lib/admin-fetch.js";
 import { berechneGesamtstatus, bereichsStatus } from "../../lib/gesamtstatus.js";
 import { KATEGORIE_LABEL } from "../../lib/aktionen.js";
+import { ErsteEinnahmeKarte, EqDashboardTabelle } from "./erste-einnahme.jsx";
 
 const eur = c => (c / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 const zeit = t => t ? new Date(t).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }) : "—";
@@ -65,6 +66,7 @@ export function Startseite({ businesses, tasks, tasksLocked, systems, finance, q
       <button type="button" key={l} className="stChip" onClick={() => oeffne(z)} title={rw.join("\n")}><span>{l}</span><b>{v}</b>{voll === false && <em>unvollständig</em>}</button>)}
     </div>
     <details className="stRechenweg"><summary>Rechenwege anzeigen</summary>{chips.map(([l, , , rw]) => <p key={l}><b>{l}:</b> {rw.join(" · ")}</p>)}</details>
+    {b?.ersteEinnahme && <ErsteEinnahmeKarte daten={b.ersteEinnahme} />}
     <h3 className="stH">Geschäftsbereiche</h3>
     <div className="stBereiche">{bereiche.map(x => <article key={x.id} className="stBereich">
       <a href={x.link} onClick={e => { if (x.tab) { e.preventDefault(); goTo?.(x.tab); } }}><span className="stAmpel">{x.ampel}</span><div><strong>{x.name}</strong><small>{x.label} · {x.grund}</small></div><i>→</i></a>
@@ -93,11 +95,12 @@ export function HeuteSeite({ goTo }) {
   return <>
     <div className="pageTitle"><div><span>TAGESZENTRALE {b?.datum ? "· " + new Date(b.datum).toLocaleDateString("de-DE") : ""}</span><h2>Heute</h2></div><div className="quick"><button className="primaryLink" disabled={busy || d === null} onClick={erstellen}>{busy ? "wird erstellt…" : "Tagesbericht erstellen"}</button></div></div>
     {d === null && <div className="panel">Nur mit Anmeldung sichtbar.</div>}
-    <section className="stWichtigste" aria-label="Wichtigste Aufgabe"><span>Wichtigste Aufgabe</span>
+    <section className="stWichtigste" aria-label="Wichtigste Aufgabe">{b?.wichtigsteNaechsteAktion && <><span>Wichtigste nächste Aktion</span><button type="button" className="stBenutzer" onClick={() => goTo?.(b.wichtigsteNaechsteAktion.ziel)}>👉 {b.wichtigsteNaechsteAktion.text}</button></>}<span>Wichtigste Aufgabe</span>
       {b?.wichtigsteAufgabe ? <button type="button" onClick={() => goTo?.("tasks")}>{b.wichtigsteAufgabe.text}</button> : <p className="stLeer">{d === undefined ? "wird geladen…" : "Keine offene Aufgabe."}</p>}
       <span>Nächste Benutzeraktion</span>
       {b?.naechsteBenutzeraktion ? <button type="button" className="stBenutzer" onClick={() => { const z = b.naechsteBenutzeraktion.ziel; z?.startsWith("/") ? window.location.assign(z) : goTo?.(z); }}>👤 {b.naechsteBenutzeraktion.text}</button> : <p className="stLeer">{d === undefined ? "…" : "Keine – nichts wartet auf dich."}</p>}
     </section>
+    {b?.ersteEinnahme && <ErsteEinnahmeKarte daten={b.ersteEinnahme} />}
     <div className="stSpalten">
       {L("Offene Aufgaben", b?.jetztZuTun, "Keine offenen Aufgaben.")}
       {L("Wartende Aufgaben (auf dich)", b?.wartendeAufgaben, "Keine Aufgabe wartet auf dich.", { klasse: "stWichtig" })}

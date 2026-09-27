@@ -5,7 +5,8 @@ import { listEinnahmequellen, createEinnahmequelle, updateEinnahmequelle, setzeE
 import { fetchWerknetz24Kalender, createWerknetz24KalenderTermin, fetchWerknetz24Aufgaben, fetchWerknetz24Rechnungen, fetchWerknetz24Incidents, fetchWerknetz24Agenten, runWerknetz24Systemcheck, closeWerknetz24Incident } from "../../../../lib/werknetz24-connector.js";
 
 import { AKTIONEN } from "../../../../lib/aktionen.js";
-import { fuehreAktionAus, listeLaeufe, ladeTagesbericht } from "../../../../lib/aktion-ausfuehren.js";
+import { fuehreAktionAus, listeLaeufe, ladeTagesbericht, ladeOptimierung } from "../../../../lib/aktion-ausfuehren.js";
+import { ersteEinnahmeCheckliste, eqDashboard } from "../../../../lib/erste-einnahme.js";
 import { eqReport } from "../../../../lib/eq-automation.js";
 import { listContent, createContent, updateContent, setzeContentStatus, contentVorbereiten, ideenVorschlaege, contentQuelle, contentBild, contentVeroeffentlichung, contentKennzahl, contentVerlauf, contentUebersicht } from "../../../../lib/content.js";
 import { listFreigaben, freigabeEntscheiden, werkzeugStatus, werkzeugAnfragen, syncPlanFreigaben } from "../../../../lib/freigaben.js";
@@ -91,8 +92,10 @@ export async function GET(request){
       // Details einer Einnahmequelle: ihre Aufgaben (aus der zentralen Liste) + Aktivitaetsverlauf.
       const eqId = params.get("id");
       if (eqId) return NextResponse.json({ ok: true, aufgaben: await aufgabenVon(eqId), verlauf: await verlaufVon(eqId) });
-      const liste = await listEinnahmequellen();
-      return NextResponse.json({ ok: true, einnahmequellen: liste, uebersicht: uebersicht(liste) });
+      const [liste, leads, tasks, finance, freigaben] = await Promise.all([listEinnahmequellen(), listLeads(), listTasks(), listFinance().catch(() => []), listFreigaben().catch(() => [])]);
+      const opt = await ladeOptimierung().catch(() => null);
+      const pilotEq = liste.find(q => q.kategorie === "C");
+      return NextResponse.json({ ok: true, einnahmequellen: liste, uebersicht: uebersicht(liste), dashboard: eqDashboard({ eqs: liste, leads, tasks, finance, optimierung: opt }), ersteEinnahme: pilotEq ? { eq: pilotEq.name, ...ersteEinnahmeCheckliste({ eq: pilotEq, leads, tasks, finance, freigaben }) } : null });
     }
     // Werknetz24-Kalender (22.09.2026, "Kommandozentrale"-Folgeauftrag) - eigener Zweig statt
     // neuer Route-Datei (12/12 Serverless-Funktionen bereits belegt, s. PROJECT-AUDIT.md im

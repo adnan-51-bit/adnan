@@ -21,23 +21,24 @@ test("jede Aktion hat genau eine Kategorie; Geld-Aktionen zeigen alle 6 Kostenan
   for (const a of AKTIONEN) {
     assert.ok(!ids.has(a.id), "doppelt: " + a.id); ids.add(a.id);
     assert.ok(["AUTOMATISCH", "FREIGABE", "NICHT_MOEGLICH"].includes(a.kategorie), a.id);
-    if (a.kategorie === "FREIGABE") for (const k of ["was", "warum", "betrag", "rhythmus", "leistung"]) assert.ok(a.kosten?.[k], `${a.id}: ${k} fehlt`);
+    if (a.kategorie === "FREIGABE") assert.ok(a.ziel, a.id + ": GELB braucht den Weg zu „Wartet auf mich“");
     if (a.kategorie === "FREIGABE") assert.ok(a.bereich, a.id + ": Bereich fehlt");
     if (a.kategorie === "NICHT_MOEGLICH") assert.ok(a.grund, a.id + ": Grund fehlt");
   }
   for (const id of ["secret-anzeigen", "passwort-anzeigen"]) assert.equal(AKTIONEN.find(a => a.id === id).kategorie, "NICHT_MOEGLICH");
-  for (const id of ["kostenpflichtiger-dienst", "geld-ausgeben", "produkt-veroeffentlichen", "zahlung-ausloesen"]) assert.equal(AKTIONEN.find(a => a.id === id).kategorie, "FREIGABE");
+  // Geld-Schutz (seit 27.09.2026): alles mit Kosten/Vertrag ist ROT = blockiert
+  for (const id of ["kostenpflichtiger-dienst", "geld-ausgeben", "werbung-bezahlen", "zahlung-ausloesen", "vertrag-abschliessen", "produkt-veroeffentlichen", "famulor-testanruf"]) assert.equal(AKTIONEN.find(a => a.id === id).kategorie, "NICHT_MOEGLICH", id);
+  for (const id of ["kontakt-freigeben", "preis-festlegen", "einnahmequelle-pausieren", "kosten-vorschlag"]) assert.equal(AKTIONEN.find(a => a.id === id).kategorie, "FREIGABE", id);
 });
 
-test("Kostenschutz: ohne Freigabe nichts; mit Freigabe trotzdem keine automatische Geld-Aktion; gesperrte bleiben gesperrt", () => {
-  assert.equal(pruefeAusfuehrung("geld-ausgeben").status, 409);
-  assert.equal(pruefeAusfuehrung("geld-ausgeben", { aktion: "anderes", bestaetigt: true }).status, 409, "Freigabe gilt nur für genau diese Aktion");
-  assert.equal(pruefeAusfuehrung("geld-ausgeben", { aktion: "geld-ausgeben", bestaetigt: "ja" }).status, 409, "nur echtes true zählt");
-  const mit = pruefeAusfuehrung("geld-ausgeben", { aktion: "geld-ausgeben", bestaetigt: true });
-  assert.equal(mit.erlaubt, false); assert.equal(mit.status, 501);
-  assert.equal(pruefeAusfuehrung("produkt-veroeffentlichen", { aktion: "produkt-veroeffentlichen", bestaetigt: true }).status, 423, "E-Commerce pausiert");
+test("Geld-Schutz: Geld-Aktionen sind blockiert – auch mit Freigabe; GELB nur mit Entscheidung; Claude-Aktionen kein Knopf", () => {
+  for (const fg of [undefined, { aktion: "geld-ausgeben", bestaetigt: true }]) assert.equal(pruefeAusfuehrung("geld-ausgeben", fg).status, 403);
+  assert.match(pruefeAusfuehrung("kostenpflichtiger-dienst").fehler, /Blockiert \(Geld-Schutz/);
+  assert.equal(pruefeAusfuehrung("preis-festlegen").status, 409, "GELB ohne Entscheidung");
+  assert.equal(pruefeAusfuehrung("preis-festlegen", { aktion: "preis-festlegen", bestaetigt: true }).status, 501, "auch entschieden: keine automatische Ausführung");
   assert.equal(pruefeAusfuehrung("secret-anzeigen", { aktion: "secret-anzeigen", bestaetigt: true }).status, 403);
-  assert.equal(pruefeAusfuehrung("dokument-aktualisieren").status, 501, "Claude-Aktionen sind kein Knopf");
+  assert.match(pruefeAusfuehrung("server-recherche").fehler, /OFFEN/);
+  assert.equal(pruefeAusfuehrung("dokument-aktualisieren").status, 501);
   assert.equal(pruefeAusfuehrung("gibt-es-nicht").status, 404);
   assert.equal(pruefeAusfuehrung("test-status").erlaubt, true);
 });
@@ -65,7 +66,7 @@ test("API: Steuerung nur mit Anmeldung; Geld-/Verbots-Aktionen abgelehnt und pro
   assert.equal((await route.GET(req("GET", "?tagesbericht=1"))).status, 401);
   assert.equal((await route.POST(req("POST", "", { action: "aktion-ausfuehren", id: "test-status" }))).status, 401);
   const geld = await route.POST(req("POST", "", { action: "aktion-ausfuehren", id: "kostenpflichtiger-dienst" }, "test-secret"));
-  assert.equal(geld.status, 409); const gj = await geld.json(); assert.equal(gj.ok, false); assert.ok(gj.kosten.betrag);
+  assert.equal(geld.status, 403); const gj = await geld.json(); assert.equal(gj.ok, false); assert.match(gj.fehler, /Geld-Schutz/);
   assert.equal((await route.POST(req("POST", "", { action: "aktion-ausfuehren", id: "passwort-anzeigen" }, "test-secret"))).status, 403);
   const w24 = await route.POST(req("POST", "", { action: "aktion-ausfuehren", id: "werknetz24-systempruefung" }, "test-secret"));
   assert.equal(w24.status, 502); assert.equal((await w24.json()).ok, false);
@@ -94,7 +95,8 @@ test("Tagesbericht: nur heutige, echte Werte; fehlende Tageswerte = nicht verfü
   assert.deepEqual(b.benutzeraktionen.map(x => x.text), ["Stripe: STRIPE_WEBHOOK_SECRET in Vercel setzen", "Wartet auf dich: Stripe"]);
   assert.deepEqual(b.jetztZuTun.map(x => x.text), ["Doku · Mittel"]);
   assert.ok(b.heuteErledigt.some(x => x.text === "Fertig"));
-  assert.equal(text["Was ist der nächste sinnvolle Schritt?"], "Stripe: STRIPE_WEBHOOK_SECRET in Vercel setzen");
+  assert.equal(text["Wichtigste nächste Aktion"], "Stripe: STRIPE_WEBHOOK_SECRET in Vercel setzen");
+  assert.equal(text["Was fehlt bis zur ersten echten Einnahme?"], "nicht verfügbar");
 });
 
 test("Geschäfts-Control-Center: 🟢 AKTIV / 🟡 TEST / ⚪ PAUSE / 🔴 FEHLER mit Grund und Ziel", () => {
