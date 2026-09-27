@@ -62,3 +62,16 @@ Beispiel (nur zur Veranschaulichung, keine echten Werte): EK 5,00 + Versand 7,50
 4. Klären, ob die 7,50 € Versand netto oder brutto sind.
 5. Danach **Verkaufspreis kalkulieren** (mit Set-Idee wegen des Mindestwarenwerts).
 6. Dann in der Zentrale „Produkt prüfen“ → „Veröffentlichen“.
+
+## Nachtrag 27.09.2026 – Bildrechte und Händlerkonto (ChiliTec-AGB)
+- **Bilder:** ChiliTec-AGB Abschnitt 11 (https://chilitec.de/html/rechtliches/agb):
+  - „Das Kopieren und Herunterladen der Website oder Teilen (Bilder, Texte etc.) hiervon ist nicht gestattet.“
+  - → Die Website-Bilder werden **nicht** verwendet.
+  - Lösungswege:
+    1. schriftliche Bildfreigabe bei ChiliTec anfragen bzw. prüfen, ob der Händler-Datenexport Bilder mit Nutzungsrecht enthält
+    2. Muster kaufen und eigene Produktfotos machen
+- **Händlerkonto:** ChiliTec „beliefert ausschließlich Unternehmer im Sinne des § 14 BGB“ → erst mit Gewerbe. Ohne Konto keine Einkaufspreise.
+- **Beschreibungen:** Für alle 7 Kandidaten sachlich aus den belegten Herstellerangaben formuliert (Maße, Material, Belastung/Zugkraft, Einsatzbereich „laut Hersteller“). Kein Text von der Website kopiert.
+- **Die 4 Produktideen** (Garten-Organizer, Heimtextilien, Hunde-Reisetrinkflasche, Schubladen-Organizer): kein konkreter Artikel mit nachvollziehbarem Lieferanten belegt. Die früheren Planwerte ohne Quelle sind entfernt:
+  - VK 29,90 / 29,90 / 19,90 / 18,90 €
+  - EK 1,21 €

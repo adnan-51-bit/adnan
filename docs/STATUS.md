@@ -377,3 +377,16 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
     - Module → Zielseite („Aufträge“ hat keine eigene Seite, bleibt ohne Link)
     - „Internetseite ↗“
 - Live: 24/24 Klickziele korrekt, App-Runde 90/90 (Desktop + Handy), 0 JS-Fehler.
+
+## Update 27.09.2026 (18) — Anmeldesperre + Katalog-Vervollständigung
+- **Sperre nach 5 Fehlversuchen** (15 min, pro IP, Tabelle `master_login_sperre`). `checkAdminSecret` ist jetzt async, alle 15 Aufrufstellen umgestellt. Ein Aufruf ohne Code zählt nicht, Erfolg setzt zurück.
+  - Anlass: Adnan will als Master-Code denselben Code wie beim Werknetz24-Login; das setzt er selbst in Vercel.
+  - Live: Zähler 1 → 0 bestätigt; 5er-Sperre per Unit-Test (live bewusst nicht ausgelöst, gleiche IP wie Adnan).
+- **Katalog:**
+  - neue Spalten Beschreibung + Quelle
+  - Zeile „Fehlt: …“ je Produkt
+  - Kennzeichnung „Bild fehlt / Rechte ungeklärt“
+  - sachliche Beschreibungen für alle 7 belegten Kandidaten
+  - unbelegte Planwerte der 4 Produktideen entfernt
+  - Bildverbot laut ChiliTec-AGB dokumentiert
+- **Tests:** 145/145. Live: Katalog 20/20, Anmeldung 19/19, App-Runde 90/90.
