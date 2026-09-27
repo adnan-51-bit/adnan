@@ -554,3 +554,37 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Browser (12 Prüfungen): Ablauf, Lead + Nachfass-Aufgabe, E-Mail-Entwurf, Aufgaben aus Schritten, Lead → Kunde, Report, Automatisierungen-Seite, Desktop + Handy
   - Testeintrag restlos gelöscht
 - Echte Einträge ergänzt: benötigte Konten, erste Recherche-Checklisten und Content-Ideen als Entwürfe.
+
+## Update 27.09.2026 (26) — Teil 4A: Content & Werbung + „Wartet auf Freigabe“
+- **Neuer Bereich „Content & Werbung“** (`?tab=content`, Tabelle `master_content`, Migration `20260927260000_content_freigaben.sql`, RLS an).
+  - Felder: Content-/Video-Ideen, Skript, Titel-Varianten, Beschreibung, Plattform-Varianten (TikTok, Instagram, YouTube Shorts, Facebook, LinkedIn), Bilder mit Pflicht-Rechteangabe, Produkt-/Angebotsinfo, Werbetext, Social-Media-Beiträge, Veröffentlichungen (Plattform/Link/Datum), Quellen, Kennzahlen, Ergebnis, Verlauf.
+- **Ablauf** Idee → Recherche → Skript → Content erstellen → Prüfung → Veröffentlichung → Reichweite → Leads → Einnahmen (+ Verworfen). Nachweise je Stufe:
+  - Thema
+  - Rechercheergebnis
+  - Skript
+  - Beschreibung + Plattform + Werbekennzeichnung + Bildrechte
+  - Freigabe + eingetragener Link
+  - echte Kennzahlen, Leads, Einnahmen
+- **Kostenlose Automatik** (`lib/content-regeln.js`, Vorlagen, ohne KI):
+  - Themen-Recherche-Links (Google Trends, TikTok-, YouTube-, Google-Suche)
+  - Ideen-Generator: nur Vorschläge, Übernahme per Klick
+  - Skript-Vorlage, 5 Titel-Varianten, Beschreibung mit Hashtags aus dem Thema, Plattform-Varianten, 3 Social-Posts, Werbetext
+  - „Automatisch vorbereiten“ füllt nur leere Felder
+- **Erfolg erkennen:** Interaktionsrate aus echten Kennzahlen, Vergleich nur mit eigenen Inhalten, erst ab 3 bewertbaren Inhalten.
+- **Nie automatisch veröffentlicht**: Prüfung → Freigabe → Adnan postet selbst → trägt den Link ein. Wird Content nach der Freigabe geändert, verfällt die Freigabe und wird neu angefragt.
+- **„Wartet auf Freigabe“** (`?tab=freigaben`, Tabelle `master_freigaben`):
+  - Arten: Veröffentlichung, Kosten, Werkzeug, Automatisierung, Recht
+  - Freigeben/Ablehnen mit Notiz, protokolliert; eine Freigabe löst selbst nichts aus
+  - Automatisierungsvorschläge der Einnahmequellen mit „Freigabe nötig“ landen automatisch hier (einmalig)
+  - offene Freigaben sind im Tagesbericht die erste Benutzeraktion
+- **Werkzeuge**: Vorlagen-Generator (aktiv, 0 €). KI-Texte, TikTok-Schnittstelle und bezahlte Werbung sind standardmäßig **aus** und nur per „Freigabe anfragen“ erreichbar; „freigegeben“ heißt „Einrichtung ausstehend“, nicht eingeschaltet.
+- **API** (keine neue Function): `GET ?content=1`, `?content=1&id=…`, `?freigaben=1`; `POST content-*`, `freigabe-entscheiden`, `werkzeug-anfragen`.
+- **Daten:** die 10 Videos aus dem Obsidian-Plan „Affiliate LKW-Kanal“ als Content übernommen (verknüpft, vorbereitet, Status Recherche, keine Partnerlinks). Der echte Vorschlag „Formular → Tabelle“ (Anfragen-Service) wartet auf Freigabe.
+- **Tests:** 195/195.
+- **Live** (13 Prüfungen, Test-Content danach restlos gelöscht):
+  - Login-Schutz
+  - Vorbereiten
+  - Ablauf bis Prüfung, Sperre ohne Freigabe
+  - Freigabe über die Oberfläche, Veröffentlichung, Kennzahlen, Reichweite
+  - Ideen
+  - Desktop + Handy
