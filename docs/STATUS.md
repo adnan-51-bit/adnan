@@ -412,3 +412,12 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - Übersicht: Aktive / Im kostenlosen Test / Ideen zur Prüfung / Pause / Kosten / Einnahmen / Gewinn.
 - Erste Einträge (live, mit Quellen, nichts geschätzt): Affiliate LKW-Kanal (PRÜFUNG), Pflege Google-Unternehmensprofil (IDEE), Sortiert24 (PAUSE, Link /e-commerce).
 - Tests: `tests/einnahmequellen.test.js` (6), gesamt 153/153 grün; Build ok; live geprüft Desktop + Handy (kein Überlauf, keine neuen JS-Fehler).
+
+## Update 27.09.2026 (21) — Grundarchitektur Schritt 1: Gesamtstatus auf der Startseite
+- Startseite `/master` zeigt 12 Kennzahlen: Systemstatus, aktive/pausierte Projekte, Fehler, offene Aufgaben, laufende Automatisierungen, Einnahmen, Kosten, Gewinn, Kunden, Leads, Warnungen + Warnungsliste. Jede Kachel zeigt ihren Rechenweg und führt per Klick zum Bereich.
+- Rechnung in `lib/gesamtstatus.js` (rein, getestet): Einnahmen = Werknetz24 bezahlte Rechnungen + bestätigte Master-Buchungen + Einnahmequellen; Kosten entsprechend (Werknetz24 bezahlte Ausgaben – neu im Werknetz24-Status, nur Summe); ausstehende/stornierte Buchungen zählen nicht. Fehlt eine Quelle → „unvollständig“ + Warnung, nie geschätzt.
+- Regel: Einnahmen/Kosten einer Einnahmequelle nur dort eintragen, nicht zusätzlich als Master-Buchung (sonst doppelt).
+- „Laufende Automatisierungen“ zeigt bewusst „—“, bis der Bereich Automatisierungen echte Läufe erfasst (Schritt 4).
+- E-Commerce-Betrieb in der Datenbank auf Status PAUSIERT gesetzt.
+- Tests: 157/157 (adnan), 171/171 `api/customers.test.js` (werknetz24-landing); live Desktop + Handy geprüft.
+- Reihenfolge der nächsten Schritte: 2 Aufgaben-Filter (Kosten, Benutzeraktion, automatisch erledigbar) → 3 Einnahmequellen-Ausbau (SKALIEREN, Aufgabe erzeugen, Kunde zuordnen) → 4 Automatisierungen mit echten Läufen → 5 Agenten → 6 Finanzen je Bereich → 7 einheitliche Bereichsseiten.
