@@ -867,3 +867,19 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - **Kontakt-Freigaben** tragen jetzt den Vermerk „Potentieller Lead – menschliche Prüfung erforderlich.“
 - **Leverkusen/Düsseldorf:** keine kostenlose Quelle mit erlaubtem automatischem Abruf bekannt → Recherche von Hand in den Sitzungen (GELB, dokumentiert).
 - **Tests:** 250/250, Build ok. Kosten 0 €, Einnahmen 0 €.
+
+## Update 27.09.2026 (44) — Kundenfindung: 20+ geprüfte potenzielle Kunden
+
+- **Läufe am 27.09.2026** (Quelle für die Betriebe: monheimer-lokalhelden.de; Analysen: öffentliche Google-Maps-Profile, Link je Lead gespeichert):
+  - Lauf 1: 28 Seiten geprüft → 5 neu
+  - Lauf 2: 14 Seiten → 5 neu
+  - Lauf 3: 15 Seiten → 5 neu
+  - keine Fehler
+- **Stand:** 30 Leads, alle analysiert. 23 mit erkennbarem Bedarf (unter 75/100 Punkten), 7 bereits gut gepflegt.
+- **Auffällige Befunde:**
+  - Profil nicht vom Inhaber beansprucht: Holtmann, Back Bakery, Hundesalon Für alle Felle, KFZ Akallich
+  - Kein Google-Profil gefunden: Lauck, Nail Lounge, Fat Monheim
+  - „Vorübergehend geschlossen“: P&A Film
+  - Adresse widersprüchlich: Jörg Schneider (Google Langenfeld, Verzeichnis Monheim)
+  - Branche im Verzeichnis falsch: Elektro Mobile ist laut Google ein Handyshop (korrigiert)
+- **Kontakt:** keiner aufgenommen, nichts verändert, nichts beansprucht. Kosten 0 €.
