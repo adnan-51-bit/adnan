@@ -827,3 +827,13 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Keine Einnahmebuchung beim Auftrag (die Monatsrechnung entsteht erst nach dokumentierter Zustimmung, bezahlt nur mit Nachweis).
 - **Nächster Schritt:** Der Betrieb, der am weitesten ist, kommt zuerst; Betriebe ohne Google-Profil sind nachrangig. Aktuell: Kontakt zu Friseur Haargenau freigeben.
 - **Tests:** 248/248, Build ok, live Desktop + Handy ohne Fehler.
+
+## Update 27.09.2026 (41) — Auftrags-Generierungs-Pilot gestartet
+
+- **Dashboard mit 8 Stufen:** Leads → Analysiert → Kontakt vorbereitet → Gespräch → Interesse → Angebot → Auftrag → Bezahlt. Dazu aktueller Lead, nächste Aktion, „Claude hat heute erledigt“, „Du musst“ (aktueller Lead zuerst), Einnahmen/Kosten/Gewinn.
+- **Alle 10 Leads analysiert.** Neu:
+  - Back Bakery 30/100 – Profil nicht vom Inhaber beansprucht
+  - Für alle Felle Hundesalon 40/100 – Profil nicht beansprucht, ca. 60 m von Haargenau
+  - emma's 75/100
+- **Aktueller Lead:** Friseur Haargenau (33/100). Nächste Aktion: Kontakt-Freigabe durch Adnan.
+- **Tests:** 248/248, Build ok, live Desktop + Handy ohne Fehler. Kosten 0 €, Einnahmen 0 €.
