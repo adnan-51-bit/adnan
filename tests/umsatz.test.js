@@ -33,17 +33,17 @@ test("Recherche: Detailseite parsen, nur passende Branchen in Monheim, keine Ver
   assert.equal(R.parseSitemap(`<loc>${R.VERZEICHNIS}/vendors/x</loc><loc>${R.VERZEICHNIS}/other</loc>`).length, 1);
 });
 
-test("Recherche-Lauf: höchstens 3 neu, nichts wenn genug Betriebe auf Analyse warten, keine Doppelten", async () => {
+test("Recherche-Lauf: höchstens 5 neu, nichts wenn genug Betriebe auf Analyse warten, keine Doppelten", async () => {
   const angelegt = [];
   const anlegen = async x => { angelegt.push(x); return { id: "id" + angelegt.length }; };
   let r = await R.rechercheLauf({ bekannt: new Set([R.VERZEICHNIS + "/vendors/a"]), wartend: 0, anlegen, fetchImpl: mockFetch, heute: "2026-09-28" });
   assert.equal(r.neu.length, 3); assert.ok(angelegt.every(x => /^https:\/\/www\.monheimer-lokalhelden\.de\/vendors\//.test(x.quelle_url) && x.quelle_datum === "2026-09-28"));
   assert.ok(!angelegt.some(x => x.firma === "Salon A" || x.firma === "Allianz B"), "bekannt bzw. ausgeschlossen");
   assert.ok(angelegt.every(x => !("telefon" in x) && !("email" in x)), "keine Kontaktdaten gespeichert");
-  r = await R.rechercheLauf({ bekannt: new Set(), wartend: 3, anlegen, fetchImpl: mockFetch });
+  r = await R.rechercheLauf({ bekannt: new Set(), wartend: 5, anlegen, fetchImpl: mockFetch });
   assert.equal(r.neu.length, 0); assert.match(r.grund, /warten noch/);
-  r = await R.rechercheLauf({ bekannt: new Set(), wartend: 2, anlegen: async () => ({ id: "x" }), fetchImpl: mockFetch });
-  assert.equal(r.neu.length, 1, "Warteschlange wird nie größer als 3");
+  r = await R.rechercheLauf({ bekannt: new Set(), wartend: 4, anlegen: async () => ({ id: "x" }), fetchImpl: mockFetch });
+  assert.equal(r.neu.length, 1, "Warteschlange wird nie größer als 5");
 });
 
 test("Nächster Schritt: weitester Betrieb zuerst; Betrieb ohne Google-Profil nachrangig", () => {
@@ -88,9 +88,26 @@ test("Umsatz-Pipeline: Stufen nur aus echten Daten, bezahlt nur mit bestätigter
   const finance = [{ kind: "income", status: "confirmed", amount: 49, lead_id: "5" }, { kind: "income", status: "confirmed", amount: 99, lead_id: "4", ist_test: true }, { kind: "income", status: "pending", amount: 49, lead_id: "4" }];
   const tk = [{ title: "Nachfassen nach Gespräch: X", status: "Offen", quelle: "lead:2" }, { title: "Angebot nachfassen: Y", status: "Erledigt", quelle: "lead:4" }];
   const u = umsatzPipeline({ leads, tasks: tk, finance, naechsterSchritt: "X" });
-  assert.deepEqual(u.stufen.map(s => [s.id, s.anzahl]), [["leads", 5], ["analysiert", 0], ["vorbereitet", 4], ["gespraech", 4], ["interesse", 3], ["angebot", 2], ["auftrag", 1], ["bezahlt", 1]]);
+  assert.deepEqual(u.stufen.map(s => [s.id, s.anzahl]), [["leads", 5], ["analysiert", 0], ["vorbereitet", 0], ["wartet", 0], ["interesse", 3], ["angebot", 2], ["auftrag", 1], ["bezahlt", 1]]);
   const v = umsatzPipeline({ leads: [{ id: "a", status: "NEU", profil_analyse: { punkte: 33 } }, { id: "b", status: "NEU", profil_analyse: { punkte: 60 }, pilot_crm: { kontakt_freigegeben: true } }], aktuellerLead: { name: "A" }, claudeErledigt: ["x"], duMusst: ["y"] });
-  assert.deepEqual(v.stufen.slice(0, 4).map(s => s.anzahl), [2, 2, 1, 0]); assert.equal(v.aktuellerLead.name, "A"); assert.deepEqual([v.claudeErledigt, v.duMusst], [["x"], ["y"]]);
+  assert.deepEqual(v.stufen.slice(0, 4).map(s => s.anzahl), [2, 2, 2, 1]); assert.equal(v.aktuellerLead.name, "A"); assert.deepEqual([v.claudeErledigt, v.duMusst], [["x"], ["y"]]);
   assert.equal(u.kennzahlen.offeneNachfassungen, 1); assert.equal(u.kennzahlen.angebote, 3); assert.equal(u.kennzahlen.einnahmen_cent, 4900); assert.equal(u.kennzahlen.offen_cent, 4900);
   assert.equal(u.naechsterSchritt, "X");
+});
+
+test("Top-5: nachvollziehbar bewertet – Lücken, unbeanspruchtes Profil vorn, kein Profil/gut gepflegt/kontaktiert hinten bzw. raus", async () => {
+  const { top5, leadBewertung } = await import("../lib/umsatz-pipeline.js");
+  const a = (punkte, extra = {}) => ({ punkte, verbesserungen: [{ text: "Beschreibung ergänzen.", dringend: true }], werte: { kategorie: "ja", kontakt: "ja" }, notiz: "", ...extra });
+  const L = [
+    { id: "1", firma: "Haar", status: "NEU", profil_analyse: a(33), quelle: "https://q.test/1 (abgerufen 2026-09-27)" },
+    { id: "2", firma: "Back", status: "NEU", profil_analyse: a(30, { notiz: "Profil ist NICHT vom Inhaber beansprucht" }) },
+    { id: "3", firma: "Ohne", status: "NEU", profil_analyse: a(0, { werte: { kategorie: "nein", kontakt: "nein" } }) },
+    { id: "4", firma: "Gut", status: "NEU", profil_analyse: a(86) },
+    { id: "5", firma: "Schon", status: "KONTAKT", profil_analyse: a(10) },
+    { id: "6", firma: "Neu", status: "NEU" },
+  ];
+  const t = top5(L);
+  assert.deepEqual(t.map(x => x.name), ["Back", "Haar", "Ohne"]);
+  assert.equal(t[1].quelle, "https://q.test/1"); assert.match(t[0].gruende.join(" "), /nicht vom Inhaber beansprucht/); assert.match(t[2].gruende.join(" "), /kein Google-Profil/);
+  assert.equal(leadBewertung(L[5]), null);
 });

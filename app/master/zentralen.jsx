@@ -128,6 +128,7 @@ export function UmsatzPipeline({ u, laden = false, goTo }) {
       <div className="zsSpalte zsAuto"><h4><span>⚙ Claude hat heute erledigt</span><b className="zsAnzahl">{d.claudeErledigt?.length ?? 0}</b></h4>{d.claudeErledigt?.length ? <ul className="zsListe">{d.claudeErledigt.map((t, i) => <li key={i} className="zsZeile"><span className="zsPunkt" /><span className="zsText" title={t}>{t}</span></li>)}</ul> : <p className="zsLeer">Heute noch nichts.</p>}</div>
       <div className="zsSpalte zsWarten"><h4><span>✋ Du musst</span><b className="zsAnzahl">{d.duMusst?.length ?? 0}</b></h4>{d.duMusst?.length ? <ul className="zsListe">{d.duMusst.map((t, i) => <li key={i} className="zsZeile"><span className="zsPunkt" /><span className="zsText" title={t}>{t}</span></li>)}</ul> : <p className="zsLeer">Nichts.</p>}</div>
     </div>
+    {d.top5?.length > 0 && <div className="upTop"><h4>⭐ Die 5 interessantesten Leads (noch nicht kontaktiert)</h4><ol>{d.top5.map(t => <li key={t.id}><b>{t.name}</b> <small>{t.branche}{t.ort ? " · " + t.ort : ""}</small><span>{t.gruende.join(" · ")}</span>{t.quelle && <a href={t.quelle} target="_blank" rel="noreferrer">Quelle ↗</a>}</li>)}</ol></div>}
     {d.naechsterSchritt && <div className="zsNaechste"><span className="zsNaechsteLabel">👉 Nächster konkreter Schritt</span>{goTo ? <button type="button" onClick={() => goTo("pilot")}>{d.naechsterSchritt}</button> : <span>{d.naechsterSchritt}</span>}</div>}
     <p className="zsLeer">„Bezahlt“ zählt nur mit Zahlungsnachweis. {k.offen_cent ? `Offen (noch kein Geld): ${eur(k.offen_cent)}.` : ""}</p>
     <style dangerouslySetInnerHTML={{ __html: ZS_CSS }} />
@@ -137,6 +138,7 @@ export function UmsatzPipeline({ u, laden = false, goTo }) {
 const ZS_CSS = `
 .upStufen{list-style:none;margin:6px 0 10px;padding:0;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
 .upLead{margin:4px 0;font-size:15px}
+.upTop{margin:10px 0}.upTop h4{margin:0 0 6px;font-size:13px}.upTop ol{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px}.upTop li span{display:block;opacity:.8;overflow-wrap:anywhere}.upTop li a{font-size:12px}
 .upStufen li{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px;border-radius:10px;background:rgba(127,127,127,.08);text-align:center;min-width:0}
 .upStufen li.an{background:rgba(16,185,129,.14)}.upStufen b{font-size:22px}.upStufen span{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;overflow-wrap:anywhere}
 .upStufen i{position:absolute;right:-6px;top:50%;transform:translateY(-50%);font-style:normal;opacity:.5;font-size:12px}
