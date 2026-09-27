@@ -359,3 +359,21 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - **Verkaufspreis optional** (leer = nicht kalkuliert).
 - **Recherche:** 7 belegte Kandidaten importiert, 0 verifiziert. Details: `docs/SORTIERT24-PRODUKTQUELLEN.md`.
 - **Tests:** 143/143; Browsertest Katalog 18/18 (Desktop + Handy).
+
+## Update 27.09.2026 (17) — Jeder Klick führt direkt zum Inhalt
+- Adnans Wunsch: „wenn ich in der Zentrale einen Bereich anklicke, will ich direkt das sehen, was dort steht“.
+- Die Bestandsaufnahme fand 40 Karten, die wie Knöpfe aussahen, aber nichts taten. Jetzt verlinkt:
+  - **Master:**
+    - Kachel „Betriebe“, Betriebszeilen → /werknetz24 bzw. /e-commerce
+    - „Nächste Aufgaben“ → Aufgaben; System-Karten → Integrationen
+    - neu: Kacheln und Seitenleiste „Internetseite werknetz24.de ↗“ und „Sortiert24-Shop ↗“
+  - **E-Commerce:**
+    - Kacheln Produkte, Lieferanten, Bestellungen, Umsatz → jeweiliger Reiter; Kunden und Retouren ebenso
+    - Schritte 01–05 → passender Reiter
+    - „Shop ansehen ↗“
+  - **Werknetz24:**
+    - Systemstatus, Probleme, Kunden, Leads → genaue Seite der Admin-Zentrale
+    - Aufgaben/Rechnungen → Reiter; rote Meldungen → Fehlerseite
+    - Module → Zielseite („Aufträge“ hat keine eigene Seite, bleibt ohne Link)
+    - „Internetseite ↗“
+- Live: 24/24 Klickziele korrekt, App-Runde 90/90 (Desktop + Handy), 0 JS-Fehler.
