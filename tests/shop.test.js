@@ -16,7 +16,7 @@ const store = await import("../lib/ecommerce-store.js");
 const orders = await import("../app/api/orders/route.js");
 const stripeRoute = await import("../app/api/payments/stripe/route.js");
 
-const P = { id: "p1", name: "Testprodukt", kategorie: "Haushalt", pipeline_status: "READY", verkaufspreis_cent: 1990, einkaufspreis_cent: 800, versandkosten_cent: 400 };
+const P = { id: "p1", name: "Testprodukt", kategorie: "Haushalt", katalog_status: "BEREIT", verkaufspreis_cent: 1990, einkaufspreis_cent: 800, versandkosten_cent: 400 };
 const TEXTE = Object.fromEntries(shop.RECHTSTEXT_SEITEN.map(k => [k, "Echter Text ".repeat(30)]));
 const ALLES = { STRIPE_SECRET_KEY: "sk_test_x", STRIPE_WEBHOOK_SECRET: "whsec_x", SHOP_LIVE: "true", SHOP_RECHTSTEXTE_FREIGEGEBEN: "true" };
 
@@ -40,7 +40,8 @@ test("Echte Rechtstexte im Repo sind leer -> Shop bleibt zu, auch wenn alles and
 
 test("Verkaufbar nur mit Freigabe-Status und positiver Marge aus echtem Einkaufspreis", () => {
   assert.equal(shop.istVerkaufbar(P), true);
-  assert.equal(shop.istVerkaufbar({ ...P, pipeline_status: "RESEARCH" }), false);
+  assert.equal(shop.istVerkaufbar({ ...P, katalog_status: "GEPRUEFT" }), false, "geprüft, aber nicht veröffentlicht");
+  assert.equal(shop.istVerkaufbar({ ...P, katalog_status: "GESPERRT" }), false);
   assert.equal(shop.istVerkaufbar({ ...P, einkaufspreis_cent: null }), false);
   assert.equal(shop.istVerkaufbar({ ...P, einkaufspreis_cent: 1700 }), false, "Marge negativ");
   const oe = shop.oeffentlichesProdukt({ ...P, notiz: "intern", supplier_id: "sup_x" });
@@ -57,7 +58,7 @@ test("Warenkorb: Preis vom Server, ungültige Positionen abgelehnt", () => {
   assert.throws(() => shop.berechneWarenkorb([{ produkt_id: "p1", menge: 0 }], [P]));
   assert.throws(() => shop.berechneWarenkorb([{ produkt_id: "p1", menge: 1.5 }], [P]));
   assert.throws(() => shop.berechneWarenkorb([{ produkt_id: "gibts-nicht", menge: 1 }], [P]));
-  assert.throws(() => shop.berechneWarenkorb([{ produkt_id: "p1", menge: 1 }], [{ ...P, pipeline_status: "IDEA" }]));
+  assert.throws(() => shop.berechneWarenkorb([{ produkt_id: "p1", menge: 1 }], [{ ...P, katalog_status: "RECHERCHIEREN" }]));
 });
 
 test("Kundendaten: Pflichtfelder und Formate", () => {
@@ -173,4 +174,59 @@ test("Shop hat eigenen Seitentitel (nicht den der Werknetz24-Zentrale) und ist b
   assert.match(src, /title: SHOP_NAME/);
   assert.match(src, /index: false/);
   assert.equal(metadata === undefined || metadata.title === "Sortiert24", true);
+});
+
+const kalk = await import("../lib/kalkulation.js");
+
+test("Kalkulation exakt nach Formel (netto): Einstand, Rohmarge, Quote", () => {
+  const k = kalk.kalkuliere({ einkaufspreis_cent: 500, versandkosten_cent: 750, sonstige_kosten_cent: 100, verkaufspreis_cent: 1990 }, 19);
+  assert.equal(k.einstand, 1350);            // 5,00 + 7,50 + 1,00
+  assert.equal(k.vkNetto, 1672);             // 19,90 / 1,19
+  assert.equal(k.rohmarge, 322);             // 16,72 - 13,50
+  assert.equal(k.quote, 19.3);               // 3,22 / 16,72
+  assert.equal(kalk.kalkuliere({ verkaufspreis_cent: 1990 }).rohmarge, null, "ohne EK keine Marge");
+  assert.equal(kalk.kalkuliere({ einkaufspreis_cent: 500, verkaufspreis_cent: 1990 }).rohmarge, null, "ohne Versand keine Marge");
+  assert.equal(kalk.kalkuliere({ einkaufspreis_cent: 1000, versandkosten_cent: 0, verkaufspreis_cent: 1190 }, 0).vkNetto, 1190, "Kleinunternehmer: netto = brutto");
+});
+
+test("EAN-Prüfziffer", () => {
+  assert.equal(kalk.eanGueltig("4006381333931"), true);
+  assert.equal(kalk.eanGueltig("4006381333932"), false);
+  assert.equal(kalk.eanGueltig("12345"), false);
+});
+
+test("Katalog: Prüfen verlangt Quellen + Bildrechte; Veröffentlichen nur nach Prüfung; Änderung setzt zurück; Sperren", async () => {
+  const lief = await store.createSupplier({ name: "Test-Lieferant", region: "DE", categories: "Test", modell: "Dropshipping", quelle_url: "https://lieferant.test" });
+  const p = await store.createProduct({ name: "Katalog-Test", kategorie: "Ordnung", verkaufspreis_cent: 1990 });
+  await assert.rejects(() => store.setzeKatalogStatus(p.id, "pruefen"), /Prüfung nicht bestanden/);
+  await assert.rejects(() => store.setzeKatalogStatus(p.id, "veroeffentlichen"), /nach bestandener Prüfung/);
+  await store.updateSupplier(lief.id, { status: "verifiziert" });
+  await store.updateProduct(p.id, { supplier_id: lief.id, einkaufspreis_cent: 500, ek_quelle: "Händlerkonto, 27.09.2026", versandkosten_cent: 750, versand_quelle: "Lieferanten-AGB",
+    bilder: ["https://lieferant.test/b.jpg"], bildquelle: "Händler-Bilddatenbank", hersteller: "Hersteller GmbH", kurzbeschreibung: "Kurz", beschreibung: "Lang", lieferzeit: "2–3 Werktage laut Lieferant" });
+  await assert.rejects(() => store.setzeKatalogStatus(p.id, "pruefen"), /Bilder/, "Bildrechte noch ungeklärt");
+  await store.updateProduct(p.id, { bildrechte: "haendlerfreigabe" });
+  assert.equal((await store.setzeKatalogStatus(p.id, "pruefen")).katalog_status, "GEPRUEFT");
+  assert.equal((await store.setzeKatalogStatus(p.id, "veroeffentlichen")).katalog_status, "BEREIT");
+  assert.equal((await store.updateProduct(p.id, { einkaufspreis_cent: 600 })).katalog_status, "RECHERCHIEREN", "Preisänderung macht Prüfung ungültig");
+  assert.equal((await store.updateProduct(p.id, { kurzbeschreibung: "Neu" })).katalog_status, "RECHERCHIEREN");
+  assert.equal((await store.setzeKatalogStatus(p.id, "sperren")).katalog_status, "GESPERRT");
+  await assert.rejects(() => store.setzeKatalogStatus(p.id, "pruefen"), /entsperren/);
+  assert.equal((await store.setzeKatalogStatus(p.id, "entsperren")).katalog_status, "RECHERCHIEREN");
+});
+
+test("API: Katalogstatus nicht per PATCH setzbar, Aktion per POST", async () => {
+  const p = await store.createProduct({ name: "API-Katalog", kategorie: "Test", verkaufspreis_cent: 900 });
+  const h = { "content-type": "application/json", authorization: "Bearer test-secret" };
+  const r1 = await orders.PATCH(new Request("http://t/api/orders?type=products", { method: "PATCH", headers: h, body: JSON.stringify({ id: p.id, katalog_status: "BEREIT" }) }));
+  assert.equal(r1.status, 400);
+  const r2 = await orders.POST(new Request("http://t/api/orders?type=products", { method: "POST", headers: h, body: JSON.stringify({ action: "katalog", id: p.id, aktion: "pruefen" }) }));
+  assert.equal(r2.status, 400); assert.ok((await r2.json()).fehlt.length > 0, "fehlende Punkte werden genannt");
+});
+
+test("Verkaufspreis optional: Kandidat ohne VK anlegbar, aber nie verkaufbar", async () => {
+  const p = await store.createProduct({ name: "Ohne VK", kategorie: "Test" });
+  assert.equal(p.verkaufspreis_cent, null);
+  assert.equal(kalk.kalkuliere(p).rohmarge, null);
+  assert.equal(shop.istVerkaufbar({ ...p, katalog_status: "BEREIT" }), false);
+  await assert.rejects(() => store.createProduct({ name: "x", kategorie: "y", verkaufspreis_cent: 0 }));
 });

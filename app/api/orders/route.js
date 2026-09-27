@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createOrderEvent, evaluateOrderAutomation, nextOrderState } from "../../../lib/automation.js";
 import {
-  listProducts, createProduct, advanceProductPipeline, updateProduct,
+  listProducts, createProduct, advanceProductPipeline, updateProduct, setzeKatalogStatus,
   listSuppliers, createSupplier, updateSupplier,
   listCustomers, createCustomer,
   listOrders, getOrderById, createOrder, updateOrder, deriveOrderGateInputs,
@@ -80,6 +80,11 @@ export async function POST(request) {
     const body = await request.json();
 
     if (type === "products") {
+      // Katalog-Aktionen (27.09.2026): pruefen / veroeffentlichen / sperren / entsperren
+      if (body.action === "katalog") {
+        try { return NextResponse.json({ ok: true, product: await setzeKatalogStatus(body.id, body.aktion) }); }
+        catch (error) { return NextResponse.json({ ok: false, error: error.message, fehlt: error.fehlt || [] }, { status: 400 }); }
+      }
       if (body.action === "advance") {
         if (!body.id) return NextResponse.json({ ok: false, error: "id is required" }, { status: 400 });
         return NextResponse.json({ ok: true, product: await advanceProductPipeline(body.id, { note: body.note }) });
@@ -146,6 +151,7 @@ export async function PATCH(request) {
 
     // Pipeline-Status nur Schritt fuer Schritt ueber POST action "advance" (26.09.2026) - sonst waere ein
     // ungepruefte Produkt per PATCH direkt auf READY und damit im Shop verkaufbar.
+    if (type === "products" && ("katalog_status" in patch || "geprueft_am" in patch)) return NextResponse.json({ ok: false, error: "Katalogstatus nur über die Aktionen Prüfen/Veröffentlichen/Sperren ändern" }, { status: 400 });
     if (type === "products" && "pipeline_status" in patch) return NextResponse.json({ ok: false, error: "Pipeline-Status nur schrittweise über die Produkt-Pipeline ändern" }, { status: 400 });
     if (type === "products") return NextResponse.json({ ok: true, product: await updateProduct(id, patch) });
     if (type === "suppliers") return NextResponse.json({ ok: true, supplier: await updateSupplier(id, patch) });

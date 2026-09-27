@@ -15,6 +15,8 @@ import { useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { adminFetch } from "../../lib/admin-fetch.js";
 import { AnmeldeKnopf } from "../_teile/anmelde-knopf.jsx";
+import { kalkuliere, bildFehlt, KATALOG_STATUS, KATALOG_LABEL, BILDRECHTE } from "../../lib/kalkulation.js";
+import { UMSATZSTEUER_SATZ } from "../../lib/shop-marke.js";
 
 const BUSINESS_ID = "ecommerce";
 
@@ -144,6 +146,13 @@ function ECommerceDashboard() {
     if (!res.ok) { setNotice("Fehler: " + data.error); return false; }
     setNotice(`„${data.product.name}“ gespeichert.`); reloadCore(); return true;
   }
+  // Katalog-Aktion (pruefen/veroeffentlichen/sperren/entsperren); liefert {ok, fehlt} fuer den Pruefdialog.
+  async function katalogAktion(id, aktion) {
+    const res = await adminFetch("/api/orders?type=products", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "katalog", id, aktion }) });
+    const data = await res.json();
+    if (!res.ok) { if (aktion !== "pruefen") setNotice("Fehler: " + data.error); return { ok: false, fehlt: data.fehlt?.length ? data.fehlt : [data.error] }; }
+    setNotice(`„${data.product.name}“: ${KATALOG_LABEL[data.product.katalog_status]}.`); reloadCore(); return { ok: true, fehlt: [] };
+  }
   async function createProduct(form) {
     const res = await adminFetch("/api/orders?type=products", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
     const data = await res.json();
@@ -213,7 +222,7 @@ function ECommerceDashboard() {
       <section className="content">
         {notice && <div className="notice">{notice}<button onClick={() => setNotice("")}>×</button></div>}
         {tab === "overview" && <Overview {...{ coreLoading, products, suppliers, customers, orders, returns, published, verifiziert, openOrders, openReturns, financeTotals, financeLoading }} />}
-        {tab === "produkte" && <Produkte {...{ products, suppliers, coreLoading, supplierName, onCreate: createProduct, onSave: saveProduct, setTab }} />}
+        {tab === "produkte" && <Produkte {...{ products, suppliers, coreLoading, supplierName, onCreate: createProduct, onSave: saveProduct, onKatalog: katalogAktion, setTab }} />}
         {tab === "pipeline" && <Pipeline {...{ products, suppliers, coreLoading, supplierName, onAdvance: advanceProduct }} />}
         {tab === "lieferanten" && <Lieferanten {...{ suppliers, coreLoading, onSetStatus: setSupplierStatus, onCreate: createSupplier }} />}
         {tab === "bestellungen" && <Bestellungen {...{ orders, coreLoading, productName, onFireEvent: fireOrderEvent, customers, products, onCreate: createOrderEntry }} />}
@@ -263,66 +272,108 @@ function Overview({ coreLoading, products, suppliers, customers, orders, returns
   </>;
 }
 
-function Produkte({ products, suppliers, coreLoading, supplierName, onCreate, onSave, setTab }) {
+// Sortiert24-Produktkatalog (27.09.2026): Tabelle Produkt | Bild | EK | Versand | VK | Marge | Lieferant |
+// Lieferzeit | Status mit den Aktionen Bearbeiten / Pruefen / Veroeffentlichen / Sperren. Alle Zahlen aus
+// lib/kalkulation.js (netto, gleiche Formel wie der Server). Nichts wird vorbelegt oder geschaetzt.
+const KATALOG_FARBE = { RECHERCHIEREN: "#b54708", GEPRUEFT: "#175cd3", BEREIT: "#067647", GESPERRT: "#b42318" };
+function Produkte({ products, suppliers, coreLoading, supplierName, onCreate, onSave, onKatalog, setTab }) {
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [pruefung, setPruefung] = useState(null);
   const [search, setSearch] = useState("");
-  const visible = products.filter(p => !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.kategorie.toLowerCase().includes(search.toLowerCase()));
+  const [filter, setFilter] = useState("alle");
+  const visible = products.filter(p => (!search || (p.name + " " + p.kategorie).toLowerCase().includes(search.toLowerCase())) && (filter === "alle" || (p.katalog_status || "RECHERCHIEREN") === filter));
+  const eur = c => (c === null || c === undefined ? "—" : centsToEUR(c));
+  const zaehle = s => products.filter(p => (p.katalog_status || "RECHERCHIEREN") === s).length;
   return <>
-    <div className="pageTitle"><div><span>KATALOG</span><h2>Produkte</h2></div><div className="quick"><input className="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Suchen…" /><button className="primaryLink" onClick={() => setCreating(true)}>+ Produkt</button></div></div>
-    {coreLoading ? <Panel title="Produkte"><p>Daten werden geladen…</p></Panel> : <div className="taskTable">
-      <div className="taskRow head"><div><strong>Produkt</strong></div><i className="businessBadge">Lieferant</i><span>Preis</span><em>Status</em><span></span></div>
-      {visible.map(p => <div className="taskRow" key={p.id}>
-        <div><strong>{p.name}</strong><small>{p.kategorie}</small></div>
-        <i className="businessBadge">{supplierName(p.supplier_id)}</i>
-        <span>{centsToEUR(p.verkaufspreis_cent)}</span>
-        <em>{PIPELINE_LABELS[p.pipeline_status]}</em>
-        <span><button className="editMini" onClick={() => setEditing(p)}>Bearbeiten</button> <button className="editMini" onClick={() => setTab("pipeline")}>Pipeline →</button></span>
-      </div>)}
-      {!visible.length && <p className="muted" style={{ padding: 16 }}>Keine Produkte gefunden.</p>}
-    </div>}
+    <div className="pageTitle"><div><span>KATALOG · SORTIERT24</span><h2>Produkte</h2></div><div className="quick">
+      <select className="search" value={filter} onChange={e => setFilter(e.target.value)}><option value="alle">Alle Status</option>{KATALOG_STATUS.map(s => <option key={s} value={s}>{KATALOG_LABEL[s]} ({zaehle(s)})</option>)}</select>
+      <input className="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Suchen…" />
+      <button className="primaryLink" onClick={() => setCreating(true)}>+ Produkt hinzufügen</button></div></div>
+    <p className="note">Rechnung (netto, USt {UMSATZSTEUER_SATZ} % – Annahme Regelbesteuerung): EK + Versand + sonstige Kosten = Einstand · VK netto − Einstand = Rohmarge · Rohmarge / VK netto = Quote. „—“ = Wert fehlt (wird nicht geschätzt).</p>
+    {coreLoading ? <Panel title="Produkte"><p>Daten werden geladen…</p></Panel> : <div className="ccTableWrap"><table className="katalog">
+      <thead><tr><th>Produkt</th><th>Bild</th><th>EK netto</th><th>Versand</th><th>VK brutto / netto</th><th>Marge</th><th>Lieferant</th><th>Lieferzeit</th><th>Status</th><th>Aktionen</th></tr></thead>
+      <tbody>{visible.map(p => { const k = kalkuliere(p); const st = p.katalog_status || "RECHERCHIEREN"; return <tr key={p.id}>
+        <td><strong>{p.name}</strong><small>{p.kategorie}{p.sku ? " · " + p.sku : ""}</small></td>
+        <td>{bildFehlt(p) ? <em className="warnBadge">Bildmaterial fehlt – Produkt noch nicht veröffentlichen</em> : <img src={p.bilder[0]} alt="" className="miniBild" />}</td>
+        <td>{eur(k.ek)}{k.ek !== null && !p.ek_quelle && <small className="warn">ohne Quelle</small>}</td>
+        <td>{eur(k.versand)}{k.versand !== null && !p.versand_quelle && <small className="warn">ohne Quelle</small>}</td>
+        <td>{eur(k.vkBrutto)}<small>{k.vkNetto !== null ? "netto " + eur(k.vkNetto) : ""}</small></td>
+        <td>{k.rohmarge === null ? "—" : <><span style={{ color: k.rohmarge > 0 ? "#067647" : "#b42318" }}>{eur(k.rohmarge)}</span><small>{k.quote} %</small></>}</td>
+        <td>{supplierName(p.supplier_id)}</td>
+        <td>{p.lieferzeit || "—"}</td>
+        <td><b style={{ color: KATALOG_FARBE[st] }}>{KATALOG_LABEL[st]}</b></td>
+        <td className="aktionen">
+          <button className="editMini" onClick={() => setEditing(p)}>Bearbeiten</button>
+          {st !== "GESPERRT" && <button className="editMini" onClick={async () => setPruefung({ p, ...(await onKatalog(p.id, "pruefen")) })}>Produkt prüfen</button>}
+          {st === "GEPRUEFT" && <button className="editMini" onClick={() => onKatalog(p.id, "veroeffentlichen")}>Veröffentlichen</button>}
+          {st !== "GESPERRT" ? <button className="editMini" onClick={() => onKatalog(p.id, "sperren")}>Sperren</button> : <button className="editMini" onClick={() => onKatalog(p.id, "entsperren")}>Entsperren</button>}
+        </td></tr>; })}</tbody></table>
+      {!visible.length && <p className="muted" style={{ padding: 16 }}>Keine Produkte gefunden.</p>}</div>}
+    {pruefung && <div className="modalBack"><div className="modal"><div className="modalHead"><h3>Prüfung: {pruefung.p.name}</h3><button onClick={() => setPruefung(null)}>×</button></div>
+      <p>{pruefung.ok ? "✅ Bestanden – Status jetzt „Geprüft“. Veröffentlichen macht es im Shop sichtbar (sobald der Shop geöffnet ist)." : "❌ Noch nicht bestanden. Es fehlt:"}</p>
+      {!pruefung.ok && <ul>{(pruefung.fehlt || []).map(x => <li key={x}>{x}</li>)}</ul>}
+      <div className="modalActions"><button className="primary" onClick={() => setPruefung(null)}>OK</button></div></div></div>}
     {editing && <ProductEditModal product={editing} suppliers={suppliers} onClose={() => setEditing(null)} onSave={async patch => { if (await onSave(editing.id, patch)) setEditing(null); }} />}
     {creating && <ProductModal suppliers={suppliers} onClose={() => setCreating(false)} onSave={async form => { if (await onCreate(form)) setCreating(false); }} />}
   </>;
 }
-// Produkt bearbeiten (Sortiert24, 26.09.2026): alle Felder fuer den Verkauf, Marge live berechnet.
-// Leere Felder bleiben leer (= unbekannt) - es wird nichts vorbelegt oder geschaetzt.
+
 const euroZuCent = v => (v === "" || v == null ? null : Math.round(Number(String(v).replace(",", ".")) * 100));
 const centZuEuro = c => (Number.isInteger(c) ? (c / 100).toFixed(2) : "");
 function ProductEditModal({ product: p, suppliers, onClose, onSave }) {
-  const [f, setF] = useState({ name: p.name, kategorie: p.kategorie, supplier_id: p.supplier_id || "", ek: centZuEuro(p.einkaufspreis_cent), vek: centZuEuro(p.versandkosten_cent),
-    vk: centZuEuro(p.verkaufspreis_cent), bestand: Number.isInteger(p.bestand) ? String(p.bestand) : "", lieferzeit: p.lieferzeit || "", beschreibung: p.beschreibung || "",
-    bilder: (p.bilder || []).join("\n"), notiz: p.notiz || "" });
+  const [f, setF] = useState({ name: p.name, kategorie: p.kategorie, supplier_id: p.supplier_id || "", hersteller: p.hersteller || "", sku: p.sku || "", ean: p.ean || "",
+    lieferanten_url: p.lieferanten_url || "", ek: centZuEuro(p.einkaufspreis_cent), ek_quelle: p.ek_quelle || "", vek: centZuEuro(p.versandkosten_cent), versand_quelle: p.versand_quelle || "",
+    sonst: centZuEuro(p.sonstige_kosten_cent), sonst_quelle: p.sonstige_kosten_quelle || "", vk: centZuEuro(p.verkaufspreis_cent),
+    bestand: Number.isInteger(p.bestand) ? String(p.bestand) : "", lieferzeit: p.lieferzeit || "", kurzbeschreibung: p.kurzbeschreibung || "", beschreibung: p.beschreibung || "",
+    vorteile: (p.vorteile || []).join("\n"), technische_daten: p.technische_daten || "", lieferumfang: p.lieferumfang || "",
+    bilder: (p.bilder || []).join("\n"), bildquelle: p.bildquelle || "", bildrechte: p.bildrechte || "ungeklaert", notiz: p.notiz || "" });
   const set = k => e => setF({ ...f, [k]: e.target.value });
-  const ek = euroZuCent(f.ek), vek = euroZuCent(f.vek), vk = euroZuCent(f.vk);
-  const marge = Number.isInteger(vk) && Number.isInteger(ek) ? vk - ek - (vek || 0) : null;
-  const patch = () => ({ name: f.name.trim(), kategorie: f.kategorie.trim(), supplier_id: f.supplier_id || null, einkaufspreis_cent: ek, versandkosten_cent: vek, verkaufspreis_cent: vk,
-    bestand: f.bestand === "" ? null : parseInt(f.bestand, 10), lieferzeit: f.lieferzeit, beschreibung: f.beschreibung, bilder: f.bilder.split(/\n+/).map(x => x.trim()).filter(Boolean), notiz: f.notiz });
-  return <div className="modalBack"><div className="modal"><div className="modalHead"><h3>Produkt bearbeiten</h3><button onClick={onClose}>×</button></div>
-    <label>Name<input value={f.name} onChange={set("name")} /></label>
-    <label>Kategorie<input value={f.kategorie} onChange={set("kategorie")} /></label>
-    <label>Lieferant<select value={f.supplier_id} onChange={set("supplier_id")}><option value="">– keiner –</option>{suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
-    <label>Einkaufspreis (€, echte Händlerkondition)<input inputMode="decimal" value={f.ek} onChange={set("ek")} placeholder="leer = unbekannt" /></label>
-    <label>Versandkosten an den Lieferanten (€)<input inputMode="decimal" value={f.vek} onChange={set("vek")} placeholder="leer = unbekannt" /></label>
-    <label>Verkaufspreis (€, Endpreis im Shop)<input inputMode="decimal" value={f.vk} onChange={set("vk")} /></label>
-    <p className="note">Marge je Stück: <strong>{marge === null ? "– (Einkaufspreis fehlt)" : (marge / 100).toFixed(2).replace(".", ",") + " €"}</strong>{marge !== null && vk ? ` (${Math.round(marge / vk * 100)} %)` : ""}{marge !== null && marge <= 0 ? " – nicht verkaufbar" : ""}</p>
-    <label>Bestand (leer = unbekannt, z. B. Dropshipping)<input inputMode="numeric" value={f.bestand} onChange={set("bestand")} /></label>
-    <label>Lieferzeit (Angabe des Lieferanten)<input value={f.lieferzeit} onChange={set("lieferzeit")} placeholder="z. B. laut Lieferant" /></label>
-    <label>Beschreibung (im Shop sichtbar)<textarea rows={4} value={f.beschreibung} onChange={set("beschreibung")} /></label>
-    <label>Bild-Adressen (https://…, eine pro Zeile, max. 8)<textarea rows={3} value={f.bilder} onChange={set("bilder")} /></label>
-    <label>Interne Notiz (nicht im Shop)<textarea rows={2} value={f.notiz} onChange={set("notiz")} /></label>
-    <p className="note">Im Shop sichtbar erst ab Pipeline-Status „Bereit“/„Veröffentlicht“, mit Einkaufspreis und positiver Marge. Aktueller Status: {PIPELINE_LABELS[p.pipeline_status]}.</p>
-    <div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" disabled={!f.name.trim() || !f.kategorie.trim() || !vk} onClick={() => onSave(patch())}>Speichern</button></div>
+  const zeilen = t => t.split("\n").map(x => x.trim()).filter(Boolean);
+  const patch = () => ({ name: f.name.trim(), kategorie: f.kategorie.trim(), supplier_id: f.supplier_id || null, hersteller: f.hersteller, sku: f.sku, ean: f.ean, lieferanten_url: f.lieferanten_url,
+    einkaufspreis_cent: euroZuCent(f.ek), ek_quelle: f.ek_quelle, versandkosten_cent: euroZuCent(f.vek), versand_quelle: f.versand_quelle,
+    sonstige_kosten_cent: euroZuCent(f.sonst), sonstige_kosten_quelle: f.sonst_quelle, verkaufspreis_cent: euroZuCent(f.vk),
+    bestand: f.bestand === "" ? null : parseInt(f.bestand, 10), lieferzeit: f.lieferzeit, kurzbeschreibung: f.kurzbeschreibung, beschreibung: f.beschreibung,
+    vorteile: zeilen(f.vorteile), technische_daten: f.technische_daten, lieferumfang: f.lieferumfang, bilder: zeilen(f.bilder), bildquelle: f.bildquelle, bildrechte: f.bildrechte, notiz: f.notiz });
+  const k = kalkuliere({ einkaufspreis_cent: euroZuCent(f.ek), versandkosten_cent: euroZuCent(f.vek), sonstige_kosten_cent: euroZuCent(f.sonst), verkaufspreis_cent: euroZuCent(f.vk) });
+  const eur = c => (c === null ? "—" : (c / 100).toFixed(2).replace(".", ",") + " €");
+  const Feld = ({ l, k: key, ...rest }) => <label>{l}<input value={f[key]} onChange={set(key)} {...rest} /></label>;
+  const Text = ({ l, k: key, rows = 3 }) => <label>{l}<textarea rows={rows} value={f[key]} onChange={set(key)} /></label>;
+  return <div className="modalBack"><div className="modal breit"><div className="modalHead"><h3>Produkt bearbeiten</h3><button onClick={onClose}>×</button></div>
+    <h4>Stammdaten</h4>
+    {Feld({ l: "Produktname", k: "name" })}{Feld({ l: "Kategorie", k: "kategorie" })}
+    <label>Lieferant<select value={f.supplier_id} onChange={set("supplier_id")}><option value="">– keiner –</option>{suppliers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.status})</option>)}</select></label>
+    {Feld({ l: "Hersteller", k: "hersteller" })}{Feld({ l: "Artikelnummer / SKU", k: "sku" })}{Feld({ l: "EAN (falls vorhanden)", k: "ean", inputMode: "numeric" })}
+    {Feld({ l: "Produkt-URL beim Lieferanten (https://…)", k: "lieferanten_url" })}
+    <h4>Preise & Kosten (jede Zahl mit Quelle)</h4>
+    {Feld({ l: "Einkaufspreis NETTO (€)", k: "ek", inputMode: "decimal", placeholder: "leer = unbekannt" })}{Feld({ l: "Quelle EK + Datum", k: "ek_quelle", placeholder: "z. B. Händlerkonto ChiliTec, 27.09.2026" })}
+    {Feld({ l: "Versandkosten (€)", k: "vek", inputMode: "decimal", placeholder: "leer = unbekannt" })}{Feld({ l: "Quelle Versand", k: "versand_quelle" })}
+    {Feld({ l: "Sonstige nachweisbare Kosten (€, optional)", k: "sonst", inputMode: "decimal" })}{Feld({ l: "Nachweis sonstige Kosten", k: "sonst_quelle" })}
+    {Feld({ l: "Verkaufspreis BRUTTO (€, Endpreis im Shop – leer = noch nicht kalkuliert)", k: "vk", inputMode: "decimal" })}
+    <p className="note">Einstand {eur(k.einstand)} · VK netto {eur(k.vkNetto)} · Rohmarge <strong>{eur(k.rohmarge)}</strong>{k.quote !== null ? ` · ${k.quote} %` : ""}{k.rohmarge !== null && k.rohmarge <= 0 ? " – nicht verkaufbar" : ""}</p>
+    <h4>Lager & Lieferung</h4>
+    {Feld({ l: "Lagerstatus / Bestand (leer = unbekannt)", k: "bestand", inputMode: "numeric" })}{Feld({ l: "Lieferzeit (Angabe des Lieferanten)", k: "lieferzeit" })}
+    <h4>Texte</h4>
+    {Feld({ l: "Kurzbeschreibung (max. 300 Zeichen)", k: "kurzbeschreibung" })}{Text({ l: "Ausführliche Beschreibung", k: "beschreibung", rows: 4 })}
+    {Text({ l: "Vorteile / Eigenschaften (eine pro Zeile)", k: "vorteile" })}{Text({ l: "Technische Daten", k: "technische_daten" })}{Text({ l: "Lieferumfang", k: "lieferumfang", rows: 2 })}
+    <h4>Bilder & Nutzungsrecht</h4>
+    {Text({ l: "Bild-Adressen (https://…, eine pro Zeile, max. 8)", k: "bilder" })}{Feld({ l: "Bildquelle", k: "bildquelle", placeholder: "z. B. Händler-Bilddatenbank des Lieferanten" })}
+    <label>Nutzungsrecht der Bilder<select value={f.bildrechte} onChange={set("bildrechte")}>{Object.entries(BILDRECHTE).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+    {Text({ l: "Interne Notiz (nicht im Shop)", k: "notiz", rows: 2 })}
+    <p className="note">Speichern setzt ein geprüftes/bereites Produkt auf „Recherchieren“ zurück, wenn Preise, Lieferant, Hersteller oder Bilder geändert werden – dann bitte erneut prüfen.</p>
+    <div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" disabled={!f.name.trim() || !f.kategorie.trim()} onClick={() => onSave(patch())}>Speichern</button></div>
   </div></div>;
 }
 
 function ProductModal({ onClose, onSave }) {
   const [form, setForm] = useState({ name: "", kategorie: "", verkaufspreis_cent: "" });
-  return <div className="modalBack"><div className="modal"><div className="modalHead"><h3>Neues Produkt</h3><button onClick={onClose}>×</button></div>
-    <label>Name<input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label>
+  const vk = form.verkaufspreis_cent === "" ? null : Math.round(Number(String(form.verkaufspreis_cent).replace(",", ".")) * 100);
+  return <div className="modalBack"><div className="modal"><div className="modalHead"><h3>Produkt hinzufügen</h3><button onClick={onClose}>×</button></div>
+    <label>Produktname<input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label>
     <label>Kategorie<input value={form.kategorie} onChange={e => setForm({ ...form, kategorie: e.target.value })} /></label>
-    <label>Verkaufspreis (€)<input type="number" min="0" step="0.01" value={form.verkaufspreis_cent} onChange={e => setForm({ ...form, verkaufspreis_cent: e.target.value })} /></label>
-    <div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" disabled={!form.name || !form.kategorie || !form.verkaufspreis_cent} onClick={() => onSave({ name: form.name, kategorie: form.kategorie, verkaufspreis_cent: Math.round(Number(form.verkaufspreis_cent) * 100) })}>Anlegen</button></div>
+    <label>Verkaufspreis brutto (€, optional – leer = noch nicht kalkuliert)<input inputMode="decimal" value={form.verkaufspreis_cent} onChange={e => setForm({ ...form, verkaufspreis_cent: e.target.value })} /></label>
+    <p className="note">Neue Produkte starten mit Status „Recherchieren“. Lieferant, Einkaufspreis mit Quelle, Bilder usw. danach über „Bearbeiten“.</p>
+    <div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" disabled={!form.name.trim() || !form.kategorie.trim()} onClick={() => onSave({ name: form.name.trim(), kategorie: form.kategorie.trim(), verkaufspreis_cent: vk })}>Anlegen</button></div>
   </div></div>;
 }
 
@@ -551,5 +602,5 @@ function Einstellungen() {
 }
 
 const styles = `
-*{box-sizing:border-box}.app{min-height:100vh;background:#f5f7fa;color:#101828;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.topbar{background:#101828;color:#fff;padding:28px max(22px,calc((100vw - 1400px)/2));display:flex;justify-content:space-between;gap:30px}.eyebrow{font-size:10px;font-weight:800;letter-spacing:.14em;color:#98a2b3}.topbar h1{font-size:34px;letter-spacing:-.035em;margin:7px 0}.topbar p{margin:0;color:#c0c5d0;max-width:600px}.topActions{display:flex;gap:8px;align-items:flex-start}.topActions a,.live{padding:9px 11px;border:1px solid #344054;border-radius:8px;color:#fff;text-decoration:none;font-size:12px}.live{background:#1d2939}.live i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#7f56d9;margin-right:6px}.layout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1400px;margin:auto}.sidebar{background:#fff;border-right:1px solid #e4e7ec;min-height:calc(100vh - 116px);padding:18px 12px}.sidebar button,.sideBottom a{width:100%;display:flex;gap:10px;align-items:center;border:0;background:transparent;text-align:left;padding:11px 12px;border-radius:8px;color:#475467;text-decoration:none;font:inherit;cursor:pointer}.sidebar button:hover,.sidebar .selected{background:#f2f4f7;color:#101828}.sidebar button b{width:20px}.sideBottom{border-top:1px solid #eaecf0;margin-top:18px;padding-top:14px}.sideBottom a{font-size:12px}.content{padding:28px;min-width:0}.pageTitle{display:flex;justify-content:space-between;align-items:end;gap:15px;margin-bottom:18px;flex-wrap:wrap}.pageTitle>div>span{font-size:10px;font-weight:800;letter-spacing:.13em;color:#667085}.pageTitle h2{margin:5px 0 0;font-size:28px;letter-spacing:-.03em}.quick{display:flex;gap:8px;align-items:center}.primaryLink{padding:9px 11px;background:#101828;color:#fff;border:0;border-radius:8px;text-decoration:none;font-size:12px;cursor:pointer}.primaryLink:disabled{opacity:.4;cursor:not-allowed}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.kpi{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:17px}.kpi span,.kpi small{display:block;color:#667085;font-size:12px}.kpi strong{display:block;font-size:26px;letter-spacing:-.03em;margin:8px 0 3px}.columns{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.panel{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:19px;margin-top:14px}.panelTitle{display:flex;justify-content:space-between;margin-bottom:13px}.panel h3{margin:0;font-size:16px}.row,.taskMini,.taskRow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #eaecf0}.row:last-child,.taskMini:last-child,.taskRow:last-child{border-bottom:0}.row>div,.taskMini>div,.taskRow>div{flex:1}.row strong,.taskMini strong,.taskRow strong{display:block}.row small,.taskMini small,.taskRow small{display:block;color:#667085;font-size:12px;margin-top:3px}.row>span{font-size:11px;color:#667085}.taskMini>span{font-size:10px;border-radius:999px;background:#f2f4f7;padding:5px 7px}.taskRow.head{font-size:11px;font-weight:800;color:#667085;background:#f9fafb}.taskRow>em,.taskRow>i.businessBadge{font-size:11px;font-style:normal;padding:6px 8px;background:#f2f4f7;border-radius:999px;white-space:nowrap}.taskRow>i.businessBadge{background:#eef2ff;color:#3538cd}.taskRow em.blocked{background:#fef3f2;color:#b42318}.taskTable{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:0 18px}.editMini{border:1px solid #d0d5dd;background:#fff;border-radius:7px;padding:7px 9px;font-size:11px;cursor:pointer}.editMini:disabled{opacity:.5;cursor:default}.search{border:1px solid #d0d5dd;border-radius:8px;padding:9px 11px}.muted{color:#667085;padding:16px}.note{color:#667085;font-size:13px;line-height:1.5}.note a{color:#175cd3}.pipelineSteps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:5px}.pipelineSteps div{border:1px solid #eaecf0;border-radius:9px;background:#f9fafb;padding:12px;font-size:12px}.pipelineSteps b{display:block;color:#667085;margin-bottom:6px}.systemGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.system{border:1px solid #eaecf0;border-radius:10px;padding:13px;background:#fff}.system small{display:block;color:#667085;font-size:12px;margin-top:5px}.rules{display:grid;gap:11px}.rules b{padding:12px;background:#f9fafb;border:1px solid #eaecf0;border-radius:8px;display:block;font-weight:600}.notice{background:#ecfdf3;border:1px solid #abefc6;color:#067647;padding:10px 12px;border-radius:8px;margin-bottom:14px;font-size:12px;display:flex;justify-content:space-between}.notice button{border:0;background:transparent;cursor:pointer}pre{margin-top:12px;background:#101828;color:#d0d5dd;padding:14px;border-radius:10px;overflow:auto;font-size:12px}.modalBack{position:fixed;inset:0;background:rgba(16,24,40,.45);display:grid;place-items:center;padding:20px;z-index:20}.modal{background:#fff;border-radius:13px;width:min(460px,100%);padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.2);max-height:92vh;overflow:auto}.modalHead{display:flex;justify-content:space-between}.modalHead h3{margin:0 0 15px}.modalHead button{border:0;background:transparent;font-size:22px;cursor:pointer}.modal label{display:block;font-size:12px;font-weight:700;margin-top:12px}.modal input,.modal select,.modal textarea{display:block;width:100%;margin-top:5px;padding:10px;border:1px solid #d0d5dd;border-radius:7px;font:inherit}.modalActions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.modalActions button{padding:9px 12px;border:1px solid #d0d5dd;background:#fff;border-radius:7px;cursor:pointer}.modalActions .primary{background:#101828;color:#fff}footer{max-width:1400px;margin:auto;padding:18px 28px 30px;color:#667085;font-size:11px}@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar{min-height:auto;border-right:0;border-bottom:1px solid #e4e7ec;display:flex;overflow:auto}.sidebar button{min-width:max-content}.sideBottom{display:none}.kpis,.systemGrid,.pipelineSteps{grid-template-columns:1fr 1fr}.columns{grid-template-columns:1fr}}@media(max-width:600px){.taskRow{flex-wrap:wrap}.topbar{display:block}.topActions{margin-top:15px}.content{padding:18px}.kpis,.systemGrid,.pipelineSteps{grid-template-columns:1fr}.pageTitle{display:block}.quick{margin-top:12px}}
+*{box-sizing:border-box}.app{min-height:100vh;background:#f5f7fa;color:#101828;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.topbar{background:#101828;color:#fff;padding:28px max(22px,calc((100vw - 1400px)/2));display:flex;justify-content:space-between;gap:30px}.eyebrow{font-size:10px;font-weight:800;letter-spacing:.14em;color:#98a2b3}.topbar h1{font-size:34px;letter-spacing:-.035em;margin:7px 0}.topbar p{margin:0;color:#c0c5d0;max-width:600px}.topActions{display:flex;gap:8px;align-items:flex-start}.topActions a,.live{padding:9px 11px;border:1px solid #344054;border-radius:8px;color:#fff;text-decoration:none;font-size:12px}.live{background:#1d2939}.live i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#7f56d9;margin-right:6px}.layout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1400px;margin:auto}.sidebar{background:#fff;border-right:1px solid #e4e7ec;min-height:calc(100vh - 116px);padding:18px 12px}.sidebar button,.sideBottom a{width:100%;display:flex;gap:10px;align-items:center;border:0;background:transparent;text-align:left;padding:11px 12px;border-radius:8px;color:#475467;text-decoration:none;font:inherit;cursor:pointer}.sidebar button:hover,.sidebar .selected{background:#f2f4f7;color:#101828}.sidebar button b{width:20px}.sideBottom{border-top:1px solid #eaecf0;margin-top:18px;padding-top:14px}.sideBottom a{font-size:12px}.content{padding:28px;min-width:0}.pageTitle{display:flex;justify-content:space-between;align-items:end;gap:15px;margin-bottom:18px;flex-wrap:wrap}.pageTitle>div>span{font-size:10px;font-weight:800;letter-spacing:.13em;color:#667085}.pageTitle h2{margin:5px 0 0;font-size:28px;letter-spacing:-.03em}.quick{display:flex;gap:8px;align-items:center}.primaryLink{padding:9px 11px;background:#101828;color:#fff;border:0;border-radius:8px;text-decoration:none;font-size:12px;cursor:pointer}.primaryLink:disabled{opacity:.4;cursor:not-allowed}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.kpi{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:17px}.kpi span,.kpi small{display:block;color:#667085;font-size:12px}.kpi strong{display:block;font-size:26px;letter-spacing:-.03em;margin:8px 0 3px}.columns{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.panel{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:19px;margin-top:14px}.panelTitle{display:flex;justify-content:space-between;margin-bottom:13px}.panel h3{margin:0;font-size:16px}.row,.taskMini,.taskRow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #eaecf0}.row:last-child,.taskMini:last-child,.taskRow:last-child{border-bottom:0}.row>div,.taskMini>div,.taskRow>div{flex:1}.row strong,.taskMini strong,.taskRow strong{display:block}.row small,.taskMini small,.taskRow small{display:block;color:#667085;font-size:12px;margin-top:3px}.row>span{font-size:11px;color:#667085}.taskMini>span{font-size:10px;border-radius:999px;background:#f2f4f7;padding:5px 7px}.taskRow.head{font-size:11px;font-weight:800;color:#667085;background:#f9fafb}.taskRow>em,.taskRow>i.businessBadge{font-size:11px;font-style:normal;padding:6px 8px;background:#f2f4f7;border-radius:999px;white-space:nowrap}.taskRow>i.businessBadge{background:#eef2ff;color:#3538cd}.taskRow em.blocked{background:#fef3f2;color:#b42318}.taskTable{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:0 18px}.editMini{border:1px solid #d0d5dd;background:#fff;border-radius:7px;padding:7px 9px;font-size:11px;cursor:pointer}.editMini:disabled{opacity:.5;cursor:default}.search{border:1px solid #d0d5dd;border-radius:8px;padding:9px 11px}.muted{color:#667085;padding:16px}.note{color:#667085;font-size:13px;line-height:1.5}.note a{color:#175cd3}.pipelineSteps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:5px}.pipelineSteps div{border:1px solid #eaecf0;border-radius:9px;background:#f9fafb;padding:12px;font-size:12px}.pipelineSteps b{display:block;color:#667085;margin-bottom:6px}.systemGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.system{border:1px solid #eaecf0;border-radius:10px;padding:13px;background:#fff}.system small{display:block;color:#667085;font-size:12px;margin-top:5px}.rules{display:grid;gap:11px}.rules b{padding:12px;background:#f9fafb;border:1px solid #eaecf0;border-radius:8px;display:block;font-weight:600}.notice{background:#ecfdf3;border:1px solid #abefc6;color:#067647;padding:10px 12px;border-radius:8px;margin-bottom:14px;font-size:12px;display:flex;justify-content:space-between}.notice button{border:0;background:transparent;cursor:pointer}pre{margin-top:12px;background:#101828;color:#d0d5dd;padding:14px;border-radius:10px;overflow:auto;font-size:12px}.modalBack{position:fixed;inset:0;background:rgba(16,24,40,.45);display:grid;place-items:center;padding:20px;z-index:20}.modal{background:#fff;border-radius:13px;width:min(460px,100%);padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.2);max-height:92vh;overflow:auto}.modalHead{display:flex;justify-content:space-between}.modalHead h3{margin:0 0 15px}.modalHead button{border:0;background:transparent;font-size:22px;cursor:pointer}.modal label{display:block;font-size:12px;font-weight:700;margin-top:12px}.katalog{width:100%;border-collapse:collapse;font-size:13px}.katalog th{text-align:left;font-size:11px;color:#667085;text-transform:uppercase;padding:10px 8px;border-bottom:1px solid #eaecf0;white-space:nowrap}.katalog td{padding:10px 8px;border-bottom:1px solid #f2f4f7;vertical-align:top}.katalog td small{display:block;color:#667085;font-size:11px;margin-top:2px}.katalog .warn{color:#b54708}.katalog .aktionen{display:flex;flex-wrap:wrap;gap:4px;min-width:170px}.warnBadge{display:inline-block;background:#fef3f2;color:#b42318;border-radius:6px;padding:4px 6px;font-size:11px;font-style:normal;max-width:150px}.miniBild{width:48px;height:48px;object-fit:cover;border-radius:6px}.ccTableWrap{overflow-x:auto;background:#fff;border:1px solid #eaecf0;border-radius:12px}.modal.breit{width:min(640px,100%)}.modal h4{margin:18px 0 0;font-size:13px;color:#344054;border-top:1px solid #eaecf0;padding-top:12px}.modal input,.modal select,.modal textarea{display:block;width:100%;margin-top:5px;padding:10px;border:1px solid #d0d5dd;border-radius:7px;font:inherit}.modalActions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.modalActions button{padding:9px 12px;border:1px solid #d0d5dd;background:#fff;border-radius:7px;cursor:pointer}.modalActions .primary{background:#101828;color:#fff}footer{max-width:1400px;margin:auto;padding:18px 28px 30px;color:#667085;font-size:11px}@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar{min-height:auto;border-right:0;border-bottom:1px solid #e4e7ec;display:flex;overflow:auto}.sidebar button{min-width:max-content}.sideBottom{display:none}.kpis,.systemGrid,.pipelineSteps{grid-template-columns:1fr 1fr}.columns{grid-template-columns:1fr}}@media(max-width:600px){.taskRow{flex-wrap:wrap}.topbar{display:block}.topActions{margin-top:15px}.content{padding:18px}.kpis,.systemGrid,.pipelineSteps{grid-template-columns:1fr}.pageTitle{display:block}.quick{margin-top:12px}}
 `;
