@@ -793,3 +793,13 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - Kein weiterer Ausbau. Chrome läuft, aber die Claude-Erweiterung ist nicht verbunden (0 verbundene Browser) – Analysen der 4 neuen Leads warten darauf.
 - Erster Kontakt zu Friseur Haargenau ist vorbereitet (Gesprächsunterlage, Leitfaden, Angebotsvorlage, Nachfass-Automatik).
 - Nächster Schritt liegt bei Adnan: Kontakt-Freigabe Haargenau + Erweiterung verbinden. Kosten 0 €, Einnahmen 0 €.
+
+## Update 27.09.2026 (38) — Pilot-Test: alle 7 Leads analysiert
+
+- Die Claude-Browser-Erweiterung ist verbunden. Die 4 neuen Leads wurden am öffentlichen Google-Profil analysiert (nur sicher Sichtbares, der Rest „nicht prüfbar“):
+  - Atlas Friseur 60/100
+  - Autolackiererei Schneider 70/100
+  - Blumenzauber 50/100
+  - Astrid Becker Cosmetics 86/100 (Profil schon gut gepflegt)
+- Berichte, Gesprächsunterlagen, Angebotsvorlagen und 7 Kontakt-Freigaben sind automatisch entstanden. Gate 18/18.
+- Keine neue Funktion gebaut. Kosten 0 €, Einnahmen 0 €.
