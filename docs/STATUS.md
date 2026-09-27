@@ -932,3 +932,15 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - **Adnans Entscheidung:** Werknetz24, Lisa und Famulor bleiben pausiert; keine Famulor-Minuten, kein Testanruf, keine Zahlungen. Die Lisa-Aufgaben 87 und 88 sind gestoppt (mit Begründung, nicht gelöscht).
 - **Ziel:** ein kostenloser Verkaufsprozess (finden → Bedarf → Lead → Kontakt vorbereiten → Freigabe → Kontakt → Interesse → Angebot → Verkauf nach Freigabe). Er läuft bereits als Google-Profil-Pilot.
 - **Regionen:** Die tägliche automatische Suche bleibt bei Monheim (monheimer-lokalhelden.de). atalanda.com erlaubt den Abruf zwar, führt aber keine Betriebe aus Düsseldorf, Leverkusen oder Langenfeld (0 von 811 Einträgen, geprüft 27.09.2026). Diese Städte werden im Browser recherchiert (öffentliche Google-Profile, kostenlos).
+
+## Update 27.09.2026 (49) — Einmal-Paket „Google-Profil-Optimierung“ + Top-10-Leads
+
+- **Angebotsstruktur** (`EINMAL_PAKET`, `einmalAngebotText` in lib/google-profil.js; Knopf „Einmal-Paket“ im Pilot):
+  - Einmalig, ca. 1 Stunde vor Ort, gemeinsam auf dem Gerät des Inhabers – kein Zugang, kein Passwort, kein Abo.
+  - Die Bausteine ergeben sich nur aus den festgestellten Lücken.
+  - Preis „noch festzulegen“; keine Rechnung vor der Gewerbe-/Steuerklärung.
+- **Top-10 qualifizierte Leads** (alle echt, öffentlich geprüft am 27.09.2026, Kontakt-Freigabe offen), mit Standort, öffentlicher Kontaktmöglichkeit, Problemen, Gesprächsargument und Status „FREIGABE NÖTIG“:
+  - Back Bakery, Für alle Felle, KFZ Akallich
+  - Friseur Haargenau, Materne Fotografie, Monheimer Blumenmarkt
+  - Blumenzauber, Eichholz, Jörg Schneider, Nail Lounge
+- **Tests:** 252/252, Build ok. Keine Kontaktaufnahme, 0 €.
