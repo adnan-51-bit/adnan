@@ -720,3 +720,28 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - **Neue Idee:** Amazon KDP (Kategorie D, Status IDEE, 0 € Start), mit 3 Quellen (KDP-Hilfe: Tantiemen 35 %/70 %, Steuerprofil vor Veröffentlichung Pflicht, Nutzung kostenlos). Gewerbe-/Rechtsprüfung = ja, Nachfrage „zu prüfen“.
 - **Tests:** 222/222. Build ok.
 - **Live:** Überblick, Heute, Pilot, Einnahmequellen und Automatisierungen am Desktop und am Handy, ohne Überlauf und ohne JS-Fehler. Die 503 von `/api/master/quality-gate` ist gewollt (Zahlungen gesperrt, solange E-Commerce pausiert ist).
+
+## Update 27.09.2026 (33) — Teil 5: Master-Zentrale als Automatisierungs-Zentrale
+
+- **Automatisierungs-Engine** (`lib/eq-pipeline.js`, täglicher Lauf `engine`):
+  - Jede Einnahmequelle durchläuft 10 Schritte: Recherche → Vorbereitung → Content/Aktion → Lead → Kontakt → Interessent → Kunde → Einnahme → Auswertung → Optimierung. Ob ein Schritt erledigt ist, wird nur aus echten Daten erkannt.
+  - Der nächste offene Schritt wird als Aufgabe „[Engine] …“ angelegt, je Quelle höchstens eine.
+  - Kontakt, Kunde, Einnahme und Optimierung sind nie automatisch. Sie werden „Wartet auf Benutzer“ (WARTET AUF FREIGABE), und es entsteht kein Doppel, wenn dafür schon eine Entscheidung offen ist.
+  - Vor der ersten Einnahme bekommt nur die Fokus-Einnahmequelle Aufgaben (Fokus-Regel).
+- **Einnahmequellen-Manager:**
+  - Neuer Status GESTOPPT (Migration 20260927360000); die Daten bleiben erhalten.
+  - Phasen IDEEN/RECHERCHE/TEST/AKTIV/PAUSE/ERFOLGREICH/GESTOPPT.
+  - Neue Dashboard-Spalten: Kategorie, Einnahmemodell, Engine-Schritt, Automatisierung, Risiko, Quellen.
+- **Finanz-Monitor:**
+  - Getrennt nach Einnahmen, Kosten, Gewinn und offenen Einnahmen; aufgeschlüsselt je Monat, je Einnahmequelle und je Kostenquelle.
+  - **Behoben:** Die Finanzen-Seite hatte offene Buchungen als Einnahmen mitgezählt.
+  - **Neu:** Eine bestätigte Einnahme gibt es nur noch mit Zahlungsnachweis (live geprüft: ohne Nachweis HTTP 400).
+- **Aufgaben-Zentrale:**
+  - Bereiche: Heute, Automatisch erledigt, Wartet auf mich, Fehler, Erfolgreich, nächste Aktion.
+  - Erledigte Aufgaben ohne Notiz werden automatisch mit Datum dokumentiert; ein vorhandenes Ergebnis bleibt stehen.
+- **E-Mail-Zentrale:** Vorlagen, Eingang, Antwort-Entwürfe, Follow-ups, Status. Kein automatischer Versand.
+- **Lead-Manager-Tabelle:** Unternehmen/Person, Quelle, Kontakt, Interesse, Status, nächste Aktion, Notizen, Datum, Ergebnis.
+- **Content-Zentrale:** Ideen, Video-Ideen, Skripte, fertige Texte, Titel, Beschreibungen, Affiliate-Kennzeichnung, Veröffentlichungsstatus, Ergebnisse. Keine automatische Veröffentlichung.
+- **Startseite:** nur noch 12 Kernkennzahlen, alles Weitere unter „Rechenwege & weitere Kennzahlen“.
+- **Tests:** 231/231, Build ok. Live-Check am Desktop und am Handy auf 6 Seiten, ohne Überlauf und ohne JS-Fehler.
+- **Hinweis:** Die Startseite zeigt 18,11 € Kosten. Das sind echte, bezahlte Werknetz24-Ausgaben aus dessen eigener Buchhaltung; Master und Einnahmequellen stehen bei 0 €.
