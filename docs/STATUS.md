@@ -588,3 +588,32 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Freigabe über die Oberfläche, Veröffentlichung, Kennzahlen, Reichweite
   - Ideen
   - Desktop + Handy
+
+## Update 27.09.2026 (27) — Teil 4B: E-Mail & Leads + Einnahmen je Einnahmequelle
+- **Neuer Bereich „E-Mail & Leads“** (`?tab=leads`, Tabelle `master_leads`, Migration `20260927280000_leads_finanzen.sql`, RLS an). Getrennt von Werknetz24-Leads und E-Commerce-Kunden.
+- **Leads:**
+  - Erfassen, optional aus eingefügtem Text (E-Mail, Telefon, Name und Firma werden erkannt)
+  - Pflichtangaben: „selbst angefragt?“ und „Einwilligung?“
+  - automatische Nachfass-Aufgabe
+- **Kontaktstatus:** Neu → Interessent → In Kontakt → Angebot → Kunde, dazu Verloren und Gesperrt (Widerspruch).
+- **Kontakt nur erlaubt** mit Einwilligung oder eigener Anfrage (UWG § 7), sonst ist „gesendet“ gesperrt. Die Zentrale **versendet nichts**: Entwurf → „In E-Mail-Programm öffnen“ (mailto) → Adnan sendet → „Als gesendet markieren“.
+- **E-Mail-Entwürfe:** Antwort, Nachfassen, Angebot, Danke.
+- **Antworten einfügen** → automatische Einordnung (Interesse, Frage, Termin, Absage, Widerspruch, Angebot angenommen) → Status und Aufgabe. Widerspruch sperrt den Lead und stoppt seine Follow-ups.
+- **Angebot:** Betrag nur, was Adnan einträgt. „Angenommen“ legt den Kunden in der Einnahmequelle an und bucht eine **offene** Einnahme; erst „Geld ist da“ macht daraus eine Einnahme. „Kosten erfassen“ nur mit Beleg.
+- **Finanzen je Einnahmequelle** (Einnahmen, Kosten, Gewinn, offen, Quelle, Datum) nur aus echten Buchungen (`master_finance_entries` + `einnahmequelle_id`/`lead_id`).
+  - `ist_test`-Buchungen zählen nie.
+  - Die Einnahmequelle wird aus den Buchungen nachgezogen; die manuellen Geldfelder im Formular sind entfernt.
+  - Im Gesamtstatus keine Doppelzählung mehr.
+- **Einnahme-Ablauf je Einnahmequelle** (aus echten Daten abgeleitet): Recherche → Test → Content → Veröffentlichung → Lead → Kontakt → Angebot → Kunde → Einnahme → Report → Skalieren.
+- **Automatisierungsgrad:** Manuell / KI vorbereitet (derzeit Regeln und Vorlagen, kostenlos) / Automatisch / Freigabe erforderlich (E-Mail-Dienst, echte KI, Werbung, Abos).
+- Die Lead-Liste der Einnahmequelle (Teil 3A) ist jetzt ein Spiegel der zentralen Liste.
+- Der Tagesbericht enthält neue Leads und Kunden (Einnahmequellen), offene Einnahmen und offene Antworten als Benutzeraktion.
+- **Tests:** 203/203.
+- **Live** (20 Prüfungen, Test-Einnahmequelle, Test-Lead und Testbuchungen danach restlos gelöscht):
+  - Zugriffsschutz, falscher Code 401
+  - Lead aus Text erkennen, Entwurf, gesendet, Antwort (Interesse), Angebot, angenommen, offene Einnahme, „Geld ist da“, Kosten, Gewinn
+  - Ablauf bis Einnahme
+  - Neuladen / Persistenz, Tagesbericht
+  - Desktop + Handy (7 Seiten)
+- **Befunde behoben:** Meldung kam vor dem Neuladen (alter Stand sichtbar); Filter-Auswahl auf dem Handy 9 px zu breit.
+- **Stand echte Daten:** 0 Leads, 0 Buchungen, alle Einnahmequellen 0 € (nichts erfunden).
