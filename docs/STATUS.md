@@ -787,3 +787,9 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - „Hat Interesse“ → „Angebot übergeben“ (+3 Tage, Preis erst nach Entscheidung).
   - Nichts wird gesendet.
 - **Tests:** 243/243, Build ok, live Desktop + Handy ohne Fehler.
+
+## Update 27.09.2026 (37) — Wechsel zum echten Pilot-Test
+
+- Kein weiterer Ausbau. Chrome läuft, aber die Claude-Erweiterung ist nicht verbunden (0 verbundene Browser) – Analysen der 4 neuen Leads warten darauf.
+- Erster Kontakt zu Friseur Haargenau ist vorbereitet (Gesprächsunterlage, Leitfaden, Angebotsvorlage, Nachfass-Automatik).
+- Nächster Schritt liegt bei Adnan: Kontakt-Freigabe Haargenau + Erweiterung verbinden. Kosten 0 €, Einnahmen 0 €.
