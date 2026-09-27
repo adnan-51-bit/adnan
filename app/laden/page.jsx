@@ -60,7 +60,7 @@ export default function Laden() {
       {kategorien.length > 2 && <nav className="kategorien">{kategorien.map(k => <button type="button" key={k} className={k === kategorie ? "aktiv" : ""} onClick={() => setKategorie(k)}>{k}</button>)}</nav>}
       {!produkte.length && <p>Aktuell sind keine Produkte verfügbar.</p>}
       <section className="raster">{sichtbar.map(p => <article className="karte" key={p.id}>
-        {p.bilder[0] && <img src={p.bilder[0]} alt={p.name} className="bild" loading="lazy" />}
+        {p.bilder[0] && <div className="bildRahmen"><img src={p.bilder[0]} alt={p.name + (p.symbolbild ? " (Symbolbild)" : "")} className="bild" loading="lazy" />{p.symbolbild && <span className="symbol">Symbolbild</span>}</div>}
         <h2>{p.name}</h2>{p.kategorie && <small>{p.kategorie}</small>}<strong>{euro(p.preis_cent)}</strong>
         {bestandText(p) && <small className="hinweis">{bestandText(p)}</small>}
         <div className="zeile"><button type="button" className="zweit" onClick={() => setDetail(p)}>Details</button>
@@ -82,7 +82,9 @@ export default function Laden() {
     {detail && <div className="dialogHintergrund" onClick={() => setDetail(null)}><div className="karte dialog" onClick={e => e.stopPropagation()} role="dialog" aria-label={detail.name}>
       <button type="button" className="zweit schliessen" onClick={() => setDetail(null)}>×</button>
       <h2>{detail.name}</h2>
-      {detail.bilder.length > 0 && <div className="galerie">{detail.bilder.map(b => <img key={b} src={b} alt={detail.name} loading="lazy" />)}</div>}
+      {detail.bilder.length > 0 && <div className="galerie">{detail.bilder.map(b => <div className="bildRahmen" key={b}><img src={b} alt={detail.name} loading="lazy" />{detail.symbolbild && <span className="symbol">Symbolbild</span>}</div>)}</div>}
+      {detail.symbolbild && <p><small>Symbolbild – das gelieferte Produkt kann in Farbe, Form und Größe abweichen. Maßgeblich ist die Produktbeschreibung.</small></p>}
+      {detail.bildnachweis && <p><small>Bildnachweis: {detail.bildnachweis}</small></p>}
       <strong>{euro(detail.preis_cent)}</strong>
       {detail.beschreibung && <p className="beschreibung">{detail.beschreibung}</p>}
       {detail.lieferzeit && <p><small>Lieferzeit: {detail.lieferzeit}</small></p>}

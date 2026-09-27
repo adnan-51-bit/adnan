@@ -203,8 +203,11 @@ test("Katalog: Prüfen verlangt Quellen + Bildrechte; Veröffentlichen nur nach 
   await store.updateSupplier(lief.id, { status: "verifiziert" });
   await store.updateProduct(p.id, { supplier_id: lief.id, einkaufspreis_cent: 500, ek_quelle: "Händlerkonto, 27.09.2026", versandkosten_cent: 750, versand_quelle: "Lieferanten-AGB",
     bilder: ["https://lieferant.test/b.jpg"], bildquelle: "Händler-Bilddatenbank", hersteller: "Hersteller GmbH", kurzbeschreibung: "Kurz", beschreibung: "Lang", lieferzeit: "2–3 Werktage laut Lieferant" });
-  await assert.rejects(() => store.setzeKatalogStatus(p.id, "pruefen"), /Bilder/, "Bildrechte noch ungeklärt");
-  await store.updateProduct(p.id, { bildrechte: "haendlerfreigabe" });
+  await assert.rejects(() => store.setzeKatalogStatus(p.id, "pruefen"), /Produktfoto/, "Bildrechte noch ungeklärt");
+  await store.updateProduct(p.id, { bildrechte: "lizenz", bildart: "symbolbild", bildnachweis: "Foto: Test, CC BY-SA 4.0" });
+  await assert.rejects(() => store.setzeKatalogStatus(p.id, "pruefen"), /Produktfoto/, "Symbolbild reicht nie für die Freigabe");
+  assert.equal(kalk.bildFehlt(await (await store.listProducts()).find(x => x.id === p.id)), false, "Symbolbild wird aber angezeigt");
+  await store.updateProduct(p.id, { bildrechte: "haendlerfreigabe", bildart: "produktfoto" });
   assert.equal((await store.setzeKatalogStatus(p.id, "pruefen")).katalog_status, "GEPRUEFT");
   assert.equal((await store.setzeKatalogStatus(p.id, "veroeffentlichen")).katalog_status, "BEREIT");
   assert.equal((await store.updateProduct(p.id, { einkaufspreis_cent: 600 })).katalog_status, "RECHERCHIEREN", "Preisänderung macht Prüfung ungültig");
@@ -229,4 +232,10 @@ test("Verkaufspreis optional: Kandidat ohne VK anlegbar, aber nie verkaufbar", a
   assert.equal(kalk.kalkuliere(p).rohmarge, null);
   assert.equal(shop.istVerkaufbar({ ...p, katalog_status: "BEREIT" }), false);
   await assert.rejects(() => store.createProduct({ name: "x", kategorie: "y", verkaufspreis_cent: 0 }));
+});
+
+test("Shop-Produktdaten kennzeichnen Symbolbild + Bildnachweis", () => {
+  const o = shop.oeffentlichesProdukt({ ...P, bilder: ["https://x.test/a.jpg"], bildart: "symbolbild", bildnachweis: "Foto: A, CC BY-SA 4.0" });
+  assert.equal(o.symbolbild, true); assert.equal(o.bildnachweis, "Foto: A, CC BY-SA 4.0");
+  assert.throws(() => store.pruefeProduktZusatz({ bildart: "fake" }));
 });
