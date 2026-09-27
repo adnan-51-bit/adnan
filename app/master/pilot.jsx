@@ -5,7 +5,7 @@
 // 0 € bis zur ersten Einnahme: keine API, keine Werbung - die Analyse erfolgt von Hand am oeffentlichen Profil.
 import { useEffect, useState } from "react";
 import { adminFetch, anmeldeUrl } from "../../lib/admin-fetch.js";
-import { ANTWORTEN } from "../../lib/google-profil.js";
+import { ANTWORTEN, GESPRAECHSLEITFADEN, ENTSCHEIDUNGEN } from "../../lib/google-profil.js";
 import { LEAD_LABEL } from "../../lib/leads-regeln.js";
 import { ErsteEinnahmeKarte, EqDashboardTabelle } from "./erste-einnahme.jsx";
 
@@ -55,6 +55,16 @@ export function PilotGoogleProfil() {
       <li>Angebot angenommen → <b>Monatliche Leistung starten</b>: Monatsaufgaben + offene Monatsrechnung entstehen automatisch.</li>
       <li>Erst nach Gewerbe-Klärung abrechnen; wenn das Geld da ist: „Geld ist da“ → erste echte Einnahme.</li></ol></section>
 
+    <section className="panel"><h3>Gesprächsleitfaden (persönlicher Besuch)</h3>
+      <ol className="plLeitfaden">{GESPRAECHSLEITFADEN.map(g => <li key={g.schritt}><b>{g.schritt}</b><span>{g.text}</span></li>)}</ol>
+      <p className="muted">Die Gesprächsunterlage zum Ausdrucken findest du bei jedem analysierten Betrieb („🖨 Gesprächsunterlage“). Ohne Kontakt-Freigabe nicht besuchen.</p></section>
+
+    <section className="panel"><h3>Entscheidungsvorlage – was fehlt, warum, Kosten, kostenlose Alternative</h3>
+      <div className="plEnt">{ENTSCHEIDUNGEN.map(e => <article key={e.id}><h4>👤 {e.titel}</h4><dl>
+        <dt>Was fehlt?</dt><dd>{e.was_fehlt}</dd><dt>Warum?</dt><dd>{e.warum}</dd><dt>Kosten</dt><dd>{e.kosten}</dd><dt>Kostenlose Alternative</dt><dd>{e.alternative}</dd>
+        <dt>Quellen</dt><dd>{e.quellen.map((q, i) => <a key={q} href={q} target="_blank" rel="noreferrer">{"[" + (i + 1) + "]"} </a>)}</dd></dl></article>)}</div>
+      <p className="muted">Entschieden wird unter „Wartet auf mich“. Die Zentrale trifft keine dieser Entscheidungen selbst.</p></section>
+
     <section className="panel"><h3>Potenzielle Kunden ({d?.leads?.length ?? "…"})</h3>
       <p className="muted">Nur öffentlich belegte Angaben mit Quelle. Keine Werbe-Mails – Kontakt persönlich. Nichts ist verbindlich, bevor du es entscheidest.</p>
       {d && !d.leads.length && <p className="muted">Noch kein Betrieb erfasst.</p>}
@@ -72,6 +82,7 @@ export function PilotGoogleProfil() {
         <div className="plAktionen">
           <button className="editMini" onClick={() => setDialog({ art: "analyse", l })}>{l.profil_analyse ? "Analyse aktualisieren" : "Profil-Analyse"}</button>
           {l.bericht && <button className="editMini" onClick={() => setDialog({ art: "text", titel: "Profil-Check-Bericht", text: l.bericht })}>Bericht</button>}
+          {l.profil_analyse && <a className="editMini" href={"/master/profil-check?id=" + encodeURIComponent(l.id)} target="_blank" rel="noreferrer">🖨 Gesprächsunterlage</a>}
           {l.stufe === "GEPRUEFT" && <a className="editMini" href="/master?tab=freigaben">Kontakt freigeben („Wartet auf mich“) →</a>}
           {l.stufe === "KONTAKT_FREIGEGEBEN" && <button className="editMini" onClick={() => senden({ action: "lead-status", id: l.id, status: "KONTAKT" }, "Gespräch vermerkt")}>Gespräch geführt</button>}
           {l.stufe === "GESPRAECH" && <button className="editMini plJa" onClick={() => senden({ action: "lead-status", id: l.id, status: "INTERESSENT" }, "Interesse vermerkt")}>Hat Interesse</button>}
@@ -189,4 +200,7 @@ const PL_CSS = `.plGate{display:grid;grid-template-columns:repeat(auto-fit,minma
 .plScore{font-size:12px;padding:3px 8px;border-radius:999px;background:#eff8ff;color:#175cd3;height:fit-content}.plZeile{font-size:13px;margin:3px 0;overflow-wrap:anywhere}.plZeile small{color:#667085}
 .plAktionen{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.plAktionen a.editMini{text-decoration:none}.plJa{background:#ecfdf3!important}.plFin{display:flex;gap:6px 16px;flex-wrap:wrap;font-size:13px;margin-bottom:6px}
 .pl h4{margin:10px 0 4px;font-size:13px}.plText{white-space:pre-wrap;font:inherit;font-size:13px;background:#f9fafb;border-radius:8px;padding:10px;overflow-wrap:anywhere}
-.plMeldung{font-size:14px}.plModal{width:min(620px,100%);max-height:92vh;overflow:auto}.plModal label{display:block;font-size:12px;font-weight:700;margin-top:10px}.plModal input,.plModal textarea,.plModal select{display:block;width:100%;margin-top:4px;padding:9px;border:1px solid #d0d5dd;border-radius:7px;font:inherit}.pl .muted{color:#98a2b3;font-size:13px}`;
+.plMeldung{font-size:14px}.plModal{width:min(620px,100%);max-height:92vh;overflow:auto}.plModal label{display:block;font-size:12px;font-weight:700;margin-top:10px}.plModal input,.plModal textarea,.plModal select{display:block;width:100%;margin-top:4px;padding:9px;border:1px solid #d0d5dd;border-radius:7px;font:inherit}.pl .muted{color:#98a2b3;font-size:13px}.plLeitfaden{margin:0;padding-left:20px;display:grid;gap:6px;font-size:14px}.plLeitfaden li b{display:block}.plLeitfaden li span{opacity:.85}
+.plEnt{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}.plEnt article{border:1px solid rgba(127,127,127,.25);border-radius:10px;padding:10px;min-width:0}
+.plEnt h4{margin:0 0 6px;font-size:14px}.plEnt dl{margin:0;display:grid;gap:2px;font-size:13px}.plEnt dt{font-weight:700;margin-top:6px}.plEnt dd{margin:0;overflow-wrap:anywhere}
+`;
