@@ -944,3 +944,16 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Friseur Haargenau, Materne Fotografie, Monheimer Blumenmarkt
   - Blumenzauber, Eichholz, Jörg Schneider, Nail Lounge
 - **Tests:** 252/252, Build ok. Keine Kontaktaufnahme, 0 €.
+
+## Update 27.09.2026 (50) — Lead-to-Customer-System (kostenlos, getrennt von Werknetz24)
+
+- **Lead-Bewertung nach 5 dokumentierten Kriterien** (lib/lead-bewertung.js, je 0–2 Punkte mit Begründung): erkennbarer Bedarf, erreichbarer Kontaktweg, passendes Angebot (Einmal-Paket), lokale Nähe, vorhandene Informationen. Sichtbar bei jedem Betrieb im Pilot; Grundlage der Top-5.
+- **Tägliche Suche** speichert jetzt auch die öffentliche Geschäftsnummer und die Adresse aus den strukturierten Verzeichnisdaten (keine E-Mail-Adressen). „Kunst“ wird ausgeschlossen (Fehlgriff „Heidis Malereien“ korrigiert; der Lead bleibt gespeichert).
+- **Heute:** 17 Seiten geprüft, 5 neue Leads, alle analysiert:
+  - For you cosmetics 40 (Profil nicht beansprucht)
+  - Salon Stock 25
+  - Schell-Höniger 33
+  - Maria's Blumenwelt 58
+  - Heidis Malereien (kein Profil, passt eingeschränkt)
+- **Stand:** 35 Leads, alle analysiert, 28 mit Bedarf.
+- **Tests:** 255/255, Build ok, live Desktop + Handy ohne Fehler. Kosten 0 €, Einnahmen 0 €.
