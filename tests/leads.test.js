@@ -65,8 +65,12 @@ test("Kompletter Ablauf: Lead → Kontakt → Angebot → Kunde → offene Einna
   let f = fin.eqFinanzen(await fin.listFinance(), q.id);
   assert.equal(f.einnahmen_cent, 0, "offen ≠ Einnahme"); assert.equal(f.offen_cent, 9900);
   assert.equal((await eq.listEinnahmequellen())[0].kunden.length, 1, "Kunde in der Einnahmequelle");
-  await L.zahlungEingegangen(buchung.id, "2026-10-01");
-  await assert.rejects(() => L.zahlungEingegangen(buchung.id), /Nur offene Einnahmen/);
+  // "Bezahlt" nur mit echter Zahlungsbestaetigung (seit 27.09.2026)
+  await assert.rejects(() => L.zahlungEingegangen(buchung.id, "2026-10-01"), /Zahlungsnachweis fehlt/);
+  await assert.rejects(() => L.zahlungEingegangen(buchung.id, "2026-10-01", "TAN 123456"), /Niemals/);
+  const bez = await L.zahlungEingegangen(buchung.id, "2026-10-01", "Kontoauszug 01.10., Verwendungszweck R-2026-001");
+  assert.match(bez.source, /Zahlungsnachweis: Kontoauszug 01\.10\./);
+  await assert.rejects(() => L.zahlungEingegangen(buchung.id, "2026-10-01", "Kontoauszug 01.10."), /Nur offene Einnahmen/);
   // Kostenregel (seit 27.09.2026): ohne freigegebene Kosten-Freigabe keine Ausgabe
   await assert.rejects(() => L.kostenErfassen(q.id, { betrag_cent: 1500, beschreibung: "Domain", quelle: "Rechnung 1", datum: "2026-10-01" }), /freigegebener Kosten-Freigabe/);
   const { freigabeEntscheiden } = await import("../lib/freigaben.js");

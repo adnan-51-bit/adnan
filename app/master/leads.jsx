@@ -76,7 +76,7 @@ export function EmailLeads() {
     {dialog?.art === "antwort" && <TextDialog titel={"Antwort erfassen – " + dialog.l.name} hinweis="Antwort hier einfügen. Die Zentrale erkennt automatisch Interesse, Frage, Termin, Absage oder Widerspruch (bitte prüfen)." feld="Antworttext" onClose={() => setDialog(null)} onSave={async text => { if (await senden({ action: "lead-antwort", id: dialog.l.id, text }, "Antwort erfasst")) setDialog(null); }} />}
     {dialog?.art === "angebot" && <AngebotDialog l={dialog.l} onClose={() => setDialog(null)} onSave={async (text, betrag_cent) => { if (await senden({ action: "lead-angebot", id: dialog.l.id, text, betrag_cent }, "Angebot gespeichert – jetzt E-Mail-Entwurf „Angebot“ erstellen")) setDialog(null); }} />}
     {dialog?.art === "kosten" && <KostenDialog eq={dialog.eq} onClose={() => setDialog(null)} onSave={async v => { if (await senden({ action: "eq-kosten-vorschlag", id: dialog.eq.id, vorschlag: v }, "Kostenvorschlag liegt unter „Wartet auf mich“")) setDialog(null); }} />}
-    {dialog?.art === "bezahlt" && <TextDialog titel={`Zahlung eingegangen: ${eur(dialog.b.betrag_cent)}`} hinweis="Nur bestätigen, wenn das Geld wirklich auf dem Konto ist." feld="Eingangsdatum (JJJJ-MM-TT)" start={heute()} einzeilig onClose={() => setDialog(null)} onSave={async datum => { if (await senden({ action: "zahlung-eingegangen", id: dialog.b.id, datum }, "Einnahme als bezahlt erfasst")) setDialog(null); }} />}
+    {dialog?.art === "bezahlt" && <BezahltDialog b={dialog.b} onClose={() => setDialog(null)} onSave={async (datum, nachweis) => { if (await senden({ action: "zahlung-eingegangen", id: dialog.b.id, datum, nachweis }, "Einnahme als bezahlt erfasst")) setDialog(null); }} />}
     <style dangerouslySetInnerHTML={{ __html: LD_CSS }} />
   </div>;
 }
@@ -133,6 +133,14 @@ function TextDialog({ titel, hinweis, feld, start = "", einzeilig, onClose, onSa
   return <div className="modalBack"><div className="modal ldModal"><div className="modalHead"><h3>{titel}</h3><button onClick={onClose}>×</button></div>{hinweis && <p className="note">{hinweis}</p>}
     <label>{feld}{einzeilig ? <input value={t} onChange={e => setT(e.target.value)} /> : <textarea rows={6} value={t} onChange={e => setT(e.target.value)} />}</label>
     <div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" disabled={!t.trim()} onClick={() => onSave(t)}>Speichern</button></div></div></div>;
+}
+function BezahltDialog({ b, onClose, onSave }) {
+  const [f, setF] = useState({ datum: heute(), nachweis: "" });
+  return <div className="modalBack"><div className="modal ldModal"><div className="modalHead"><h3>Zahlung eingegangen: {eur(b.betrag_cent)}</h3><button onClick={onClose}>×</button></div>
+    <p className="note">Nur bestätigen, wenn das Geld wirklich auf dem Konto ist – mit Nachweis (z. B. Kontoauszug/Gutschrift). Nie PIN, TAN oder Passwörter eintragen.</p>
+    <label>Eingangsdatum<input type="date" value={f.datum} onChange={e => setF({ ...f, datum: e.target.value })} /></label>
+    <label>Zahlungsnachweis (z. B. „Kontoauszug 01.10., Verwendungszweck R-2026-001“)<input value={f.nachweis} onChange={e => setF({ ...f, nachweis: e.target.value })} /></label>
+    <div className="modalActions"><button onClick={onClose}>Abbrechen</button><button className="primary" disabled={f.nachweis.trim().length < 5} onClick={() => onSave(f.datum, f.nachweis)}>Als bezahlt erfassen</button></div></div></div>;
 }
 function AngebotDialog({ l, onClose, onSave }) {
   const [f, setF] = useState({ text: l.angebot?.text || "", betrag: l.angebot?.betrag_cent ? String(l.angebot.betrag_cent / 100).replace(".", ",") : "" });

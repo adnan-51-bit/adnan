@@ -179,7 +179,7 @@ export async function POST(request){
           : a === "lead-antwort-erledigt" ? { lead: await antwortErledigt(id, body.index) }
           : a === "lead-angebot" ? { lead: await angebotErstellen(id, { text: body.text, betrag_cent: body.betrag_cent ?? null }) }
           : a === "lead-angebot-entscheidung" ? await angebotEntscheidung(id, body.angenommen)
-          : a === "zahlung-eingegangen" ? { buchung: await zahlungEingegangen(id, body.datum) }
+          : a === "zahlung-eingegangen" ? { buchung: await zahlungEingegangen(id, body.datum, body.nachweis) }
           : a === "eq-kosten" ? { buchung: await kostenErfassen(id, body.kosten || {}) }
           : a === "eq-kosten-vorschlag" ? { freigabe: await kostenVorschlagen(id, body.vorschlag || {}) }
           : null;

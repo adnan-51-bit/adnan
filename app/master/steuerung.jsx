@@ -35,6 +35,7 @@ export function Startseite({ businesses, tasks, tasksLocked, systems, finance, q
   const [steuerung] = useDaten("/api/master/businesses?aktionen=1");
   const [agenten] = useDaten("/api/master/businesses?werknetz24Agenten=1");
   const [bericht] = useDaten("/api/master/businesses?tagesbericht=1");
+  const [eqLeads] = useDaten("/api/master/businesses?leads=1");
   const g = berechneGesamtstatus({ businesses, tasks, tasksLocked, systems, finance, qualityGate, einnahmequellen: eq?.einnahmequellen ?? null, ecKunden: kunden?.customers ?? null });
   const bereiche = bereichsStatus({ businesses, einnahmequellen: eq?.einnahmequellen ?? null });
   const serverAktionen = steuerung?.aktionen?.filter(a => a.ausfuehrung === "server").length;
@@ -53,6 +54,9 @@ export function Startseite({ businesses, tasks, tasksLocked, systems, finance, q
     ["Automatisierungen", serverAktionen ?? "—", "automation", [`${serverAktionen ?? "?"} per Knopf ausführbar`, `letzter Lauf: ${letzterLauf ? zeit(letzterLauf.created_at) + " " + letzterLauf.details?.name : "noch keiner"}`]],
     ["Agenten", w24Agenten === null ? "—" : w24Agenten + 2, "agents", [`Werknetz24: ${w24Agenten ?? "nicht verfügbar"}`, "Master: 2 (Systemmonitor, E-Commerce-Engine)"], w24Agenten !== null],
     ["Fehler", g.fehler.wert, "alerts", g.fehler.rechenweg, g.fehler.vollstaendig],
+    ["Wartet auf mich", b?.offeneFreigaben ? b.offeneFreigaben.length : "—", "freigaben", ["Offene Entscheidungen, die nur du treffen kannst"]],
+    ["Aktive Kunden (Einnahmequellen)", eqLeads?.uebersicht ? eqLeads.uebersicht.kunden : "—", "leads", ["Kunden aus „E-Mail & Leads“ (getrennt von Werknetz24/E-Commerce)"]],
+    ["Offene Leads (Einnahmequellen)", eqLeads?.uebersicht ? eqLeads.uebersicht.neu + eqLeads.uebersicht.interessenten + eqLeads.uebersicht.kontakt + eqLeads.uebersicht.angebot : "—", "leads", ["Neu + Interessenten + in Kontakt + Angebot"]],
   ];
   const oeffne = z => z.startsWith("/") ? window.location.assign(z) : goTo?.(z);
   return <>
