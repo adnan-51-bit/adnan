@@ -99,3 +99,8 @@ The schema now includes `master_systems` and `master_settings` in addition to bu
 ## Migration 20260926220000_sortiert24_produktfelder (26.09.2026)
 - `ecommerce_products` + `beschreibung text default ''`, `bilder text[] default '{}'` (max. 8), `bestand integer` (null = unbekannt, ≥ 0), `lieferzeit text`.
 - Live angewandt; die 6 bestehenden Produkte sind unverändert, die neuen Felder leer. RLS weiterhin auf allen Tabellen.
+
+## Migrationen 27.09.2026
+- `20260927090000_sortiert24_katalog`: 16 Katalogfelder (u. a. `ek_quelle`, `versand_quelle`, `bildquelle`, `bildrechte` ∈ {ungeklaert, haendlerfreigabe, eigene, lizenz}, `katalog_status` ∈ {RECHERCHIEREN, GEPRUEFT, BEREIT, GESPERRT}, `ean` 8/13 Ziffern).
+- `20260927100000_sortiert24_vk_optional`: `verkaufspreis_cent` darf NULL sein (nicht kalkuliert), sonst > 0.
+- Datenstand: 11 Produkte, alle RECHERCHIEREN, alle `bildrechte = ungeklaert`. Neuer Lieferant „Laprinta (Werbeartikel-Großhandel)“.

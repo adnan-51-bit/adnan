@@ -346,3 +346,16 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Schreiben ohne Anmeldung → Weiterleitung zur Anmeldeseite; kein Browser-Fenster mehr.
 - Adnans Entscheidung: eigenen Master-Code vergeben. **Er setzt `MASTER_API_SECRET` selbst in Vercel**, Claude ändert ihn nicht.
 - Tests 138/138, live: Anmelden/Abmelden/falscher Code/Rücksprung auf Desktop + Handy, 0 JS-Fehler, 0 Browser-Fenster.
+
+## Update 27.09.2026 (16) — Sortiert24-Produktkatalog
+- **Produktfelder:** Kurz-/Langbeschreibung, Vorteile, technische Daten, Lieferumfang, Hersteller, SKU, EAN (Prüfziffer), Lieferanten-URL, EK/Versand/Sonstiges jeweils mit Quelle, Bildquelle + Nutzungsrecht, Katalogstatus.
+- **Kalkulation netto** (`lib/kalkulation.js`): Einstand, Rohmarge, Quote.
+  - Behobener Fehler: Die Marge war vorher Brutto-VK minus Netto-EK, also um die USt zu hoch.
+- **Katalogstatus** RECHERCHIEREN/GEPRÜFT/BEREIT/GESPERRT:
+  - „Produkt prüfen“ (9 Prüfpunkte mit Quellen), „Veröffentlichen“ nur nach Prüfung, „Sperren/Entsperren“
+  - Eine Änderung an Preis/Lieferant/Bildern setzt auf RECHERCHIEREN zurück.
+  - Der Shop verkauft nur BEREIT.
+- **Admin-Tabelle** Produkt | Bild | EK | Versand | VK | Marge | Lieferant | Lieferzeit | Status mit Kennzeichnung „Bildmaterial fehlt – Produkt noch nicht veröffentlichen“.
+- **Verkaufspreis optional** (leer = nicht kalkuliert).
+- **Recherche:** 7 belegte Kandidaten importiert, 0 verifiziert. Details: `docs/SORTIERT24-PRODUKTQUELLEN.md`.
+- **Tests:** 143/143; Browsertest Katalog 18/18 (Desktop + Handy).
