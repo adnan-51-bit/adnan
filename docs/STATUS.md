@@ -764,3 +764,16 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Desktop und Handy ohne Überlauf und ohne JS-Fehler; Finanzen weiter 0 €.
 - **Befund:** Die Migration schlug zuerst fehl, weil `analyse` ein reserviertes Wort ist. Der Spaltenname ist jetzt in Anführungszeichen gesetzt; kurzzeitig lieferte die neue Seite live einen Fehler.
 - **Tests:** 239/239, Build ok.
+
+## Update 27.09.2026 (35) — Erstkunden-Paket für den Google-Profil-Pilot
+
+- **Druckbare Gesprächsunterlage** je analysiertem Betrieb (`/master/profil-check?id=…`, nur mit Anmeldung):
+  - Punkte, die 3 wichtigsten Lücken, alle 10 geprüften Punkte, Leistungsumfang, Google-Regeln.
+  - Kein Preis. Der Absender wird von Hand eingetragen (keine erfundenen Firmendaten).
+  - Drucklayout DIN A4; Link „🖨 Gesprächsunterlage“ bei jedem Betrieb.
+- **Gesprächsleitfaden** (7 Schritte) auf der Pilot-Seite: keine Versprechen, nichts unterschreiben lassen oder kassieren, keine Passwörter annehmen, danach in der Zentrale dokumentieren.
+- **Entscheidungsvorlage** für Kontakt, Monatspreis, Gewerbe/Steuer und AVV: je Entscheidung was fehlt, warum, Kosten und kostenlose Alternative, mit Quellen. Neu recherchiert:
+  - Gewerbeanmeldung Monheim 26 € (Stadt Monheim).
+  - Kostenlose amtliche AVV-Formulierungshilfe (BayLDA).
+- **Live-Test:** Alle 3 Unterlagen öffnen korrekt (0/60/33 Punkte, kein €); ohne Anmeldung sind keine Daten sichtbar. Desktop, Handy und Druckansicht ohne Überlauf und ohne JS-Fehler.
+- **Tests:** 242/242, Build ok.
