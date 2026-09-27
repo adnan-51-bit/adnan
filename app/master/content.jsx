@@ -6,6 +6,7 @@
 import { useEffect, useState } from "react";
 import { adminFetch, anmeldeUrl } from "../../lib/admin-fetch.js";
 import { C_STATUS, C_LABEL, C_ABLAUF, C_TYPEN, PLATTFORMEN, KENNZAHLEN, cNaechsteStufe, kennzahlSumme, C_HINWEIS } from "../../lib/content-regeln.js";
+import { ContentZentraleKarte } from "./zentralen.jsx";
 
 const heute = () => new Date().toISOString().slice(0, 10);
 const zeit = t => t ? new Date(t).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }) : "—";
@@ -40,6 +41,7 @@ export function ContentWerbung() {
     {d?.gesperrt && <div className="panel">Nur mit Anmeldung sichtbar. <a href={anmeldeUrl()}>⎆ Anmelden</a></div>}
     {meldung && <div className="panel ctMeldung">{meldung}</div>}
     <div className="ctKpis">{C_STATUS.map(s => <div key={s}><span>{C_LABEL[s]}</span><b>{d?.nachStatus ? d.nachStatus[s] : "…"}</b></div>)}</div>
+    <ContentZentraleKarte z={d?.zentrale} />
     <div className="ctZwei">
       <section className="panel"><h3>Erfolgreiche Inhalte</h3>{!d?.auswertung ? <p className="muted">…</p> : !d.auswertung.genug ? <p className="muted">{d.auswertung.hinweis}</p> :
         <>{d.auswertung.top.map(x => <p key={x.id} className="ctTop">⭐ <b>{x.titel}</b> <small>Interaktionsrate {pz(x.rate)} · {x.aufrufe.toLocaleString("de-DE")} Aufrufe · {x.leads} Leads</small></p>)}<p className="muted">{d.auswertung.hinweis} Eigener Median: {pz(d.auswertung.median)}.</p></>}</section>

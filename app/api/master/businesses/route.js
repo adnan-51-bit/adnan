@@ -7,6 +7,7 @@ import { fetchWerknetz24Kalender, createWerknetz24KalenderTermin, fetchWerknetz2
 import { AKTIONEN } from "../../../../lib/aktionen.js";
 import { fuehreAktionAus, listeLaeufe, ladeTagesbericht, ladeOptimierung } from "../../../../lib/aktion-ausfuehren.js";
 import { ersteEinnahmeCheckliste, eqDashboard } from "../../../../lib/erste-einnahme.js";
+import { emailZentrale, leadZeile, contentZentrale } from "../../../../lib/zentralen.js";
 import { eqReport } from "../../../../lib/eq-automation.js";
 import { listContent, createContent, updateContent, setzeContentStatus, contentVorbereiten, ideenVorschlaege, contentQuelle, contentBild, contentVeroeffentlichung, contentKennzahl, contentVerlauf, contentUebersicht } from "../../../../lib/content.js";
 import { listFreigaben, freigabeEntscheiden, werkzeugStatus, werkzeugAnfragen, syncPlanFreigaben } from "../../../../lib/freigaben.js";
@@ -62,7 +63,7 @@ export async function GET(request){
         const reportNachEinnahme = Boolean(ersteEinnahme && reportLaeufe.some(l => l.created_at > ersteEinnahme));
         return { id: q.id, name: q.name, status: q.status, finanzen, ablauf: ablaufStand(q, { content, leads, finanzen, reportNachEinnahme }) };
       });
-      return NextResponse.json({ ok: true, leads: leads.map(l => ({ ...l, kontakt: kontaktErlaubt(l) })), uebersicht: leadUebersicht(leads), einnahmequellen, automatisierungsgrad: AUTOMATISIERUNGSGRAD });
+      return NextResponse.json({ ok: true, leads: leads.map(l => ({ ...l, kontakt: kontaktErlaubt(l), zeile: leadZeile(l) })), uebersicht: leadUebersicht(leads), einnahmequellen, automatisierungsgrad: AUTOMATISIERUNGSGRAD, emailZentrale: emailZentrale({ leads, tasks: await listTasks() }) });
     }
     // Content & Werbung + "Wartet auf Freigabe" (Teil 4A, 27.09.2026) - nur mit Secret.
     if (params.get("content") || params.get("freigaben")) {
@@ -74,7 +75,8 @@ export async function GET(request){
       }
       const cid = params.get("id");
       if (cid) return NextResponse.json({ ok: true, verlauf: await contentVerlauf(cid) });
-      return NextResponse.json({ ok: true, content: await listContent(), ...(await contentUebersicht()), werkzeuge: await werkzeugStatus() });
+      const alleContent = await listContent();
+      return NextResponse.json({ ok: true, content: alleContent, ...(await contentUebersicht()), werkzeuge: await werkzeugStatus(), zentrale: contentZentrale(alleContent) });
     }
     // Einnahmequellen-Report (Text) nur mit Secret.
     if (params.get("eqreport")) {
@@ -92,10 +94,10 @@ export async function GET(request){
       // Details einer Einnahmequelle: ihre Aufgaben (aus der zentralen Liste) + Aktivitaetsverlauf.
       const eqId = params.get("id");
       if (eqId) return NextResponse.json({ ok: true, aufgaben: await aufgabenVon(eqId), verlauf: await verlaufVon(eqId) });
-      const [liste, leads, tasks, finance, freigaben] = await Promise.all([listEinnahmequellen(), listLeads(), listTasks(), listFinance().catch(() => []), listFreigaben().catch(() => [])]);
+      const [liste, leads, tasks, finance, freigaben, content] = await Promise.all([listEinnahmequellen(), listLeads(), listTasks(), listFinance().catch(() => []), listFreigaben().catch(() => []), listContent().catch(() => [])]);
       const opt = await ladeOptimierung().catch(() => null);
       const pilotEq = liste.find(q => q.kategorie === "C");
-      return NextResponse.json({ ok: true, einnahmequellen: liste, uebersicht: uebersicht(liste), dashboard: eqDashboard({ eqs: liste, leads, tasks, finance, optimierung: opt }), ersteEinnahme: pilotEq ? { eq: pilotEq.name, ...ersteEinnahmeCheckliste({ eq: pilotEq, leads, tasks, finance, freigaben }) } : null });
+      return NextResponse.json({ ok: true, einnahmequellen: liste, uebersicht: uebersicht(liste), dashboard: eqDashboard({ eqs: liste, leads, tasks, finance, optimierung: opt, content }), ersteEinnahme: pilotEq ? { eq: pilotEq.name, ...ersteEinnahmeCheckliste({ eq: pilotEq, leads, tasks, finance, freigaben }) } : null });
     }
     // Werknetz24-Kalender (22.09.2026, "Kommandozentrale"-Folgeauftrag) - eigener Zweig statt
     // neuer Route-Datei (12/12 Serverless-Funktionen bereits belegt, s. PROJECT-AUDIT.md im

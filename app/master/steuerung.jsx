@@ -43,21 +43,32 @@ export function Startseite({ businesses, tasks, tasksLocked, systems, finance, q
   const letzterLauf = steuerung?.laeufe?.[0];
   const w24Agenten = agenten?.agenten?.ok ? agenten.agenten.agenten.length : null;
   const b = bericht?.bericht;
+  const dash = eq?.dashboard || [];
+  const tests = dash.filter(z => ["TEST", "RECHERCHE"].includes(z.phase));
+  const offeneTasks = tasks.filter(t => !["Erledigt", "Gestoppt"].includes(t.status));
+  const az = b?.aufgabenZentrale;
+  const eqL = eqLeads?.leads;
+  // Teil 5: auf der Startseite nur das Wichtigste (12 Kennzahlen). Alles andere steht unter "Weitere Kennzahlen".
   const chips = [
-    ["System", g.system.ampel, "alerts", g.system.rechenweg],
-    ["Geschäftsbereiche", [["🟢", "aktiv"], ["🟡", "Test"], ["🔴", "Fehler"], ["⚪", "Pause"]].map(([amp, t]) => [bereiche.filter(x => x.ampel === amp).length, t]).filter(([n]) => n).map(([n, t]) => n + " " + t).join(" · "), "bereiche", bereiche.map(x => `${x.name}: ${x.label}`)],
+    ["Aktive Einnahmequellen", eq?.uebersicht ? eq.uebersicht.aktiv : "—", "einnahmequellen", ["Einnahmequellen mit echten Einnahmen (Phase AKTIV/ERFOLGREICH)"]],
+    ["Tests", eq ? tests.length : "—", "einnahmequellen", tests.length ? tests.map(z => `${z.name}: ${z.phase}`) : ["Keine Einnahmequelle in Recherche/Test"]],
+    ["Leads", eqL ? eqL.length : "—", "leads", ["Alle Leads der Einnahmequellen (Werknetz24 ist pausiert und separat)"]],
+    ["Interessenten", eqLeads?.uebersicht ? eqLeads.uebersicht.interessenten : "—", "leads", ["Leads mit Status „Interessent“"]],
+    ["Kunden", eqLeads?.uebersicht ? eqLeads.uebersicht.kunden : "—", "leads", ["Kunden der Einnahmequellen"]],
     ["Einnahmen", eur(g.einnahmen.cent), "finance", g.einnahmen.rechenweg, g.einnahmen.vollstaendig],
     ["Kosten", eur(g.kosten.cent), "finance", g.kosten.rechenweg, g.kosten.vollstaendig],
     ["Gewinn", eur(g.gewinn.cent), "finance", g.gewinn.rechenweg, g.gewinn.vollstaendig],
-    ["Kunden", g.kunden.wert, "/werknetz24", g.kunden.rechenweg, g.kunden.vollstaendig],
-    ["Leads", g.leads.wert ?? "—", "/werknetz24", g.leads.rechenweg, g.leads.vollstaendig],
-    ["Aufgaben", g.aufgaben.wert ?? "—", "tasks", g.aufgaben.rechenweg, g.aufgaben.vollstaendig],
-    ["Automatisierungen", serverAktionen ?? "—", "automation", [`${serverAktionen ?? "?"} per Knopf ausführbar`, `letzter Lauf: ${letzterLauf ? zeit(letzterLauf.created_at) + " " + letzterLauf.details?.name : "noch keiner"}`]],
+    ["Offene Aufgaben", tasksLocked ? "—" : offeneTasks.length, "tasks", ["Offene Aufgaben der Master-Zentrale (ohne pausierte Bereiche)"]],
+    ["Wartet auf mich", az ? az.wartetAufMich.length : "—", "freigaben", ["Offene Entscheidungen + Aufgaben, die nur du erledigen kannst"]],
+    ["Fehler", b ? b.fehler.length : "—", "alerts", b?.fehler?.length ? b.fehler.map(f => f.text) : ["Keine Fehler (pausierte Bereiche ausgenommen)"]],
+    ["Automatisierungen", serverAktionen ?? "—", "automation", [`${serverAktionen ?? "?"} automatische Aktionen`, `letzter Lauf: ${letzterLauf ? zeit(letzterLauf.created_at) + " " + letzterLauf.details?.name : "noch keiner"}`]],
+  ];
+  const weitere = [
+    ["System", g.system.ampel, "alerts", g.system.rechenweg],
+    ["Geschäftsbereiche", [["🟢", "aktiv"], ["🟡", "Test"], ["🔴", "Fehler"], ["⚪", "Pause"]].map(([amp, t]) => [bereiche.filter(x => x.ampel === amp).length, t]).filter(([n]) => n).map(([n, t]) => n + " " + t).join(" · "), "bereiche", bereiche.map(x => `${x.name}: ${x.label}`)],
+    ["Werknetz24/E-Commerce-Kunden", g.kunden.wert, "/werknetz24", g.kunden.rechenweg, g.kunden.vollstaendig],
+    ["Werknetz24-Leads", g.leads.wert ?? "—", "/werknetz24", g.leads.rechenweg, g.leads.vollstaendig],
     ["Agenten", w24Agenten === null ? "—" : w24Agenten + 2, "agents", [`Werknetz24: ${w24Agenten ?? "nicht verfügbar"}`, "Master: 2 (Systemmonitor, E-Commerce-Engine)"], w24Agenten !== null],
-    ["Fehler", g.fehler.wert, "alerts", g.fehler.rechenweg, g.fehler.vollstaendig],
-    ["Wartet auf mich", b?.offeneFreigaben ? b.offeneFreigaben.length : "—", "freigaben", ["Offene Entscheidungen, die nur du treffen kannst"]],
-    ["Aktive Kunden (Einnahmequellen)", eqLeads?.uebersicht ? eqLeads.uebersicht.kunden : "—", "leads", ["Kunden aus „E-Mail & Leads“ (getrennt von Werknetz24/E-Commerce)"]],
-    ["Offene Leads (Einnahmequellen)", eqLeads?.uebersicht ? eqLeads.uebersicht.neu + eqLeads.uebersicht.interessenten + eqLeads.uebersicht.kontakt + eqLeads.uebersicht.angebot : "—", "leads", ["Neu + Interessenten + in Kontakt + Angebot"]],
   ];
   const oeffne = z => z.startsWith("/") ? window.location.assign(z) : goTo?.(z);
   return <>
@@ -65,7 +76,9 @@ export function Startseite({ businesses, tasks, tasksLocked, systems, finance, q
     <div className="stLeiste" aria-label="Statusleiste">{chips.map(([l, v, z, rw, voll]) =>
       <button type="button" key={l} className="stChip" onClick={() => oeffne(z)} title={rw.join("\n")}><span>{l}</span><b>{v}</b>{voll === false && <em>unvollständig</em>}</button>)}
     </div>
-    <details className="stRechenweg"><summary>Rechenwege anzeigen</summary>{chips.map(([l, , , rw]) => <p key={l}><b>{l}:</b> {rw.join(" · ")}</p>)}</details>
+    <details className="stRechenweg"><summary>Rechenwege & weitere Kennzahlen</summary>{chips.map(([l, , , rw]) => <p key={l}><b>{l}:</b> {rw.join(" · ")}</p>)}
+      <div className="stLeiste">{weitere.map(([l, v, z, rw, voll]) => <button type="button" key={l} className="stChip" onClick={() => oeffne(z)} title={rw.join("\n")}><span>{l}</span><b>{v}</b>{voll === false && <em>unvollständig</em>}</button>)}</div>
+      {weitere.map(([l, , , rw]) => <p key={l}><b>{l}:</b> {rw.join(" · ")}</p>)}</details>
     {b?.ersteEinnahme && <ErsteEinnahmeKarte daten={b.ersteEinnahme} />}
     <h3 className="stH">Geschäftsbereiche</h3>
     <div className="stBereiche">{bereiche.map(x => <article key={x.id} className="stBereich">

@@ -5,11 +5,12 @@
 import { useEffect, useState } from "react";
 import { adminFetch } from "../../lib/admin-fetch.js";
 import { TASK_STATUS, TASK_PRIO, istOffen, istWartend, sortiereAufgaben } from "../../lib/aufgaben-status.js";
+import { AufgabenZentraleKarte } from "./zentralen.jsx";
 
 const datum = t => t ? new Date(t).toLocaleDateString("de-DE") : "—";
 const bereichName = (id, businesses) => id === "master" || !id ? "Master-übergreifend" : businesses.find(b => b.id === id)?.name || id;
 
-export function Aufgaben({ tasks, businesses, loading, onSave, onCreate }) {
+export function Aufgaben({ tasks, businesses, loading, onSave, onCreate, goTo }) {
   const [editing, setEditing] = useState(null);
   const [filter, setFilter] = useState({ status: "offen", bereich: "all", eq: "all", prio: "all" });
   const [eqs, setEqs] = useState([]);
@@ -24,6 +25,7 @@ export function Aufgaben({ tasks, businesses, loading, onSave, onCreate }) {
   const zaehler = Object.fromEntries(TASK_STATUS.map(s => [s, tasks.filter(t => s === "Wartet auf Benutzer" ? istWartend(t.status) : t.status === s).length]));
   return <>
     <div className="pageTitle"><div><span>STEUERUNG</span><h2>Aufgaben</h2></div><div className="quick"><button className="primaryLink" onClick={() => setEditing({ title: "", area: "", business_id: "master", status: "Offen", priority: "Mittel", owner: "Adnan", due_at: "", beschreibung: "", naechste_aktion: "", quelle: "", ergebnis: "" })}>+ Aufgabe</button></div></div>
+    <AufgabenZentraleKarte goTo={goTo} />
     <div className="afZaehler">{TASK_STATUS.map(s => <button key={s} className={filter.status === s ? "an" : ""} onClick={() => setF("status", filter.status === s ? "offen" : s)}>{s} <b>{zaehler[s]}</b></button>)}</div>
     <div className="afFilter">
       <select value={filter.status} onChange={e => setF("status", e.target.value)} aria-label="Status"><option value="offen">Alle offenen</option><option value="alle">Alle (auch erledigt/gestoppt)</option>{TASK_STATUS.map(s => <option key={s}>{s}</option>)}</select>

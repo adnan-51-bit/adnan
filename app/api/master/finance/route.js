@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { listFinance, createFinance, financeStorage } from "../../../../lib/master-finance";
+import { listFinance, createFinance, financeStorage, finanzMonitor } from "../../../../lib/master-finance";
+import { listEinnahmequellen } from "../../../../lib/einnahmequellen.js";
 import { checkAdminSecret } from "../../../../lib/auth.js";
 export const runtime="nodejs";
 // Seit Supabase-Persistenz (26.09.2026): echte Finanzbuchungen nur noch mit MASTER_API_SECRET lesbar.
-export async function GET(request){const authError=await checkAdminSecret(request);if(authError)return NextResponse.json({ok:false,error:authError.error},{status:authError.status});try{const business_id=new URL(request.url).searchParams.get("business_id")||undefined;const entries=await listFinance({business_id});return NextResponse.json({ok:true,storage:financeStorage(),entries})}catch(e){return NextResponse.json({ok:false,error:e.message},{status:500})}}
+export async function GET(request){const authError=await checkAdminSecret(request);if(authError)return NextResponse.json({ok:false,error:authError.error},{status:authError.status});try{const business_id=new URL(request.url).searchParams.get("business_id")||undefined;const entries=await listFinance({business_id});const eqs=await listEinnahmequellen().catch(()=>[]);return NextResponse.json({ok:true,storage:financeStorage(),entries,monitor:finanzMonitor(entries,eqs)})}catch(e){return NextResponse.json({ok:false,error:e.message},{status:500})}}
 export async function POST(request){const authError=await checkAdminSecret(request);if(authError)return NextResponse.json({ok:false,error:authError.error},{status:authError.status});try{const body=await request.json();return NextResponse.json({ok:true,storage:financeStorage(),entry:await createFinance(body)},{status:201})}catch(e){return NextResponse.json({ok:false,error:e.message},{status:400})}}

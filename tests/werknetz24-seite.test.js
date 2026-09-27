@@ -26,7 +26,9 @@ test("Finanzen: Werknetz24 wird live und nur lesend getrennt gezeigt, nicht in M
   assert.match(master, /function Werknetz24Finanzen\(\{business\}\)/);
   assert.match(master, /nur lesend, nicht in den Summen oben enthalten/);
   // Die Master-Summen werden ausschliesslich aus den eigenen Buchungen (entries) gebildet.
-  assert.match(master, /const totals=entries\.reduce\(/);
+  // Seit Teil 5: Finanz-Monitor, serverseitig nur aus den eigenen Buchungen (entries) berechnet.
+  assert.match(master, /<FinanzMonitor m=\{monitor\}\/>/);
+  assert.match(readFileSync(new URL("../app/api/master/finance/route.js", import.meta.url), "utf8"), /monitor:finanzMonitor\(entries,eqs\)/);
 });
 
 test("Werknetz24-Seite zeigt Kunden/Leads nur als Zahlen aus dem Status", () => {

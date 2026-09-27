@@ -6,6 +6,7 @@
 import { useEffect, useState } from "react";
 import { adminFetch, anmeldeUrl } from "../../lib/admin-fetch.js";
 import { LEAD_STATUS, LEAD_LABEL, EMAIL_ARTEN, ANTWORT_LABEL, EINNAHME_ABLAUF, EINNAHME_LABEL, GRAD } from "../../lib/leads-regeln.js";
+import { EmailZentraleKarte, LeadTabelle } from "./zentralen.jsx";
 
 const eur = c => ((c || 0) / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 const tag = t => t ? new Date(t).toLocaleDateString("de-DE") : "—";
@@ -46,6 +47,8 @@ export function EmailLeads() {
     {meldung && <div className="panel ldMeldung">{meldung}</div>}
     <div className="ldKpis">{[["Neu", u?.neu], ["Interessenten", u?.interessenten], ["In Kontakt", u?.kontakt], ["Angebot", u?.angebot], ["Kunden", u?.kunden], ["Offene Antworten", u?.offeneAntworten]].map(([l, v]) => <div key={l}><span>{l}</span><b>{v ?? "…"}</b></div>)}</div>
 
+    <EmailZentraleKarte e={d?.emailZentrale} />
+    <LeadTabelle leads={d?.leads} />
     <section className="panel"><h3>Einnahme-Ablauf & Finanzen je Einnahmequelle</h3>
       <p className="muted">Ablauf: {EINNAHME_ABLAUF.map(s => EINNAHME_LABEL[s]).join(" → ")}. Der Stand ergibt sich nur aus echten Daten.</p>
       {eqs.map(q => <article key={q.id} className="ldEq">
