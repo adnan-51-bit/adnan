@@ -57,6 +57,8 @@ test("WARTET AUF MICH: Rückruf zuerst, dann Preis/Angebot, Briefe, Freigaben (h
   assert.match(w[1], /Preis festlegen/); assert.match(w[2], /Angebot für „Interessent AG“/);
   assert.match(w[3], /1 Brief\(e\) drucken.*Frei Alt/); assert.match(w[4], /1 Brief\(e\) einwerfen: Frei Neu/);
   assert.match(w[5], /2 Kontakt-Freigabe\(n\).*zuerst: Café Eins, Salon Zwei/);
+  const oL = daten(); oL.leads.push({ id: "f3", firma: "Foto Privat", branche: "Fotografie", ort: "Monheim", status: "NEU", erstellt_am: vor(9), profil_analyse: ana(20), pilot_crm: { kontakt_freigegeben: true, kontakt_freigabe_am: vor(1), ladenlokal: false } });
+  assert.match(vertriebStatus(oL).wartetAufMich.find(t => /drucken/.test(t)), /1 Brief\(e\) drucken.*: Frei Alt \(1 weitere ohne Ladenlokal zurückgestellt\)$/);
   const mitPreis = vertriebStatus({ ...daten(), monatspreis_cent: 4900 }).wartetAufMich;
   assert.ok(!mitPreis.some(t => /Preis festlegen/.test(t)));
 });
