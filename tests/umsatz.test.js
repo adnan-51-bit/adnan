@@ -54,7 +54,7 @@ test("Nächster Schritt: weitester Betrieb zuerst; Betrieb ohne Google-Profil na
   assert.equal(G.naechstePilotAktion([lauck, haar]).lead_id, "h");
   const haarFrei = { ...haar, pilot_crm: { kontakt_freigegeben: true } };
   const na = G.naechstePilotAktion([lauck, haarFrei, { id: "b", firma: "B", status: "NEU", profil_analyse: ana(10) }]);
-  assert.equal(na.lead_id, "h"); assert.match(na.text, /persönlich zeigen/);
+  assert.equal(na.lead_id, "h"); assert.match(na.text, /Brief mit Antwort-Link für „Haargenau“ drucken/);
 });
 
 test("Angebot: Entwurf automatisch bei Interesse; Freigabe erst mit Monatspreis; übergeben → Nachfassen; Auftrag ohne Doppelbuchung", async () => {

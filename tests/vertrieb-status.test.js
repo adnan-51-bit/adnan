@@ -80,6 +80,10 @@ test("Selbstprüfung: Widersprüche sind Fehler, Stockendes sind Hinweise", () =
   assert.ok(b.some(x => /Doppelter Lead: Café {2}Eins/.test(x)));
   assert.ok(b.includes("Lead-Recherche ist heute nicht gelaufen (täglich 07:00)"));
   assert.ok(!vertriebStatus({ ...d, jetzt: new Date("2026-09-28T07:30:00+02:00") }).befunde.some(x => /Recherche/.test(x.text)), "vor 9 Uhr noch kein Befund");
+  // Analyse älter als 7 Tage bei freigegebenem Betrieb ohne Brief
+  const a7 = daten(); a7.leads.find(l => l.id === "f1").profil_analyse = { ...ana(40), datum: vor(8).slice(0, 10) };
+  assert.ok(vertriebStatus(a7).befunde.some(x => x.art === "hinweis" && /Frei Alt: Analyse älter als 7 Tage/.test(x.text)));
+  assert.ok(!vertriebStatus(daten()).befunde.some(x => /älter als 7 Tage/.test(x.text)));
   // überfälliger Rückruf
   const o = daten(); o.tasks[0].due_at = vor(1);
   assert.ok(vertriebStatus(o).befunde.some(x => x.art === "hinweis" && /Rückruf überfällig: Interessent AG/.test(x.text)));

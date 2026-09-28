@@ -35,3 +35,9 @@ test("Reihenfolge: Ladenlokal vor Bedarf vor Kontaktdaten; ohne Ladenlokal nach 
   assert.deepEqual(top5([fotograf, cafeWenig, cafeViel]).map(t => t.name), ["Café viele Lücken", "Café wenig Lücken", "Fotograf viele Lücken"]);
   assert.equal(G.naechstePilotAktion([fotograf, cafeWenig]).lead_id, "Café wenig Lücken");
 });
+
+test("Einmal-Paket erkennt unbeanspruchte Profile auch an „nicht beansprucht“ / „Als Inhaber eintragen“", () => {
+  const u = G.EINMAL_PAKET.bausteine.unbeansprucht;
+  for (const notiz of ["Profil ist NICHT vom Inhaber beansprucht.", "Profil ist nicht beansprucht (Hinweis „Als Inhaber eintragen“).", "Google zeigt „Als Inhaber eintragen“."]) assert.ok(G.einmalBausteine({ ...ana(30), notiz }).includes(u), notiz);
+  assert.ok(!G.einmalBausteine({ ...ana(30), notiz: "Profil beansprucht und gepflegt." }).includes(u));
+});
