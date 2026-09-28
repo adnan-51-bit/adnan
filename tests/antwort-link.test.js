@@ -90,6 +90,19 @@ test("Persönlicher Brief-Absatz: gespeichert ohne Kontakt, keine Links, leer = 
   await P.briefAbsatzSetzen(l.id, ""); x = await lead(l.id); assert.equal(x.pilot_crm.brief_absatz, null);
 });
 
+test("Gleicher Inhaber: ein Brief für beide, Nachweis Pflicht, „Nein danke“ sperrt beide", async () => {
+  const haupt = await betrieb();
+  const neben = await P.potenziellenKundenAnlegen({ firma: "Schwesterbetrieb", ort: "Monheim am Rhein", branche: "Friseur", quelle_url: "https://verzeichnis.test/s", quelle_datum: "2026-09-28" });
+  await assert.rejects(() => P.zusammenMit(neben.id, haupt.id, ""), /Nachweis/);
+  await assert.rejects(() => P.zusammenMit(neben.id, "gibtsnicht", "Impressum 28.09."), /Hauptbetrieb nicht gefunden/);
+  await P.zusammenMit(neben.id, haupt.id, "Impressum beider Websites, abgerufen 28.09.2026");
+  assert.equal((await lead(neben.id)).pilot_crm.zusammen_mit, haupt.id);
+  const { token } = await A.briefVorbereiten(haupt.id);
+  await A.briefAntwortErfassen(token, { wahl: "kein-interesse" });
+  assert.equal((await lead(haupt.id)).status, "GESPERRT"); assert.equal((await lead(neben.id)).status, "GESPERRT", "Widerspruch gilt für beide");
+  await P.zusammenMit(neben.id, null); assert.equal((await lead(neben.id)).pilot_crm.zusammen_mit, null);
+});
+
 test("Route: Antwort-Link ohne Anmeldung, Brief vorbereiten nur mit Anmeldung", async () => {
   const l = await betrieb();
   const ohne = await route.POST(new Request("http://x/api/master/businesses", { method: "POST", body: JSON.stringify({ action: "pilot-brief", id: l.id }) }));

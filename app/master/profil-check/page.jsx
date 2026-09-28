@@ -29,9 +29,10 @@ export default function ProfilCheck() {
     adminFetch("/api/master/businesses?pilot=1").then(async r => {
       if (r.status === 401) return setD({ gesperrt: true });
       const j = await r.json();
-      const leads = ids.map(id => (j.leads || []).find(x => x.id === id)).filter(l => l?.profil_analyse);
+      const leads = ids.map(id => (j.leads || []).find(x => x.id === id)).filter(l => l?.profil_analyse && !(brief && l.pilot_crm?.zusammen_mit));
+      const dazu = l => (j.leads || []).filter(x => x.pilot_crm?.zusammen_mit === l.id && x.profil_analyse);
       if (!leads.length) return setD({ fehlt: true });
-      if (!brief) return setD({ leads });
+      if (!brief) return setD({ leads, dazu: {} });
       // Brief: Antwort-Link je Betrieb (nur nach Kontakt-Freigabe; einmalig, mehrfaches Drucken legt nichts doppelt an).
       const QR = (await import("qrcode")).default;
       const briefe = [], fehler = [];
@@ -41,7 +42,7 @@ export default function ProfilCheck() {
         const link = LINK_BASIS + "/r/" + b.token;
         briefe.push({ l, link, qr: await QR.toString(link, { type: "svg", margin: 0, errorCorrectionLevel: "M" }) });
       }
-      setD({ leads: briefe.map(b => b.l), briefe, fehler });
+      setD({ leads: briefe.map(b => b.l), briefe, fehler, dazu: Object.fromEntries(briefe.map(b => [b.l.id, dazu(b.l)])) });
     }).catch(() => setD({ fehlt: true }));
   }, []);
   if (!d) return <main className="pc"><p>Wird geladen…</p><style>{CSS}</style></main>;
@@ -54,6 +55,7 @@ export default function ProfilCheck() {
     {d.leads.map((l, i) => <div key={l.id}>
       {d.briefe && <Brief {...d.briefe[i]} />}
       <Blatt l={l} />
+      {(d.dazu?.[l.id] || []).map(x => <Blatt key={x.id} l={x} />)}
     </div>)}
     <style>{CSS}</style>
   </main>;
