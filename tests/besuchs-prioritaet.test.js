@@ -34,4 +34,6 @@ test("Reihenfolge: Ladenlokal vor Bedarf vor Kontaktdaten; ohne Ladenlokal nach 
   assert.equal(G.prioritaet(cafeViel).stufe, "HOCH");
   assert.deepEqual(top5([fotograf, cafeWenig, cafeViel]).map(t => t.name), ["Café viele Lücken", "Café wenig Lücken", "Fotograf viele Lücken"]);
   assert.equal(G.naechstePilotAktion([fotograf, cafeWenig]).lead_id, "Café wenig Lücken");
+  const ohneProfil = { ...lead("Café ohne Google-Profil", "Cafe", 0), profil_analyse: { ...ana(0), werte: { kategorie: "nein", kontakt: "nein" } } };
+  assert.deepEqual([ohneProfil, cafeViel].sort((a, b) => G.besuchsRang(a) - G.besuchsRang(b)).map(l => l.id), ["Café viele Lücken", "Café ohne Google-Profil"]);
 });
