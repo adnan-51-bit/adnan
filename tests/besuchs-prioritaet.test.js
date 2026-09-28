@@ -41,3 +41,10 @@ test("Einmal-Paket erkennt unbeanspruchte Profile auch an „nicht beansprucht�
   for (const notiz of ["Profil ist NICHT vom Inhaber beansprucht.", "Profil ist nicht beansprucht (Hinweis „Als Inhaber eintragen“).", "Google zeigt „Als Inhaber eintragen“."]) assert.ok(G.einmalBausteine({ ...ana(30), notiz }).includes(u), notiz);
   assert.ok(!G.einmalBausteine({ ...ana(30), notiz: "Profil beansprucht und gepflegt." }).includes(u));
 });
+
+test("Branchen-Schätzung: Biergarten/Wäscherei sind Ladenlokale, Gebäudereinigung nicht", () => {
+  assert.equal(G.ladenlokal(lead("Biergarten zur Altstadt", "Biergarten", 50)).laden, true);
+  assert.equal(G.ladenlokal(lead("Textilservices", "Reinigung und Bügelservice - Wäscherei", 50)).laden, true);
+  assert.equal(G.ladenlokal(lead("Glanz GmbH", "Gebäudereinigung", 50)).laden, false);
+  assert.equal(G.ladenlokal(lead("Grün GmbH", "Garten- & Landschaftsbau", 50)).laden, false);
+});
