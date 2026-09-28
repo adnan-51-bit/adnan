@@ -974,3 +974,14 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - Live geprüft: Weiterleitung 307, Antwortseite 200 + noindex, Datenschutz online. Tests 260/260 (master) und 969/969 (landing).
 - Stand: 50 Leads, alle analysiert. 0 Interessenten, 0 Kunden, 0 € Einnahmen, 0 € Kosten.
 - Nächster Schritt (Adnan): Kontakt-Freigaben, Briefe drucken und einwerfen.
+
+## Update 28.09.2026 (53) — Sales-Automat B1–B3
+
+- **B1:** Die 5 neuen Leads des 07:00-Laufs sind analysiert (öffentliche Google-Profile), damit 55/55.
+- **B2:** Neue Funktion `vertriebStatus` (lib/vertrieb-status.js).
+  - Im Tagesbericht ganz oben: Vertriebsstatus, neue Antworten (24 h), „WARTET AUF MICH“ und Selbstprüfung.
+  - In der Umsatz-Pipeline: „WARTET AUF MICH“ statt der langen Freigabe-Liste, dazu die Kästen „Neue Antworten“ und „Selbstprüfung“.
+- **B3:** Selbstprüfung.
+  - Fehler: Antwort ohne Rückruf-Aufgabe, gesperrt mit offenen Aufgaben, Dubletten, Recherche heute nicht gelaufen.
+  - Hinweise: Freigabe ohne Brief > 3 Tage, Lead ohne Analyse > 3 Tage, Rückruf überfällig.
+- **Tests:** 264/264, Build ok, live geprüft. Kosten 0 €.
