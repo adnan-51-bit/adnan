@@ -1009,3 +1009,14 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - **Marktpreis:** 300–545 € einmalig (3 Anbieterquellen, 28.09.2026), für unser kleines Paket nicht verifiziert. Der Preis bleibt offen, er ist Adnans Entscheidung.
 - **Vor einer Rechnung:** Schuldnerberatung → Arbeitgeber → Gewerbeanmeldung → ELSTER-Fragebogen (§ 19 UStG) → Rechnung. Keine Rechnung erzeugt.
 - **Dokumentation:** Aufgabe #120 in der Zentrale; Unterlagen im Obsidian-Vault. Tests 268/268, Build ok.
+
+## Update 28.09.2026 (57) — Selbstständige kostenlose Runde
+
+- **Brief-Absätze:** 10 weitere Top-Leads haben einen persönlichen Absatz (insgesamt 13 Betriebe druckfertig nach Freigabe).
+- **Leads:** Zusätzlicher Recherchelauf mit 5 neuen Betrieben, alle analysiert → 60 Leads. Café Primavera und der Biergarten konnten nur in 5 Punkten geprüft werden.
+- **Fixes:**
+  - Einmal-Paket erkennt unbeanspruchte Profile auch an „nicht beansprucht“ / „Als Inhaber eintragen“.
+  - „Nächste Aktion“ nennt den Brief statt „persönlich zeigen“.
+  - Selbstprüfung warnt bei einer Analyse älter als 7 Tage vor dem Druck.
+  - Branchen-Schätzung: Biergarten, Gaststätte und Wäscherei gelten als Ladenlokal.
+- **Kosten:** 0 €. Nichts blockiert, weil nichts Kostenpflichtiges nötig war. Tests 270/270.
