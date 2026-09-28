@@ -89,9 +89,13 @@ export async function GET(request){
           const offen = (await listFreigaben()).filter(f => f.status === "OFFEN");
           let duMusst = [...offen.filter(f => ["lead-kontakt", "angebot", "pilot"].includes(f.bezug_typ)).map(f => f.titel), ...alleTasks.filter(t => t.status === "Wartet auf Benutzer" && String(t.quelle || "").startsWith("lead:")).map(t => t.title)];
           const aktuell = na?.lead_id ? leads.find(l => l.id === na.lead_id) : null;
+          // Vertriebsstatus + Selbstpruefung (28.09.2026): "WARTET AUF MICH" ersetzt die lange Freigabe-Liste.
+          const { vertriebStatus } = await import("../../../../lib/vertrieb-status.js");
+          const vertrieb = pq ? vertriebStatus({ leads: leads.filter(l => l.einnahmequelle_id === pq.id), tasks: alleTasks, freigaben: offen, audit: laeufe, einnahmen_cent: eqFinanzen(finance, pq.id).einnahmen_cent || 0, monatspreis_cent: pq.pilot?.monatspreis_cent || null }) : null;
+          if (vertrieb) duMusst = [...vertrieb.wartetAufMich.map(t => t.replace(/^WARTET AUF MICH: /, "")), ...duMusst.filter(t => !/^Kontakt zu „/.test(t) && !/^Angebot für „/.test(t))];
           // Zuerst was den aktuellen Lead betrifft, dann Preis/Gewerbe, dann der Rest.
           if (aktuell) duMusst.sort((a, b) => (b.includes(aktuell.firma || aktuell.name) - a.includes(aktuell.firma || aktuell.name)) || (/Monatspreis|Gewerbe/.test(b) - /Monatspreis|Gewerbe/.test(a)));
-          return umsatzPipeline({ leads: pq ? leads.filter(l => l.einnahmequelle_id === pq.id) : leads, tasks: alleTasks, finance, naechsterSchritt: na?.text || null, aktuellerLead: aktuell ? { id: aktuell.id, name: aktuell.firma || aktuell.name, punkte: aktuell.profil_analyse?.punkte ?? null, stufe: na.stufe } : null, claudeErledigt, duMusst: duMusst.slice(0, 8) });
+          return { ...umsatzPipeline({ leads: pq ? leads.filter(l => l.einnahmequelle_id === pq.id) : leads, tasks: alleTasks, finance, naechsterSchritt: na?.text || null, aktuellerLead: aktuell ? { id: aktuell.id, name: aktuell.firma || aktuell.name, punkte: aktuell.profil_analyse?.punkte ?? null, stufe: na.stufe } : null, claudeErledigt, duMusst: duMusst.slice(0, 8) }), vertrieb };
         })() });
     }
     // Content & Werbung + "Wartet auf Freigabe" (Teil 4A, 27.09.2026) - nur mit Secret.
