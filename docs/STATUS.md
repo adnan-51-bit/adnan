@@ -985,3 +985,11 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
   - Fehler: Antwort ohne Rückruf-Aufgabe, gesperrt mit offenen Aufgaben, Dubletten, Recherche heute nicht gelaufen.
   - Hinweise: Freigabe ohne Brief > 3 Tage, Lead ohne Analyse > 3 Tage, Rückruf überfällig.
 - **Tests:** 264/264, Build ok, live geprüft. Kosten 0 €.
+
+## Update 28.09.2026 (54) — Lead-Priorität für den persönlichen Kontakt
+
+- **Reihenfolge (Adnans Vorgabe):** 1. Ladenlokal / öffentlich zugänglich, 2. nachweisbarer Bedarf, 3. öffentliche Geschäftskontakte. Funktionen `ladenlokal()` und `besuchsRang()` in lib/google-profil.js.
+- **Ohne Ladenlokal:** Priorität niedrig, nach hinten sortiert. „WARTET AUF MICH“ schlägt Briefe nur noch für Betriebe mit Ladenlokal vor. Im Pilot lässt sich „Ladenlokal ja/nein“ pro Betrieb prüfen und setzen.
+- **Fix:** Adress-Erkennung in lib/lead-bewertung.js.
+- **Revert:** a6f52a5 (per cfb78da zurückgenommen, ein Test war rot).
+- **Tests:** 266/266, live geprüft. 55 Leads, 26 kontaktierbar, 0 Interessenten, 0 Kunden, 0 €.
