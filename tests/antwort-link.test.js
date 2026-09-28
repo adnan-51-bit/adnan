@@ -78,6 +78,18 @@ test("Antwort „Kein Interesse“: gesperrt, alle Aufgaben gestoppt, höchstens
   await assert.rejects(() => A.briefAntwortErfassen(token, { wahl: "kein-interesse" }), /bereits vor/);
 });
 
+test("Persönlicher Brief-Absatz: gespeichert ohne Kontakt, keine Links, leer = Standardtext", async () => {
+  const l = await betrieb(false);
+  await assert.rejects(() => P.briefAbsatzSetzen(l.id, "zu kurz"), /40 bis 900/);
+  await assert.rejects(() => P.briefAbsatzSetzen(l.id, "ich habe mir Ihr Profil angesehen, mehr unter www.beispiel.de – bitte schauen Sie."), /keine Links/);
+  await P.briefAbsatzSetzen(l.id, "ich habe mir das öffentliche Google-Profil angesehen –   71 Bewertungen mit 4,9 Sternen.");
+  let x = await lead(l.id);
+  assert.equal(x.pilot_crm.brief_absatz, "ich habe mir das öffentliche Google-Profil angesehen – 71 Bewertungen mit 4,9 Sternen.");
+  assert.equal(x.pilot_crm.antwort_token, undefined, "kein Link, keine Brief-Aufgabe");
+  assert.ok(!(await offeneAufgaben(l.id)).some(t => /Brief einwerfen/.test(t.title)));
+  await P.briefAbsatzSetzen(l.id, ""); x = await lead(l.id); assert.equal(x.pilot_crm.brief_absatz, null);
+});
+
 test("Route: Antwort-Link ohne Anmeldung, Brief vorbereiten nur mit Anmeldung", async () => {
   const l = await betrieb();
   const ohne = await route.POST(new Request("http://x/api/master/businesses", { method: "POST", body: JSON.stringify({ action: "pilot-brief", id: l.id }) }));

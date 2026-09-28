@@ -69,8 +69,10 @@ function Brief({ l, link, qr }) {
     <p className="pcDatum">{new Date().toLocaleDateString("de-DE")}</p>
     <p><b>Kostenloser Check Ihres Google-Profils</b></p>
     <p>Guten Tag,</p>
+    {l.pilot_crm?.brief_absatz ? <p>{l.pilot_crm.brief_absatz} Die vollständige Auswertung liegt bei – kostenlos und unverbindlich.</p> : <>
     <p>ich habe mir das öffentlich sichtbare Google-Profil von {l.firma || l.name} angesehen. Dabei sind mir {a.verbesserungen.length} Punkte aufgefallen, mit denen Sie bei Google Maps mehr Kunden erreichen können. Die vollständige Auswertung liegt bei – kostenlos und unverbindlich.</p>
     {wichtig.length > 0 && <><p>Das Wichtigste:</p><ol>{wichtig.map(v => <li key={v.id}>{v.text}</li>)}</ol></>}
+    </>}
     <p>Wenn Sie möchten, gehen wir die Punkte in etwa einer Stunde gemeinsam bei Ihnen durch – direkt auf Ihrem Gerät. Sie bleiben Inhaber Ihres Profils, ich brauche kein Passwort.</p>
     <div className="pcQr"><div dangerouslySetInnerHTML={{ __html: qr }} /><p>Antworten Sie einfach über den QR-Code oder unter<br /><b>{link.replace(/^https?:\/\//, "")}</b><br />„Ja, gern ein Gespräch“ – oder „Nein danke“, dann melde ich mich nicht wieder.</p></div>
     <p>Freundliche Grüße</p>

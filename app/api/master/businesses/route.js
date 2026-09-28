@@ -18,7 +18,7 @@ import { istWartend, istOffen } from "../../../../lib/aufgaben-status.js";
 import { listLeads, leadAnlegen, leadAendern, leadStatusSetzen, emailEntwurfErstellen, alsGesendet, antwortErfassen, antwortErledigt, angebotErstellen, angebotEntscheidung, zahlungEingegangen, kostenErfassen, kostenVorschlagen, leadVerlauf, leadUebersicht } from "../../../../lib/leads.js";
 import { strukturiere, ablaufStand, AUTOMATISIERUNGSGRAD, kontaktErlaubt } from "../../../../lib/leads-regeln.js";
 import { listFinance, eqFinanzen } from "../../../../lib/master-finance.js";
-import { pilotDaten, analyseSpeichern, preisFestlegen, vertragStarten, vertragBeenden, berichtText, angebotText, potenziellenKundenAnlegen, googleZugangBestaetigen, aenderungProtokollieren, zugriffEntfernt, rechnungVorbereiten, ladenlokalSetzen } from "../../../../lib/pilot.js";
+import { pilotDaten, analyseSpeichern, preisFestlegen, vertragStarten, vertragBeenden, berichtText, angebotText, potenziellenKundenAnlegen, googleZugangBestaetigen, aenderungProtokollieren, zugriffEntfernt, rechnungVorbereiten, ladenlokalSetzen, briefAbsatzSetzen } from "../../../../lib/pilot.js";
 import { listTasks } from "../../../../lib/master-tasks.js";
 import { antwortSeite, briefAntwortErfassen, briefVorbereiten } from "../../../../lib/antwort-link.js";
 
@@ -215,6 +215,7 @@ export async function POST(request){
           : a === "pilot-rechnung" ? { text: await rechnungVorbereiten(body.id) }
           : a === "pilot-brief" ? await briefVorbereiten(body.id)
           : a === "pilot-ladenlokal" ? { lead: await ladenlokalSetzen(body.id, body.ladenlokal ?? null) }
+          : a === "pilot-brief-absatz" ? { lead: await briefAbsatzSetzen(body.id, body.text) }
           : null;
         if (!e) return NextResponse.json({ ok: false, error: "Unbekannte Aktion" }, { status: 400 });
         return NextResponse.json({ ok: true, ...e });
