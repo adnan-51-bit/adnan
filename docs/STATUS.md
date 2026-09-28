@@ -999,3 +999,13 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - Persönlicher Brief-Absatz je Betrieb (`pilot-brief-absatz`, `briefAbsatzSetzen` in lib/pilot.js): ersetzt im Druck die allgemeine Einleitung; 40–900 Zeichen, keine Links; erzeugt keinen Link und keine Aufgabe.
 - Für Café Zuckersüss, Café mit Liebe und Patisserie Mit Liebe gespeichert (Entwurf). Vollständige Unterlagen im Obsidian-Vault: „Verkaufs-Pilot 1 – Unterlagen Cafés“.
 - Nichts gesendet, niemand kontaktiert. Tests 267/267, Build ok.
+
+## Update 28.09.2026 (56) — Verkaufs-Pilot 1, Teil 2
+
+- **Gleicher Inhaber:** Café Mit Liebe und Patisserie Mit Liebe gehören derselben GbR (Impressum beider Websites, 28.09.2026).
+  - Neu: `pilot-zusammen` / `zusammenMit`, nur mit Nachweis.
+  - Folge: ein Brief mit beiden Profil-Checks; der Sammeldruck und „WARTET AUF MICH“ überspringen den zugeordneten Betrieb; „Nein danke“ sperrt beide.
+- **Profile neu geprüft (28.09.):** Zuckersüss hat einen Facebook-Link (Entwurfsaussage korrigiert); alle drei haben 75/100.
+- **Marktpreis:** 300–545 € einmalig (3 Anbieterquellen, 28.09.2026), für unser kleines Paket nicht verifiziert. Der Preis bleibt offen, er ist Adnans Entscheidung.
+- **Vor einer Rechnung:** Schuldnerberatung → Arbeitgeber → Gewerbeanmeldung → ELSTER-Fragebogen (§ 19 UStG) → Rechnung. Keine Rechnung erzeugt.
+- **Dokumentation:** Aufgabe #120 in der Zentrale; Unterlagen im Obsidian-Vault. Tests 268/268, Build ok.
