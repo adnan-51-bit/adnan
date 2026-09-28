@@ -993,3 +993,9 @@ Adnans Entscheidung: „Alles vorbereiten“ und „Eigener Shop, kostenlos“ (
 - **Fix:** Adress-Erkennung in lib/lead-bewertung.js.
 - **Revert:** a6f52a5 (per cfb78da zurückgenommen, ein Test war rot).
 - **Tests:** 266/266, live geprüft. 55 Leads, 26 kontaktierbar, 0 Interessenten, 0 Kunden, 0 €.
+
+## Update 28.09.2026 (55) — Verkaufs-Pilot 1 vorbereitet
+
+- Persönlicher Brief-Absatz je Betrieb (`pilot-brief-absatz`, `briefAbsatzSetzen` in lib/pilot.js): ersetzt im Druck die allgemeine Einleitung; 40–900 Zeichen, keine Links; erzeugt keinen Link und keine Aufgabe.
+- Für Café Zuckersüss, Café mit Liebe und Patisserie Mit Liebe gespeichert (Entwurf). Vollständige Unterlagen im Obsidian-Vault: „Verkaufs-Pilot 1 – Unterlagen Cafés“.
+- Nichts gesendet, niemand kontaktiert. Tests 267/267, Build ok.
