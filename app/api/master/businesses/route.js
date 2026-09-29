@@ -18,7 +18,7 @@ import { istWartend, istOffen } from "../../../../lib/aufgaben-status.js";
 import { listLeads, leadAnlegen, leadAendern, leadStatusSetzen, emailEntwurfErstellen, alsGesendet, antwortErfassen, antwortErledigt, angebotErstellen, angebotEntscheidung, zahlungEingegangen, kostenErfassen, kostenVorschlagen, leadVerlauf, leadUebersicht } from "../../../../lib/leads.js";
 import { strukturiere, ablaufStand, AUTOMATISIERUNGSGRAD, kontaktErlaubt } from "../../../../lib/leads-regeln.js";
 import { listFinance, eqFinanzen } from "../../../../lib/master-finance.js";
-import { pilotDaten, analyseSpeichern, preisFestlegen, vertragStarten, vertragBeenden, berichtText, angebotText, potenziellenKundenAnlegen, googleZugangBestaetigen, aenderungProtokollieren, zugriffEntfernt, rechnungVorbereiten, ladenlokalSetzen, briefAbsatzSetzen, zusammenMit } from "../../../../lib/pilot.js";
+import { pilotDaten, analyseSpeichern, preisFestlegen, vertragStarten, vertragBeenden, berichtText, angebotText, potenziellenKundenAnlegen, googleZugangBestaetigen, aenderungProtokollieren, zugriffEntfernt, rechnungVorbereiten, ladenlokalSetzen, briefAbsatzSetzen, zusammenMit, kontaktErfolgt, terminVereinbaren } from "../../../../lib/pilot.js";
 import { listTasks } from "../../../../lib/master-tasks.js";
 import { antwortSeite, briefAntwortErfassen, briefVorbereiten } from "../../../../lib/antwort-link.js";
 
@@ -91,7 +91,7 @@ export async function GET(request){
           const aktuell = na?.lead_id ? leads.find(l => l.id === na.lead_id) : null;
           // Vertriebsstatus + Selbstpruefung (28.09.2026): "WARTET AUF MICH" ersetzt die lange Freigabe-Liste.
           const { vertriebStatus } = await import("../../../../lib/vertrieb-status.js");
-          const vertrieb = pq ? vertriebStatus({ leads: leads.filter(l => l.einnahmequelle_id === pq.id), tasks: alleTasks, freigaben: offen, audit: laeufe, einnahmen_cent: eqFinanzen(finance, pq.id).einnahmen_cent || 0, monatspreis_cent: pq.pilot?.monatspreis_cent || null }) : null;
+          const vertrieb = pq ? vertriebStatus({ leads: leads.filter(l => l.einnahmequelle_id === pq.id), tasks: alleTasks, freigaben: offen, audit: laeufe, finance, einnahmen_cent: eqFinanzen(finance, pq.id).einnahmen_cent || 0, kosten_cent: eqFinanzen(finance, pq.id).kosten_cent || 0, monatspreis_cent: pq.pilot?.monatspreis_cent || null }) : null;
           if (vertrieb) duMusst = [...vertrieb.wartetAufMich.map(t => t.replace(/^WARTET AUF MICH: /, "")), ...duMusst.filter(t => !/^Kontakt zu „/.test(t) && !/^Angebot für „/.test(t))];
           // Zuerst was den aktuellen Lead betrifft, dann Preis/Gewerbe, dann der Rest.
           if (aktuell) duMusst.sort((a, b) => (b.includes(aktuell.firma || aktuell.name) - a.includes(aktuell.firma || aktuell.name)) || (/Monatspreis|Gewerbe/.test(b) - /Monatspreis|Gewerbe/.test(a)));
@@ -216,6 +216,8 @@ export async function POST(request){
           : a === "pilot-brief" ? await briefVorbereiten(body.id)
           : a === "pilot-ladenlokal" ? { lead: await ladenlokalSetzen(body.id, body.ladenlokal ?? null) }
           : a === "pilot-brief-absatz" ? { lead: await briefAbsatzSetzen(body.id, body.text) }
+          : a === "pilot-kontakt-erfolgt" ? { lead: await kontaktErfolgt(body.id, body.kontakt || {}) }
+          : a === "pilot-termin" ? { lead: await terminVereinbaren(body.id, body.termin || {}) }
           : a === "pilot-zusammen" ? { lead: await zusammenMit(body.id, body.haupt_id ?? null, body.nachweis) }
           : null;
         if (!e) return NextResponse.json({ ok: false, error: "Unbekannte Aktion" }, { status: 400 });

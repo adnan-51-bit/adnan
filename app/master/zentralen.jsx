@@ -121,7 +121,8 @@ export function UmsatzPipeline({ u, laden = false, goTo }) {
   const d = u || eigen; if (!d) return null;
   const k = d.kennzahlen;
   return <section className="panel up" aria-label="Umsatz-Pipeline"><h3>Umsatz-Pipeline</h3>
-    <ol className="upStufen">{d.stufen.map((s, i) => <li key={s.id} className={s.anzahl ? "an" : ""}><b>{s.anzahl}</b><span>{s.name}</span>{i < d.stufen.length - 1 && <i aria-hidden="true">→</i>}</li>)}</ol>
+    {(() => { const st = d.vertrieb?.stufenZahlen || d.stufen; return <ol className={"upStufen" + (d.vertrieb?.stufenZahlen ? " up12" : "")}>{st.map((s, i) => <li key={s.id} className={s.anzahl ? "an" : ""}><b>{s.anzahl}</b><span>{s.name}</span>{i < st.length - 1 && <i aria-hidden="true">→</i>}</li>)}</ol>; })()}
+    {d.vertrieb?.heute?.length > 0 && <div className="upHeute"><h4>📋 HEUTE BEARBEITEN</h4><ol>{d.vertrieb.heute.map(h => <li key={h.lead_id}><b>{h.name}</b> <small>{h.stufe_label} · {h.wer === "Adnan" ? "WARTET AUF MICH" : "Claude"}</small><span>➜ {h.aktion}</span><span>💬 {h.einstieg}</span><span>📮 {h.kontaktweg}</span></li>)}</ol></div>}
     <div className="zsKpis">{[["Leads", k.leads], ["Interessenten", k.interessenten], ["Offene Nachfassungen", k.offeneNachfassungen], ["Angebote", k.angebote], ["Gewonnene Aufträge", k.auftraege], ["Einnahmen", eur(k.einnahmen_cent)], ["Kosten", eur(k.kosten_cent)], ["Gewinn", eur(k.gewinn_cent)]].map(([l, v]) => <div key={l}><span>{l}</span><b>{v}</b></div>)}</div>
     <div className="zsGitter">
       <div className="zsSpalte zsHeute"><h4><span>🎯 Aktueller Lead</span></h4><p className="upLead">{d.aktuellerLead ? <><b>{d.aktuellerLead.name}</b>{d.aktuellerLead.punkte != null ? ` · ${d.aktuellerLead.punkte}/100` : ""}</> : "—"}</p></div>
@@ -142,6 +143,8 @@ export function UmsatzPipeline({ u, laden = false, goTo }) {
 const ZS_CSS = `
 .upStufen{list-style:none;margin:6px 0 10px;padding:0;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
 .upLead{margin:4px 0;font-size:15px}
+.upStufen.up12{grid-template-columns:repeat(6,minmax(0,1fr))}
+.upHeute{margin:10px 0;padding:10px 12px;border-radius:10px;background:rgba(59,130,246,.07);border-top:3px solid #3b82f6}.upHeute h4{margin:0 0 6px;font-size:13px}.upHeute ol{margin:0;padding-left:20px;display:grid;gap:8px;font-size:13px}.upHeute li span{display:block;opacity:.85;overflow-wrap:anywhere}.upHeute small{opacity:.7}
 .upTop{margin:10px 0}.upTop h4{margin:0 0 6px;font-size:13px}.upTop ol{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px}.upTop li span{display:block;opacity:.8;overflow-wrap:anywhere}.upTop li a{font-size:12px}
 .upStufen li{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px;border-radius:10px;background:rgba(127,127,127,.08);text-align:center;min-width:0}
 .upStufen li.an{background:rgba(16,185,129,.14)}.upStufen b{font-size:22px}.upStufen span{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;overflow-wrap:anywhere}

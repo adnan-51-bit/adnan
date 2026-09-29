@@ -71,12 +71,15 @@ export function PilotGoogleProfil() {
       <p className="muted">Nur öffentlich belegte Angaben mit Quelle. Keine Werbe-Mails – Kontakt persönlich. Nichts ist verbindlich, bevor du es entscheidest.</p>
       {(() => { const briefe = (d?.leads || []).filter(l => l.stufe === "KONTAKT_FREIGEGEBEN" && !(l.pilot_crm?.antworten || []).length && !l.pilot_crm?.zusammen_mit); return briefe.length > 0 && <p className="plZeile"><a className="editMini plJa" href={"/master/profil-check?brief=1&ids=" + briefe.map(l => encodeURIComponent(l.id)).join(",")} target="_blank" rel="noreferrer">✉ Briefe mit Antwort-Link drucken ({briefe.length})</a> <span className="muted">Nur freigegebene Betriebe. Ausdrucken, unterschreiben, selbst einwerfen – die Antwort (Interesse oder „bitte nicht mehr kontaktieren“) kommt automatisch hierher.</span></p>; })()}
       {d && !d.leads.length && <p className="muted">Noch kein Betrieb erfasst.</p>}
-      {(d?.leads || []).map(l => { const q = String(l.quelle || "").match(/https?:\/\/\S+/)?.[0]; const i = (d.stufen || []).findIndex(([k]) => k === l.stufe); return <article key={l.id} className={"plBetrieb" + (d.naechsteAktion?.lead_id === l.id ? " plDran" : "")}>
+      {(d?.leads || []).map(l => { const q = String(l.quelle || "").match(/https?:\/\/\S+/)?.[0]; const vst = d.vertriebsStufen || d.stufen || []; const i = vst.findIndex(([k]) => k === (l.vstufe || l.stufe)); return <article key={l.id} className={"plBetrieb" + (d.naechsteAktion?.lead_id === l.id ? " plDran" : "")}>
         <div className="plKopf"><div><strong>{l.firma || l.name}</strong><small>{[l.branche, l.ort].filter(Boolean).join(" · ") || "—"} · {LEAD_LABEL[l.status]} · erfasst {tag(l.erstellt_am)}</small>
           <small>Quelle: {q ? <a href={q} target="_blank" rel="noreferrer">{String(l.quelle).replace(q, "").trim() || "Link"} ↗</a> : (l.quelle || "—")} · <a href={"https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent([l.firma || l.name, l.ort].filter(Boolean).join(" "))} target="_blank" rel="noreferrer">Google-Profil suchen ↗</a>{l.profil_analyse ? <> · <a href={l.profil_analyse.quelle} target="_blank" rel="noreferrer">analysiertes Profil ↗</a></> : null}</small></div>
           <span className="plBadges"><b className="plScore">{l.profil_analyse ? `${l.profil_analyse.punkte}/100` : "nicht analysiert"}</b><b className={"plPrio p" + l.prioritaet?.stufe} title="Arbeitspriorität aus der eigenen Analyse – keine Erfolgsaussage">Priorität: {l.prioritaet?.text}</b></span></div>
         <p className="plZeile">Website: {l.website ? <a href={l.website} target="_blank" rel="noreferrer">{l.website}</a> : "keine verifizierte Website gefunden"}</p>
-        <ol className="plStufen">{(d.stufen || []).map(([k, n], x) => <li key={k} className={x < i ? "fertig" : x === i ? "jetzt" : ""}>{n}</li>)}</ol>
+        <ol className="plStufen" aria-label="Vertriebsstufe">{vst.map(([k, n], x) => <li key={k} className={x < i ? "fertig" : x === i ? "jetzt" : ""}>{n}</li>)}</ol>
+        {["GESPERRT", "VERLOREN"].includes(l.status) && <p className="plZeile"><b>Ausgeschieden: kein Interesse{l.status === "GESPERRT" ? " – nicht mehr kontaktieren" : ""}</b></p>}
+        {l.einstieg && !["GESPERRT", "VERLOREN"].includes(l.status) && <p className="plZeile">💬 Gesprächseinstieg: <i>{l.einstieg}</i></p>}
+        {l.kontaktweg && <p className="plZeile">📮 Kontaktweg: {l.kontaktweg}</p>}
         {l.profil_analyse?.verbesserungen?.length > 0 && <p className="plZeile">Erkennbare Verbesserungen: {l.profil_analyse.verbesserungen.map(v => (v.dringend ? "⚠ " : "") + v.text).join(" · ")}</p>}
         {l.laden && <p className="plZeile">Besuch: <b>{l.laden.text}</b> · <button className="editMini" onClick={() => senden({ action: "pilot-ladenlokal", id: l.id, ladenlokal: true }, "Ladenlokal: ja")}>Ladenlokal ja</button> <button className="editMini" onClick={() => senden({ action: "pilot-ladenlokal", id: l.id, ladenlokal: false }, "Ladenlokal: nein – nach hinten sortiert")}>nein</button></p>}
         {l.bewertung && <p className="plZeile">Bewertung <b>{l.bewertung.summe}/10</b>: {l.bewertung.kriterien.map(k => `${k.name} ${k.punkte}/2 (${k.begruendung})`).join(" · ")}</p>}
@@ -90,6 +93,9 @@ export function PilotGoogleProfil() {
           {l.bericht && <button className="editMini" onClick={() => setDialog({ art: "text", titel: "Profil-Check-Bericht", text: l.bericht })}>Bericht</button>}
           {l.profil_analyse && <a className="editMini" href={"/master/profil-check?id=" + encodeURIComponent(l.id)} target="_blank" rel="noreferrer">🖨 Gesprächsunterlage</a>}
           {l.stufe === "GEPRUEFT" && <a className="editMini" href="/master?tab=freigaben">Kontakt freigeben („Wartet auf mich“) →</a>}
+          {l.vstufe === "KONTAKT_VORBEREITET" && !l.pilot_crm?.zusammen_mit && <button className="editMini plJa" onClick={() => senden({ action: "pilot-kontakt-erfolgt", id: l.id, kontakt: { datum: new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }), weg: l.pilot_crm?.brief_am ? "Brief eingeworfen" : "Persönlich vorbeigegangen" } }, "Kontakt vermerkt")}>{l.pilot_crm?.brief_am ? "✉ Brief eingeworfen (heute)" : "Persönlich vorbeigegangen (heute)"}</button>}
+          {["ANTWORT", "INTERESSE"].includes(l.vstufe) && !l.pilot_crm?.termin && <TerminKnopf onSave={datum => senden({ action: "pilot-termin", id: l.id, termin: { datum } }, "Termin vereinbart – Termin-Aufgabe angelegt")} />}
+          {l.pilot_crm?.termin && <span className="plZeile">📅 Termin {new Date(l.pilot_crm.termin.datum).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })}</span>}
           {l.stufe === "KONTAKT_FREIGEGEBEN" && !l.pilot_crm?.zusammen_mit && <a className="editMini" href={"/master/profil-check?brief=1&id=" + encodeURIComponent(l.id)} target="_blank" rel="noreferrer">✉ Brief mit Antwort-Link</a>}
           {l.pilot_crm?.zusammen_mit && <span className="plZeile">Gleicher Inhaber wie „{(d.leads.find(x => x.id === l.pilot_crm.zusammen_mit) || {}).firma || "?"}“ – wird mit dessen Brief angesprochen ({l.pilot_crm.zusammen_nachweis})</span>}
           {l.stufe === "KONTAKT_FREIGEGEBEN" && <button className="editMini" onClick={() => senden({ action: "lead-status", id: l.id, status: "KONTAKT" }, "Gespräch vermerkt")}>Gespräch geführt</button>}
@@ -216,3 +222,10 @@ const PL_CSS = `.plGate{display:grid;grid-template-columns:repeat(auto-fit,minma
 .plEnt{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}.plEnt article{border:1px solid rgba(127,127,127,.25);border-radius:10px;padding:10px;min-width:0}
 .plEnt h4{margin:0 0 6px;font-size:14px}.plEnt dl{margin:0;display:grid;gap:2px;font-size:13px}.plEnt dt{font-weight:700;margin-top:6px}.plEnt dd{margin:0;overflow-wrap:anywhere}
 `;
+
+// Termin eintragen (29.09.2026): Datum + Uhrzeit, erst nach Interesse/Antwort sichtbar.
+function TerminKnopf({ onSave }) {
+  const [offen, setOffen] = useState(false), [wert, setWert] = useState("");
+  if (!offen) return <button className="editMini plJa" onClick={() => setOffen(true)}>📅 Termin vereinbart</button>;
+  return <span className="plZeile"><input type="datetime-local" value={wert} onChange={e => setWert(e.target.value)} aria-label="Termin Datum und Uhrzeit" /> <button className="editMini plJa" disabled={!wert} onClick={() => { onSave(wert); setOffen(false); }}>Speichern</button> <button className="editMini" onClick={() => setOffen(false)}>Abbrechen</button></span>;
+}

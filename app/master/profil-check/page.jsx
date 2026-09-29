@@ -18,7 +18,7 @@ const LINK_BASIS = "https://werknetz24.de";
 const ZEICHEN ={ ja: "✓", teilweise: "◐", nein: "✗", unbekannt: "–" };
 
 // Empfaengeradresse nur aus der gespeicherten Verzeichnis-Angabe ("Adresse laut Verzeichnis: ...").
-const adresseAus = notiz => (String(notiz || "").match(/Adresse laut Verzeichnis: (.+?)\.(?:\s|$)/) || [])[1] || "";
+const adresseAus = notiz => (String(notiz || "").match(/Adresse laut Verzeichnis: (.+?\d{5} [^.]+)/) || [])[1] || "";
 
 export default function ProfilCheck() {
   const [d, setD] = useState(null);

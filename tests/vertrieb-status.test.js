@@ -93,8 +93,11 @@ test("Tagesbericht: Vertrieb steht zuerst, Fehler der Selbstprüfung zählen als
   const d = daten(); d.audit = [];
   const vertrieb = vertriebStatus(d);
   const b = erstelleTagesbericht({ jetzt: JETZT, vertrieb, tasks: d.tasks });
-  assert.deepEqual(b.bericht.slice(0, 4).map(z => z[0]), ["Vertriebsstatus", "Neue Antworten (letzte 24 Stunden)", "WARTET AUF MICH (Vertrieb)", "Vertrieb – Selbstprüfung"]);
-  assert.match(b.bericht[2][1], /^Interessent meldet sich: Interessent AG – Frau A zurückrufen/);
+  // Seit 29.09.2026: der taegliche Vertriebsreport mit genau Adnans Feldern, danach die Selbstpruefung.
+  const felder = ["Neue Leads", "Kontaktierbare Leads", "Heute zu bearbeiten", "Kontakte erfolgt", "Antworten", "Interessenten", "Termine", "Angebote", "Gewonnene Kunden", "Tatsächliche Einnahmen", "Kosten", "Offene Aufgaben für mich"];
+  assert.deepEqual(b.bericht.slice(0, 13).map(z => z[0]), [...felder.map(f => "Vertrieb – " + f), "Vertrieb – Selbstprüfung"]);
+  assert.match(b.bericht[11][1], /^Interessent meldet sich: Interessent AG – Frau A zurückrufen/);
+  assert.match(b.bericht[9][1], /^0,00\s€ \(nur bestätigte Zahlungseingänge\)$/);
   assert.ok(b.fehler.some(f => f.text === "Vertrieb: Lead-Recherche ist heute nicht gelaufen (täglich 07:00)" && f.ziel === "pilot"));
   assert.ok(!b.fehler.some(f => /ohne Profil-Analyse/.test(f.text)), "Hinweise sind keine Fehler");
   const ohne = erstelleTagesbericht({ jetzt: JETZT });
