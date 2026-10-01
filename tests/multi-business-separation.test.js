@@ -161,5 +161,5 @@ test("Fehler-/Agenten-Zentrale fuehren business_id je Eintrag, E-Commerce ruft w
 
 test("Betriebe erscheinen in fester Reihenfolge (Werknetz24, E-Commerce, weitere) - auch aus der DB", async () => {
   const ids = (await listBusinesses()).map(b => b.id);
-  assert.deepEqual(ids, ["werknetz24", "ecommerce", "future"]);
+  assert.deepEqual(ids, ["werknetz24", "ecommerce", "auto-income", "future"]);
 });

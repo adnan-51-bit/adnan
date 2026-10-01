@@ -24,6 +24,7 @@ const VALID_TABS=new Set(TABS.map(([id])=>id));
 const initialBusinesses = [
   { id:"werknetz24", name:"Werknetz24", type:"Bestehender Betrieb", status:"EXTERNAL", health:"🟡", revenue:"—", link:"/werknetz24", modules:["Lisa / Telefon","Kunden","Leads","Aufträge","Rechnungen","Finanzen","Integrationen"] },
   { id:"ecommerce", name:"E-Commerce", type:"Geschäftsbereich", status:"CODE EXISTS", health:"🟡", revenue:"0 €", link:"/e-commerce", modules:["Produkte","Lieferanten","Bestellungen","Shop","Marketing","Retouren","Finanzen"] },
+  { id:"auto-income", name:"AUTO-INCOME", type:"Geschäftsbereich", status:"TEST", health:"🟡", revenue:"0 €", link:"/auto-income", modules:["Test-Center","Geld","Blocker","Arbeitsverlauf","Agenten","Automatisierung","Dokumente"] },
   { id:"future", name:"Weiterer Betrieb", type:"Vorbereitet", status:"OPEN", health:"⚪", revenue:"—", link:"#", modules:["Kunden","Aufgaben","Finanzen","Reports"] }
 ];
 
@@ -117,7 +118,7 @@ export default function MasterDashboard(){
 
     <div className="layout">
       <aside className="sidebar">
-        <div className="sideAreas"><span>Direkt öffnen</span><a href="/werknetz24">▸ Werknetz24</a><a href="/e-commerce">▸ E-Commerce</a><a href="https://werknetz24.de" target="_blank" rel="noreferrer">▸ Internetseite ↗</a><a href="/laden" target="_blank" rel="noreferrer">▸ Sortiert24-Shop ↗</a></div>
+        <div className="sideAreas"><span>Direkt öffnen</span><a href="/werknetz24">▸ Werknetz24</a><a href="/e-commerce">▸ E-Commerce</a><a href="/auto-income">▸ AUTO-INCOME</a><a href="https://werknetz24.de" target="_blank" rel="noreferrer">▸ Internetseite ↗</a><a href="/laden" target="_blank" rel="noreferrer">▸ Sortiert24-Shop ↗</a></div>
         {GRUPPEN.map(([gruppe,ids])=><div className="sideGruppe" key={gruppe}><span>{gruppe}</span>{ids.map(id=>TABS.find(t=>t[0]===id)).map(([id,icon,label])=><button key={id} className={tab===id?"selected":""} onClick={()=>setTab(id)}><b>{icon}</b>{label}</button>)}</div>)}
         <div className="sideBottom"><a href="/e-commerce?tab=pipeline">↳ Produkt-Pipeline</a><a href="/e-commerce?tab=lieferanten">↳ Lieferanten</a><a href="/e-commerce?tab=automation">↳ Automationen</a><a href="https://werknetz24.de/admin-zentrale" target="_blank" rel="noreferrer">↳ Werknetz24-Verwaltung ↗</a></div>
       </aside>

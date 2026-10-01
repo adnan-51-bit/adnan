@@ -30,6 +30,21 @@ function Liste({ titel, eintraege, leer, goTo, max = 5, klasse = "" }) {
   </section>;
 }
 
+// AUTO-INCOME (01.10.2026): kompakte Zeile auf der Startseite, Details nur auf /auto-income.
+// Daten nur mit Anmeldung (business_id "auto-income"), keine Werknetz24-/E-Commerce-Daten.
+function AutoIncomeKurz() {
+  const [d] = useDaten("/api/master/businesses?autoIncome=kurz");
+  if (d === undefined) return <p className="stLeer">AUTO-INCOME wird geladen…</p>;
+  if (!d?.kurz) return <p className="stLeer">AUTO-INCOME: Details nur mit Anmeldung.</p>;
+  const k = d.kurz;
+  return <nav aria-label="AUTO-INCOME kurz">
+    <a href="/auto-income">Status: {k.ampel}</a><a href="/auto-income">Aktiver Test: {k.aktiverTest}</a>
+    <a href="/auto-income">Einnahmen: {eur(k.einnahmen_cent)}</a><a href="/auto-income">Kosten: {eur(k.kosten_cent)}</a>
+    <a href="/auto-income">Messstufe: {k.messstufe ?? "—"}</a><a href="/auto-income">Blocker: {k.blocker}</a>
+    <a href="/auto-income">Letzte Aktivität: {k.letzteAktivitaet}</a>
+  </nav>;
+}
+
 // ---------- Startseite ----------
 export function Startseite({ businesses, tasks, tasksLocked, systems, finance, qualityGate, goTo }) {
   const [eq] = useDaten("/api/master/businesses?einnahmequellen=1");
@@ -87,6 +102,7 @@ export function Startseite({ businesses, tasks, tasksLocked, systems, finance, q
       <a href={x.link} onClick={e => { if (x.tab) { e.preventDefault(); goTo?.(x.tab); } }}><span className="stAmpel">{x.ampel}</span><div><strong>{x.name}</strong><small>{x.label} · {x.grund}</small></div><i>→</i></a>
       {x.id === "werknetz24" && <nav><a href="https://werknetz24.de/admin-zentrale#kunden" target="_blank" rel="noreferrer">Kunden ↗</a><a href="https://werknetz24.de/admin-zentrale#leads" target="_blank" rel="noreferrer">Leads ↗</a><a href="/werknetz24?tab=rechnungen">Rechnungen</a><a href="https://werknetz24.de" target="_blank" rel="noreferrer">Internetseite ↗</a></nav>}
       {x.id === "ecommerce" && <nav><a href="/e-commerce?tab=kunden">Kunden</a><a href="/e-commerce?tab=bestellungen">Bestellungen</a><a href="/e-commerce?tab=produkte">Produkte</a><a href="/laden" target="_blank" rel="noreferrer">Shop ↗</a></nav>}
+      {x.id === "auto-income" && <AutoIncomeKurz />}
     </article>)}</div>
     <div className="stSpalten">
       <Liste titel="Jetzt zu tun" eintraege={b?.jetztZuTun ?? (b === null ? [] : undefined)} leer="Keine offenen Aufgaben." goTo={goTo} />

@@ -12,6 +12,10 @@ Die Master-Zentrale ist seit Phase 5 (21.09.2026) tatsächlich live und live gep
 
 Produktiver **echter Geschäftsbetrieb** (Verkauf, Zahlungen) bleibt weiterhin gesperrt: Persistenz läuft weiterhin im Fallback-Speicher (kein Supabase-Konto vorhanden, auf Adnans ausdrücklichen Wunsch nicht selbst angelegt), und die rechtlichen Pflichttexte (Impressum/Datenschutz/AGB/Widerruf) fehlen komplett (🔴 BLOCKER, s. `docs/QUALITY-GATE-PHASE-4.md`).
 
+## AUTO-INCOME als eigener Betrieb (01.10.2026)
+
+🟢 **UMGESETZT, GETESTET (282/282), LOKAL IM BROWSER GEPRÜFT.** Neuer Betrieb `business_id: auto-income` mit eigener Seite `/auto-income`, Eintrag in Seitenleiste, Betriebe-Tab und Startseite (Kurzübersicht). Daten nur über `GET /api/master/businesses?autoIncome=1|kurz` mit `MASTER_API_SECRET`. Die Daten sind ein von Claude gepflegter Snapshot ohne Live-Anbindung, und im öffentlichen Repo stehen keine persönlichen Angaben. Werknetz24 und E-Commerce sind unverändert. Details: `docs/AUTO-INCOME.md`.
+
 ## Multi-Business-Struktur — Phase 1 (21.09.2026)
 
 🟢 **UMGESETZT, GETESTET, NICHT DEPLOYED.**

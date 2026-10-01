@@ -21,6 +21,7 @@ import { listFinance, eqFinanzen } from "../../../../lib/master-finance.js";
 import { pilotDaten, analyseSpeichern, preisFestlegen, vertragStarten, vertragBeenden, berichtText, angebotText, potenziellenKundenAnlegen, googleZugangBestaetigen, aenderungProtokollieren, zugriffEntfernt, rechnungVorbereiten, ladenlokalSetzen, briefAbsatzSetzen, zusammenMit, kontaktErfolgt, terminVereinbaren } from "../../../../lib/pilot.js";
 import { listTasks } from "../../../../lib/master-tasks.js";
 import { antwortSeite, briefAntwortErfassen, briefVorbereiten } from "../../../../lib/antwort-link.js";
+import { autoIncomeDaten, autoIncomeKurz } from "../../../../lib/auto-income-data.js";
 
 export const runtime = "nodejs";
 
@@ -131,6 +132,12 @@ export async function GET(request){
       const opt = await ladeOptimierung().catch(() => null);
       const pilotEq = liste.find(q => q.kategorie === "C");
       return NextResponse.json({ ok: true, einnahmequellen: liste, uebersicht: uebersicht(liste), dashboard: eqDashboard({ eqs: liste, leads, tasks, finance, optimierung: opt, content }), ersteEinnahme: pilotEq ? { eq: pilotEq.name, ...ersteEinnahmeCheckliste({ eq: pilotEq, leads, tasks, finance, freigaben }) } : null });
+    }
+    // AUTO-INCOME (01.10.2026): eigener Betrieb, nur mit Secret. Liefert ausschliesslich Daten mit
+    // business_id "auto-income" (lib/auto-income-data.js), nie Werknetz24- oder E-Commerce-Daten.
+    if (params.get("autoIncome")) {
+      if (authError) return NextResponse.json({ ok: false, error: authError.error }, { status: authError.status });
+      return NextResponse.json({ ok: true, ...(params.get("autoIncome") === "kurz" ? { kurz: autoIncomeKurz() } : autoIncomeDaten()) });
     }
     // Werknetz24-Kalender (22.09.2026, "Kommandozentrale"-Folgeauftrag) - eigener Zweig statt
     // neuer Route-Datei (12/12 Serverless-Funktionen bereits belegt, s. PROJECT-AUDIT.md im
